@@ -5,6 +5,7 @@ import {
   type LessonRestrictionView,
   lessonRestrictionView,
 } from './owaClient';
+import { subjectSlugs } from './keyStageAndSubjects';
 
 const commonError =
   'Learn more about Oak errors: https://open-api.thenational.academy/docs/about-oaks-api/errors';
@@ -76,6 +77,11 @@ export function collapsedRestrictionStatus(
 }
 
 export const blockedSubjects = ['financial-education'];
+
+export function isSubjectAllowed(subject: string): boolean {
+  const allowed = [...subjectSlugs, 'combined-science'];
+  return allowed.includes(subject);
+}
 
 export async function getLessonsRestrictions(
   client: GraphQLClient,

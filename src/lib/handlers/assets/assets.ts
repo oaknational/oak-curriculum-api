@@ -18,11 +18,14 @@ import {
   sequenceView,
   sequenceViewWhereInput,
 } from '@/lib/owaClient';
-import { subjectSlugs } from '@/lib/keyStageAndSubjects';
 import { baseUrl } from '@/lib/baseUrl';
 import { getOakUrlForLesson } from '@/lib/canonicalUrls';
 
-import { getLessonsRestrictions, isLessonRestricted } from '@/lib/queryGate';
+import {
+  getLessonsRestrictions,
+  isLessonRestricted,
+  isSubjectAllowed,
+} from '@/lib/queryGate';
 import { sequenceWhere } from '../sequences/sequences';
 import { nextPageLink } from '@/lib/pagination';
 import { downloadTypeEnum } from './types';
@@ -127,10 +130,7 @@ export async function assetsForLesson(
   const attribution = tpcViewResult[lessonView][0];
 
   // validate the subject
-  if (
-    !attribution.subjectSlug ||
-    !subjectSlugs.includes(attribution.subjectSlug)
-  ) {
+  if (!attribution.subjectSlug || !isSubjectAllowed(attribution.subjectSlug)) {
     throw new TRPCError({
       message: 'Lesson not found',
       code: 'NOT_FOUND',
@@ -640,7 +640,7 @@ Not for: assets across a whole sequence (GET /sequences/{sequence}/assets); asse
       }
 
       // validate the subject
-      if (!subjectSlugs.includes(rows[0].subject_slug)) {
+      if (!isSubjectAllowed(rows[0].subject_slug)) {
         throw new TRPCError({
           message: 'Programme not found',
           code: 'NOT_FOUND',
