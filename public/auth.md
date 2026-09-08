@@ -1,6 +1,6 @@
-# Oak OpenAPI auth.md
+# Oak Curriculum API auth.md
 
-Oak OpenAPI does not currently support OAuth 2.0, OpenID Connect, dynamic client
+Oak Curriculum API does not currently support OAuth 2.0, OpenID Connect, dynamic client
 registration, or auth.md agent registration flows.
 
 Do not try to discover OAuth or OpenID Connect metadata for this service. These
@@ -35,7 +35,7 @@ Request an API key:
 
 Agent audience:
 
-- Agents, applications, and developers integrating with Oak OpenAPI.
+- Agents, applications, and developers integrating with the Oak Curriculum API.
 
 Registration and provisioning:
 

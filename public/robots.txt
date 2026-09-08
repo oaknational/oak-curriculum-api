@@ -1,4 +1,4 @@
-# Oak OpenAPI crawl policy
+# Oak Curriculum API crawl policy
 
 User-agent: *
 Content-Signal: ai-train=yes, search=yes, ai-input=yes
