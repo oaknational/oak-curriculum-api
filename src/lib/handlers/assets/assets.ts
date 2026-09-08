@@ -743,19 +743,18 @@ Not for: assets across a whole sequence (GET /sequences/{sequence}/assets); asse
         method: 'GET',
         tags: ['assets', 'lessons'],
         path: '/lessons/{lesson}/assets/{type}',
-        summary: 'Stream a lesson asset file',
-        description: `Use when you want to download one specific asset for a lesson — slide deck, worksheet, etc. Returns the file directly. Call GET /lessons/{lesson}/assets first to see which type values are available. Valid type values: slideDeck, starterQuiz, starterQuizAnswers, exitQuiz, exitQuizAnswers, worksheet, worksheetAnswers, supplementaryResource, video. Lesson content is under OGL v3.0; assets are either Oak-owned or third-party under an OGL-compatible licence. Attribution required — see https://open-api.thenational.academy/docs/about-oaks-api/terms.
+        summary: 'Download a lesson asset file',
+        description: `Use when you want to download one specific asset for a lesson — slide deck, worksheet, etc. Responds with a 302 redirect: follow the \`Location\` header to fetch the file. Videos redirect to a CDN; every other asset type redirects to a signed storage URL that is valid for 15 minutes, so start the download promptly rather than storing the URL. Call GET /lessons/{lesson}/assets first to see which type values are available. Valid type values: slideDeck, starterQuiz, starterQuizAnswers, exitQuiz, exitQuizAnswers, worksheet, worksheetAnswers, supplementaryResource, video. Lesson content is under OGL v3.0; assets are either Oak-owned or third-party under an OGL-compatible licence. Attribution required — see https://open-api.thenational.academy/docs/about-oaks-api/terms.
 
 Not for: listing which asset types a lesson has (GET /lessons/{lesson}/assets); fetching the transcript (GET /lessons/{lesson}/transcript).`,
-        contentTypes: ['application/octet-stream'],
         errorResponses,
       },
     })
     .input(lessonAssetRequestSchema)
-    .output(lessonAssetResponseSchema) // no output, but file is streamed to the request
+    .output(lessonAssetResponseSchema) // no output, the request is redirected to the file
     .query(() => {
-      // IMPORTANT - this endpoint specific returns a stream of the
-      // file (video, slides, etc), but the actual execution isn't
+      // IMPORTANT - this endpoint redirects to the file (video, slides,
+      // etc), but the actual execution isn't
       // done here, but in the handler at:
       // /src/app/api/v0/lessons/[lesson]/assets/[type]/route.ts
       //

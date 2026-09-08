@@ -12,26 +12,28 @@ const bearerAuth = {
 } as const;
 
 // trpc-to-openapi can only emit a single 200 success response per operation, so
-// the redirect that GET /lessons/{lesson}/assets/{type} returns for videos has
-// nowhere to live in the procedure's `.meta()`. Non-video assets are streamed
-// back as a 200 (application/octet-stream); a `type=video` request instead gets
-// a 302 pointing at the CDN-hosted file (see the handler at
-// src/app/api/v0/lessons/[lesson]/assets/[type]/route.ts). Inject that 302 here.
-function applyVideoRedirectResponse(document: OpenAPIObject): OpenAPIObject {
+// the redirect that GET /lessons/{lesson}/assets/{type} returns has nowhere to
+// live in the procedure's `.meta()`. Every asset type responds with a 302: a
+// `type=video` request points at the CDN-hosted file, every other type at a
+// signed storage URL valid for 15 minutes (see the handler at
+// src/app/api/v0/lessons/[lesson]/assets/[type]/route.ts). Inject that 302 here
+// and drop the 200 that trpc-to-openapi derives, which can never be returned.
+function applyAssetRedirectResponse(document: OpenAPIObject): OpenAPIObject {
   const operation = document.paths?.['/lessons/{lesson}/assets/{type}']?.get;
   if (operation?.responses) {
     operation.responses['302'] = {
       description:
-        'Redirect to the video file. Returned only for `type=video` — the ' +
-        'file is served from a CDN, so follow the `Location` header to ' +
-        'download it.',
+        'Redirect to the asset file. Follow the `Location` header to download ' +
+        'it. Videos are served from a CDN; every other asset type is served ' +
+        'from a signed storage URL that is valid for 15 minutes.',
       headers: {
         Location: {
-          description: 'Absolute URL of the video file to download.',
+          description: 'Absolute URL of the asset file to download.',
           schema: { type: 'string', format: 'uri' },
         },
       },
     };
+    delete operation.responses['200'];
   }
   return document;
 }
@@ -72,7 +74,7 @@ function camelCaseOperationIds(document: OpenAPIObject): OpenAPIObject {
 // which loses the descriptions and cross-field rules declared on it, so we copy
 // them back onto the document afterwards.
 export const openApiDocument = camelCaseOperationIds(
-  applyVideoRedirectResponse(
+  applyAssetRedirectResponse(
     applyRequestMetadata(
       generateOpenApiDocument(router, {
         title: 'Oak Curriculum API',

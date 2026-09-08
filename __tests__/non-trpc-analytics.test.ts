@@ -1,10 +1,12 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NextRequest } from 'next/server';
+import { TRPCError } from '@trpc/server';
 
 const mocks = vi.hoisted(() => ({
   assetsForLessonMock: vi.fn(),
   captureApiRequestEventMock: vi.fn(),
   getApiKeyFromRequestMock: vi.fn(),
+  getSignedAssetUrlMock: vi.fn(),
   getVideoFromMuxMock: vi.fn(),
   listFilesWithMimeTypeMock: vi.fn(),
   parseQueryParamsMock: vi.fn(),
@@ -30,7 +32,7 @@ vi.mock('@/lib/bulk-data/data-stores', () => ({
   getGoogleCloudStorage: () => ({
     bucket: () => ({
       file: () => ({
-        createReadStream: vi.fn(),
+        getSignedUrl: vi.fn(() => Promise.resolve(['https://signed.example/'])),
       }),
       getFiles: vi.fn(() => [[]]),
     }),
@@ -42,6 +44,7 @@ vi.mock('@/lib/handlers/assets/assets', () => ({
 }));
 
 vi.mock('@/lib/handlers/assets/helpers', () => ({
+  getSignedAssetUrl: mocks.getSignedAssetUrlMock,
   getVideoFromMux: mocks.getVideoFromMuxMock,
   listFilesWithMimeType: mocks.listFilesWithMimeTypeMock,
 }));
@@ -71,8 +74,14 @@ describe('Non-tRPC route analytics', () => {
     mocks.protectMock.mockReset();
     mocks.withUserMock.mockReset();
     mocks.assetsForLessonMock.mockReset();
+    mocks.getSignedAssetUrlMock.mockReset();
     mocks.getVideoFromMuxMock.mockReset();
     mocks.listFilesWithMimeTypeMock.mockReset();
+
+    mocks.getSignedAssetUrlMock.mockResolvedValue(
+      'https://storage.googleapis.com/bucket/lesson-1/worksheet/sheet.pdf?X-Goog-Signature=abc',
+    );
+    mocks.listFilesWithMimeTypeMock.mockResolvedValue([]);
 
     mocks.getApiKeyFromRequestMock.mockReturnValue('test-api-key');
     mocks.parseQueryParamsMock.mockReturnValue({ qa: '1' });
@@ -167,6 +176,98 @@ describe('Non-tRPC route analytics', () => {
         source: 'lesson_assets_route',
         success: true,
         userId: 7,
+      }),
+    );
+  });
+
+  it('redirects non-video assets to a signed storage url', async () => {
+    mocks.assetsForLessonMock.mockResolvedValue({
+      assets: {
+        worksheet: {
+          bucket_name: 'bucket',
+          bucket_path: 'lesson-1/worksheet/sheet.pdf',
+        },
+      },
+    });
+
+    const req = new Request(
+      'http://localhost:2727/api/v0/lessons/lesson-1/assets/worksheet',
+      {
+        method: 'GET',
+        headers: {
+          authorization: 'Bearer test-api-key',
+        },
+      },
+    ) as NextRequest;
+
+    const res = await lessonAssetGet(req, {
+      params: Promise.resolve({
+        lesson: 'lesson-1',
+        type: 'worksheet',
+      }),
+    });
+
+    expect(res.status).toBe(302);
+    expect(res.headers.get('location')).toBe(
+      'https://storage.googleapis.com/bucket/lesson-1/worksheet/sheet.pdf?X-Goog-Signature=abc',
+    );
+    expect(res.headers.get('cache-control')).toBe('private, no-store');
+    expect(mocks.getSignedAssetUrlMock).toHaveBeenCalledWith(
+      expect.anything(),
+      'bucket',
+      'lesson-1/worksheet/sheet.pdf',
+      'lesson-1_worksheet.pdf',
+    );
+    expect(mocks.captureApiRequestEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        source: 'lesson_assets_route',
+        success: true,
+      }),
+    );
+  });
+
+  it('returns a 500 when signing a non-video asset url fails', async () => {
+    mocks.assetsForLessonMock.mockResolvedValue({
+      assets: {
+        worksheet: {
+          bucket_name: 'bucket',
+          bucket_path: 'lesson-1/worksheet/sheet.pdf',
+        },
+      },
+    });
+    mocks.getSignedAssetUrlMock.mockRejectedValue(
+      new TRPCError({
+        message: 'Failed to sign asset URL',
+        code: 'INTERNAL_SERVER_ERROR',
+      }),
+    );
+
+    const req = new Request(
+      'http://localhost:2727/api/v0/lessons/lesson-1/assets/worksheet',
+      {
+        method: 'GET',
+        headers: {
+          authorization: 'Bearer test-api-key',
+        },
+      },
+    ) as NextRequest;
+
+    const res = await lessonAssetGet(req, {
+      params: Promise.resolve({
+        lesson: 'lesson-1',
+        type: 'worksheet',
+      }),
+    });
+
+    expect(res.status).toBe(500);
+    await expect(res.json()).resolves.toMatchObject({
+      code: 'INTERNAL_SERVER_ERROR',
+    });
+    expect(mocks.captureApiRequestEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        errorCode: 'INTERNAL_SERVER_ERROR',
+        source: 'lesson_assets_route',
+        success: false,
       }),
     );
   });
