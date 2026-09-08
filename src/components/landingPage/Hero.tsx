@@ -41,7 +41,7 @@ export default function Hero(): React.ReactElement {
             />
 
             <OakHeading $mv={'spacing-24'} $font="heading-3" tag="h2">
-              Access high-quality education content with Oak OpenAPI
+              Access high-quality education content with the Oak Curriculum API
             </OakHeading>
 
             <OakP $mb={'spacing-48'} $color="text-primary" $font="body-2">

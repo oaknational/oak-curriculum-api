@@ -1,4 +1,4 @@
-# Oak National API
+# Oak Curriculum API
 
 [![Latest release](https://img.shields.io/github/v/release/oaknational/oak-openapi?label=release)](https://github.com/oaknational/oak-openapi/releases)
 [![Tests](https://github.com/oaknational/oak-openapi/actions/workflows/test.yml/badge.svg)](https://github.com/oaknational/oak-openapi/actions/workflows/test.yml)

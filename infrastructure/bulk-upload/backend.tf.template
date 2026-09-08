@@ -1,6 +1,6 @@
 terraform {
   cloud {
-    organization = "oak-national-academy"
+    organization = "your-organization-name"
     workspaces {
       tags = ["repo:oak-openapi", "config:bulk-upload"]
     }

@@ -33,7 +33,7 @@ export default function Banner(): React.ReactElement {
         <Logo width="104" height="48" />
       </OakLinkLogo>
       <OakHeading ariaHidden tag="h1" $font="heading-6">
-        Oak OpenAPI
+        Oak Curriculum API
       </OakHeading>
     </OakFlex>
   );

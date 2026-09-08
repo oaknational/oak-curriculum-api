@@ -153,7 +153,7 @@ describe('HTTP Headers - homepage agent discovery', () => {
       'utf8',
     );
 
-    expect(authMd).toContain('# Oak OpenAPI auth.md');
+    expect(authMd).toContain('# Oak Curriculum API auth.md');
     expect(authMd).toContain('does not currently support OAuth 2.0');
     expect(authMd).toContain('OpenID Connect');
     expect(authMd).toContain(

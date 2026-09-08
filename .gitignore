@@ -21,6 +21,10 @@ videos.tsv.bak
 *.tfstate
 *.tfstate.*
 
+# backend.tf is generated from backend.tf.template at build time (and locally)
+# and must not be committed in a public repo. See infrastructure/*/backend.tf.template.
+backend.tf
+
 # Crash log files
 crash.log
 crash.*.log

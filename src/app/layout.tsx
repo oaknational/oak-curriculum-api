@@ -11,7 +11,7 @@ const lexend = Lexend({
 });
 
 export const metadata: Metadata = {
-  title: 'Oak OpenAPI - Oak National Academy',
+  title: 'Oak Curriculum API - Oak National Academy',
   icons: [
     { rel: 'icon', type: 'image/x-icon', url: '/images/favicon.ico' },
     {

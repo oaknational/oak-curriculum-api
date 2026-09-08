@@ -377,7 +377,7 @@ export default function Features(): React.ReactElement {
           </Feature>
           <Feature
             anchorTarget="give-feedback"
-            title="Help us make Oak OpenAPI better"
+            title="Help us make the Oak Curriculum API better"
           >
             <OakP $font="body-2">
               Our API is new, and we strive to make it as accessible and suited
