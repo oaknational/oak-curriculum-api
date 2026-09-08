@@ -30,3 +30,7 @@ overrides:
   # high: crafted ZIP triggers a 4GB allocation (GHSA-xcpc-8h2w-3j85),
   # via @sanity/cli.
   adm-zip@<0.6.0: ^0.6.0
+  fast-uri@<3.1.6: ^3.1.6
+  uuid@<11.1.1: ^11.1.1
+  qs@<6.16.0: ^6.16.0
+  prismjs@<1.27.0: ^1.30.0
