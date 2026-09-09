@@ -174,7 +174,8 @@ describe('HTTP Headers - homepage agent discovery', () => {
       'apart from error responses from the lesson-asset',
     );
     expect(authMd).toContain('not listed in `Access-Control-Expose-Headers`');
-    expect(authMd).toContain('the end of the current\n  clock-hour bucket');
+    expect(authMd).toContain('clock-hour bucket');
+    expect(authMd).toContain('Back off on `X-RateLimit-Remaining`');
     expect(authMd).toContain('Support:');
     expect(authMd).toContain(
       'https://bvumd.share.hsforms.com/2nacebr1eQuKMoA-vGpkjCA',
