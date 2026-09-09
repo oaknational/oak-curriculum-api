@@ -49,10 +49,13 @@ describe.each(API_MAJORS)('the %s OpenAPI document', (major) => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('refers to no other major anywhere in the document', () => {
+  it('refers to no other major outside the successor pointer', () => {
     // Response examples are authored against v0 with absolute URLs, so a
-    // document for any other major has to retarget them.
-    const serialised = JSON.stringify(document);
+    // document for any other major has to retarget them. The top-level
+    // description is exempt: a frozen major deliberately links to its
+    // successor there.
+    const info = { ...document.info, description: undefined };
+    const serialised = JSON.stringify({ ...document, info });
 
     for (const other of API_MAJORS.filter((m) => m !== major)) {
       expect(serialised).not.toContain(`/api/${other}/`);
