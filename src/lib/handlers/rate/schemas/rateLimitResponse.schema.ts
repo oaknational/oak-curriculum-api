@@ -14,7 +14,7 @@ export const rateLimitResponseSchema = z
     reset: z
       .number()
       .describe(
-        'The time at which the current window resets, in milliseconds since the Unix epoch.',
+        'The end of the current clock-hour bucket, in milliseconds since the Unix epoch. The window slides, so the allowance returns gradually before this rather than all at once at it.',
       ),
   })
   .meta({ example });

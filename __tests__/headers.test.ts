@@ -168,6 +168,13 @@ describe('HTTP Headers - homepage agent discovery', () => {
     );
     expect(authMd).toContain('The default allowance is 1000 requests per hour');
     expect(authMd).toContain('X-RateLimit-Remaining');
+    expect(authMd).toContain('GET /api/v0/rate-limit');
+    expect(authMd).not.toContain('`GET /rate-limit`');
+    expect(authMd).toContain(
+      'apart from error responses from the lesson-asset',
+    );
+    expect(authMd).toContain('not listed in `Access-Control-Expose-Headers`');
+    expect(authMd).toContain('the end of the current\n  clock-hour bucket');
     expect(authMd).toContain('Support:');
     expect(authMd).toContain(
       'https://bvumd.share.hsforms.com/2nacebr1eQuKMoA-vGpkjCA',

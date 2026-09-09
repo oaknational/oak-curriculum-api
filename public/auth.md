@@ -51,12 +51,19 @@ Rate limits:
 - Requests are rate limited per API key over a sliding one-hour window.
 - The default allowance is 1000 requests per hour. A key may be issued with a
   different allowance, so treat the headers below as authoritative for your key.
-- Every rate-limited response carries `X-RateLimit-Limit`,
-  `X-RateLimit-Remaining` and `X-RateLimit-Reset`.
-- `GET /rate-limit` returns the same three values as JSON and does not count
-  against the allowance.
+- Responses carry `X-RateLimit-Limit`, `X-RateLimit-Remaining` and
+  `X-RateLimit-Reset`, apart from error responses from the lesson-asset
+  download and `/api/bulk`, which drop them.
+- These headers are not listed in `Access-Control-Expose-Headers`, so a browser
+  client cannot read them cross-origin. Call the endpoint below instead.
+- `GET /api/v0/rate-limit` returns the same three values as JSON and does not
+  count against the allowance.
 - Once the allowance is spent, requests are rejected and the response carries
-  `X-Retry-After` holding the reset time in milliseconds since the Unix epoch.
+  `X-Retry-After`.
+- `X-RateLimit-Reset` and `X-Retry-After` both hold the end of the current
+  clock-hour bucket, in milliseconds since the Unix epoch. The window slides,
+  so the allowance returns gradually before then rather than all at once at it.
+  Back off on `X-RateLimit-Remaining` rather than sleeping to the timestamp.
 
 Support:
 
