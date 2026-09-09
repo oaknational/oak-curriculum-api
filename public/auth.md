@@ -71,5 +71,6 @@ Support:
 Useful documentation:
 
 - API overview: `/docs/about-oaks-api/api-overview`
-- OpenAPI description: `/api/v0/swagger.json`
+- OpenAPI description: `/api/v1/swagger.json` (the frozen `/api/v0` is
+  described at `/api/v0/swagger.json`)
 - Interactive playground: `/playground`

@@ -139,8 +139,16 @@ describe('HTTP Headers - homepage agent discovery', () => {
     expect(linkHeader?.value).toContain(
       `<${apiCatalogPath}>; rel="api-catalog"`,
     );
+    // Both majors are described; the current one is listed first.
+    expect(linkHeader?.value).toContain(
+      '</api/v1/swagger.json>; rel="service-desc"',
+    );
     expect(linkHeader?.value).toContain(
       '</api/v0/swagger.json>; rel="service-desc"',
+    );
+    const value = linkHeader?.value ?? '';
+    expect(value.indexOf('/api/v1/swagger.json')).toBeLessThan(
+      value.indexOf('/api/v0/swagger.json'),
     );
     expect(linkHeader?.value).toContain(
       '</docs/about-oaks-api/api-overview>; rel="service-doc"',

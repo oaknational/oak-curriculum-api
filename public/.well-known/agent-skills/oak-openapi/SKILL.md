@@ -15,7 +15,9 @@ key stages, subjects, units, lessons, quizzes, transcripts, and lesson assets.
 https://open-api.thenational.academy
 ```
 
-All public endpoints are served under `/api/v0`.
+All public endpoints are served under `/api/v1`. `/api/v0` remains
+available and frozen: it takes fixes, but new endpoints and fields land in
+`/api/v1` only.
 
 ## Authentication
 
@@ -30,7 +32,7 @@ client registration. Request a key via the form linked from `/auth.md`.
 
 ## Discovering the API
 
-- Machine-readable OpenAPI description: `/api/v0/swagger.json`
+- Machine-readable OpenAPI description: `/api/v1/swagger.json`
 - Endpoint / service catalogue: `/.well-known/api-catalog`
 - Authentication details: `/auth.md`
 - Human documentation: `/docs/about-oaks-api/api-overview`
@@ -41,13 +43,13 @@ Any HTML documentation page can be fetched as Markdown by sending an
 
 ## Common tasks
 
-- List the curriculum tree: `GET /api/v0/key-stages`, then
-  `GET /api/v0/subjects`, then drill into units and lessons.
-- Fetch a lesson: `GET /api/v0/lessons/{lesson}/summary`, plus
+- List the curriculum tree: `GET /api/v1/key-stages`, then
+  `GET /api/v1/subjects`, then drill into units and lessons.
+- Fetch a lesson: `GET /api/v1/lessons/{lesson}/summary`, plus
   `/quiz`, `/transcript`, and `/assets` for its quiz, transcript, and media.
-- Search lessons or transcripts: `GET /api/v0/search/lessons` and
-  `GET /api/v0/search/transcripts`.
-- Check your quota: `GET /api/v0/rate-limit`.
+- Search lessons or transcripts: `GET /api/v1/search/lessons` and
+  `GET /api/v1/search/transcripts`.
+- Check your quota: `GET /api/v1/rate-limit`.
 
 List endpoints for questions accept `limit` (max 100) and `offset` query
 parameters for pagination.
@@ -60,6 +62,6 @@ schema at `/api/bulk/schema.json` and the guide at `/bulk-download`.
 ## Notes
 
 - Data shapes are defined by the API's Zod schemas and the generated OpenAPI
-  document; treat `/api/v0/swagger.json` as the source of truth for request and
+  document; treat `/api/v1/swagger.json` as the source of truth for request and
   response contracts.
 - Be a good citizen: honour rate limits and cache responses where practical.
