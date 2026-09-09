@@ -4,9 +4,15 @@ import {
   getInputOutputParsers,
 } from 'trpc-to-openapi';
 import router from '@/lib/router';
-import { openApiDocument } from '@/lib/zod-openapi/schema/generateDocument';
+import { openApiDocumentFor } from '@/lib/zod-openapi/schema/generateDocument';
+import { LATEST_API_MAJOR } from '@/lib/apiVersion';
+
 import { getRequestRules } from '@/lib/zod-openapi/schema/requestMetadata';
 import type { OpenAPIV3 } from 'openapi-types';
+
+// The frozen majors are covered by the surface snapshot; this validates the
+// document the current major publishes.
+const openApiDocument = openApiDocumentFor(LATEST_API_MAJOR);
 
 const swaggerData: OpenAPIV3.Document =
   openApiDocument as unknown as OpenAPIV3.Document;

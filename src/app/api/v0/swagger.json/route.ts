@@ -1,5 +1,3 @@
-import { openApiDocument } from '@/lib/zod-openapi/schema/generateDocument';
+import { createSwaggerHandler } from '@/lib/api/swaggerRoute';
 
-export const GET = () => {
-  return Response.json(openApiDocument);
-};
+export const GET = createSwaggerHandler('v0');

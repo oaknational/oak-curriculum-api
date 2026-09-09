@@ -1,0 +1,2 @@
+# Vitest writes these; their formatting is the assertion.
+__tests__/__snapshots__/

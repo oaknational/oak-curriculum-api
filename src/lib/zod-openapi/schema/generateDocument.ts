@@ -1,7 +1,8 @@
-import { LATEST_API_MAJOR } from '@/lib/apiVersion';
+import type { ApiMajor } from '@/lib/apiVersion';
+import { isFrozen, successorMajor } from '@/lib/apiVersion';
 import { apiBaseUrl } from '@/lib/baseUrl';
-import router from '@/lib/router';
 import { VERSION } from '@/lib/version';
+import { routerForMajor } from '@/lib/versionedRouter';
 
 import { generateOpenApiDocument, type OpenAPIObject } from 'trpc-to-openapi';
 
@@ -69,18 +70,7 @@ function camelCaseOperationIds(document: OpenAPIObject): OpenAPIObject {
   return document;
 }
 
-// trpc-to-openapi rebuilds query parameters from the input schema's shape,
-// which loses the descriptions and cross-field rules declared on it, so we copy
-// them back onto the document afterwards.
-export const openApiDocument = camelCaseOperationIds(
-  applyVideoRedirectResponse(
-    applyRequestMetadata(
-      generateOpenApiDocument(router, {
-        title: 'Oak Curriculum API',
-        version: VERSION,
-        baseUrl: apiBaseUrl(LATEST_API_MAJOR),
-        docsUrl: '/docs',
-        description: `This Oak Curriculum API is an intermediary that enables software applications to communicate with each other to exchange - in this case - data and assets. Through the Oak Curriculum API, you will have access to a wide range of educational content across subjects for key stages 1-4.
+const DESCRIPTION = `This Oak Curriculum API is an intermediary that enables software applications to communicate with each other to exchange - in this case - data and assets. Through the Oak Curriculum API, you will have access to a wide range of educational content across subjects for key stages 1-4.
 
 ### How could you use this API?
 
@@ -94,23 +84,100 @@ To give you some inspiration, here are just a few examples of how you could use 
 - Use the endpoint \`GET /lessons/{lesson}/assets\` to retrieve all of the resources for a given lesson. You could embed these lesson resources in your own product or service to give teachers a starting point for their lesson planning.
 
 Full documentation for the Oak Curriculum API is available on the URL below:
-`,
-        securitySchemes: {
-          bearerAuth,
-        },
-        tags: [
-          'internal',
-          'assets',
-          'lessons',
-          'lists',
-          'programmes',
-          'questions',
-          'search',
-          'sequences',
-          'units',
-        ],
-      }),
-      router,
+`;
+
+/**
+ * The major each example URL in the schemas is written against.
+ *
+ * Examples are authored with real, copy-pasteable URLs, and the schemas they
+ * hang off are shared between majors, so a document for any other major has to
+ * retarget them.
+ */
+const EXAMPLE_SOURCE_MAJOR = 'v0';
+
+// A whole-document pass rather than a walk of `example` fields: descriptions
+// carry the same URLs and should be retargeted too. A no-op for the major the
+// examples were written against.
+function applyExampleMajor(
+  document: OpenAPIObject,
+  major: ApiMajor,
+): OpenAPIObject {
+  const from = `/api/${EXAMPLE_SOURCE_MAJOR}/`;
+  const to = `/api/${major}/`;
+
+  if (from === to) {
+    return document;
+  }
+
+  return JSON.parse(
+    JSON.stringify(document).replaceAll(from, to),
+  ) as OpenAPIObject;
+}
+
+function describeMajor(major: ApiMajor): string {
+  const successor = successorMajor(major);
+
+  if (isFrozen(major) && successor) {
+    return `\n\nThis document describes \`/api/${major}\`, which is frozen: it continues to receive fixes, but new endpoints and fields land in \`/api/${successor}\` ([\`/api/${successor}/swagger.json\`](/api/${successor}/swagger.json)).`;
+  }
+
+  return `\n\nThis document describes \`/api/${major}\`, the current major.`;
+}
+
+const documents = new Map<ApiMajor, OpenAPIObject>();
+
+/**
+ * The OpenAPI document for one major.
+ *
+ * Built from the same derived router that serves the requests, so the document
+ * always describes exactly the surface on offer. `generateOpenApiDocument`
+ * returns a fresh object each call, so the transforms below never mutate shared
+ * state.
+ *
+ * trpc-to-openapi rebuilds query parameters from the input schema's shape,
+ * which loses the descriptions and cross-field rules declared on it, so we copy
+ * them back onto the document afterwards.
+ */
+export function openApiDocumentFor(major: ApiMajor): OpenAPIObject {
+  const cached = documents.get(major);
+  if (cached) {
+    return cached;
+  }
+
+  const router = routerForMajor(major);
+
+  const document = applyExampleMajor(
+    camelCaseOperationIds(
+      applyVideoRedirectResponse(
+        applyRequestMetadata(
+          generateOpenApiDocument(router, {
+            title: 'Oak Curriculum API',
+            version: VERSION,
+            baseUrl: apiBaseUrl(major),
+            docsUrl: '/docs',
+            description: DESCRIPTION + describeMajor(major),
+            securitySchemes: {
+              bearerAuth,
+            },
+            tags: [
+              'internal',
+              'assets',
+              'lessons',
+              'lists',
+              'programmes',
+              'questions',
+              'search',
+              'sequences',
+              'units',
+            ],
+          }),
+          router,
+        ),
+      ),
     ),
-  ),
-);
+    major,
+  );
+
+  documents.set(major, document);
+  return document;
+}
