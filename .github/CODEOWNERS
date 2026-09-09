@@ -1,6 +1,6 @@
 # Every change needs a review from the engineering team by default. More
 # specific rules below override this, so keep it first.
-*                                   @oaknational/devs
+*                                   @oaknational/lead_engs
 
 # Tag cloud-ops for any terraform changes
 infrastructure/                     @oaknational/cloud-ops
@@ -10,14 +10,14 @@ infrastructure/                     @oaknational/cloud-ops
 
 # Public-facing legal, security and community files: changing these changes what
 # Oak commits to publicly.
-/LICENSE                            @oaknational/devs
-/SECURITY.md                        @oaknational/devs
-/CODE_OF_CONDUCT.md                 @oaknational/devs
-/CONTRIBUTING.md                    @oaknational/devs
-/SUPPORT.md                         @oaknational/devs
-/docs/accessibility.md              @oaknational/devs
-/docs/public-release.md             @oaknational/devs
+/LICENSE                            @oaknational/lead_engs
+/SECURITY.md                        @oaknational/lead_engs
+/CODE_OF_CONDUCT.md                 @oaknational/lead_engs
+/CONTRIBUTING.md                    @oaknational/lead_engs
+/SUPPORT.md                         @oaknational/lead_engs
+/docs/accessibility.md              @oaknational/lead_engs
+/docs/public-release.md             @oaknational/lead_engs
 
 # CI configuration and repository automation.
-/.github/workflows/                 @oaknational/devs
-/.github/dependabot.yml             @oaknational/devs
+/.github/workflows/                 @oaknational/lead_engs
+/.github/dependabot.yml             @oaknational/lead_engs
