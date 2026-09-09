@@ -10,7 +10,6 @@ import {
   lessonSearchView,
   lessonView,
 } from 'lib/owaClient';
-import { subjectSlugs } from '@/lib/keyStageAndSubjects';
 import type { LessonSearchView, LessonView } from 'lib/owaClient';
 import * as z from 'zod/v4';
 import { errorResponses } from '@/lib/errorResponses';
@@ -20,6 +19,7 @@ import {
   collapsedRestrictionStatuses,
   highestRestrictionLevel,
   isLessonRestricted,
+  isSubjectAllowed,
 } from '@/lib/queryGate';
 import {
   getUnitProgrammeFactorsFromLesson,
@@ -189,7 +189,7 @@ Example slug: imagining-you-are-the-characters-the-three-billy-goats-gruff.`,
       }
 
       // validate the subject
-      if (!data[0].subjectSlug || !subjectSlugs.includes(data[0].subjectSlug)) {
+      if (!data[0].subjectSlug || !isSubjectAllowed(data[0].subjectSlug)) {
         throw new TRPCError({
           message: 'Lesson not found',
           code: 'NOT_FOUND',

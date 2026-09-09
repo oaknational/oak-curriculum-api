@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.11.1](https://github.com/oaknational/oak-curriculum-api/compare/v0.11.0...v0.11.1) (2026-09-08)
+
+### Bug Fixes
+
+* some lesson assets from science were 404'ing ([#355](https://github.com/oaknational/oak-curriculum-api/issues/355)) ([900613f](https://github.com/oaknational/oak-curriculum-api/commit/900613fbff8735846f101ae2607c584ce7d0eac7))
+
 ## [0.11.0](https://github.com/oaknational/oak-openapi/compare/v0.10.0...v0.11.0) (2026-08-14)
 
 ### Features

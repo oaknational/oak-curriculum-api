@@ -17,9 +17,9 @@ import {
   unitVariantLessonsView,
   gql,
 } from '@/lib/owaClient';
-import { subjectSlugs } from '@/lib/keyStageAndSubjects';
 import { TRPCError } from '@trpc/server';
 import { subjectSlugSchema } from '@/lib/handlers/commonTypes';
+import { isSubjectAllowed } from '@/lib/queryGate';
 
 export const getAllProgrammesForSubject = router({
   getAllProgrammesForSubject: protectedProcedure
@@ -129,7 +129,7 @@ Not for: the units, questions, or assets of one programme (GET /programmes/{prog
       } = rows[0].programme_fields;
 
       // validate the subject
-      if (!subjectSlugs.includes(subjectSlug)) {
+      if (!isSubjectAllowed(subjectSlug)) {
         throw new TRPCError({
           message: 'Programme not found',
           code: 'NOT_FOUND',
@@ -204,7 +204,7 @@ Not for: the units, questions, or assets of one programme (GET /programmes/{prog
       }
 
       // validate the subject
-      if (!subjectSlugs.includes(rows[0].subject_slug)) {
+      if (!isSubjectAllowed(rows[0].subject_slug)) {
         throw new TRPCError({
           message: 'Programme not found',
           code: 'NOT_FOUND',

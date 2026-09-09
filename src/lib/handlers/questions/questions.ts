@@ -14,7 +14,11 @@ import type {
   UnitVariantLessonsView,
 } from 'lib/owaClient';
 
-import { getLessonsRestrictions, isLessonRestricted } from '../../queryGate';
+import {
+  getLessonsRestrictions,
+  isLessonRestricted,
+  isSubjectAllowed,
+} from '../../queryGate';
 import type { Question, QuizKey } from './types';
 import { TRPCError } from '@trpc/server';
 import { sequenceWhere } from '../sequences/sequences';
@@ -31,7 +35,6 @@ import {
 } from './schemas';
 import { nextPageLink } from '@/lib/pagination';
 import { errorResponses } from '@/lib/errorResponses';
-import { subjectSlugs } from '@/lib/keyStageAndSubjects';
 
 function hasQuestions(results: Record<QuizKey, Question[]>): boolean {
   return results.starterQuiz.length > 0 || results.exitQuiz.length > 0;
@@ -101,7 +104,7 @@ Not for: quiz questions across a sequence (GET /sequences/{sequence}/questions);
       const lesson = data[0];
 
       // validate the subject
-      if (!lesson.subjectSlug || !subjectSlugs.includes(lesson.subjectSlug)) {
+      if (!lesson.subjectSlug || !isSubjectAllowed(lesson.subjectSlug)) {
         throw new TRPCError({
           message: 'Programme not found',
           code: 'NOT_FOUND',
@@ -408,7 +411,7 @@ Not for: questions in a single lesson (GET /lessons/{lesson}/quiz); questions ac
       }
 
       // validate the subject
-      if (!subjectSlugs.includes(rows[0].subject_slug)) {
+      if (!isSubjectAllowed(rows[0].subject_slug)) {
         throw new TRPCError({
           message: 'Programme not found',
           code: 'NOT_FOUND',
