@@ -1,4 +1,4 @@
-import { protectedProcedure } from '@/lib/protect';
+import { v0Procedure } from '@/lib/protect';
 import { router } from '@/lib/trpc';
 import { errorResponses } from '@/lib/errorResponses';
 import type {
@@ -27,7 +27,7 @@ import {
 } from '../lesson/lesson';
 
 export const getKeyStageSubjectLessons = router({
-  getKeyStageSubjectLessons: protectedProcedure
+  getKeyStageSubjectLessons: v0Procedure
     .meta({
       openapi: {
         method: 'GET',
@@ -169,7 +169,7 @@ Example: keyStage=ks3, subject=maths, unit=perimeter-and-area.`,
       return units;
     }),
 
-  getKeyStageSubjectLessonRestrictions: protectedProcedure
+  getKeyStageSubjectLessonRestrictions: v0Procedure
     .meta({
       openapi: {
         method: 'GET',

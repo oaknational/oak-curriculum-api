@@ -1,4 +1,4 @@
-import { protectedProcedure } from '@/lib/protect';
+import { v0Procedure } from '@/lib/protect';
 import { router } from '@/lib/trpc';
 import * as z from 'zod/v4';
 import type { SequenceView, ThreadView } from '@/lib/owaClient';
@@ -22,7 +22,7 @@ import { errorResponses } from '@/lib/errorResponses';
 // } from '@/lib/handlers/unitProgrammeFactors';
 
 export const getThreads = router({
-  getAllThreads: protectedProcedure
+  getAllThreads: v0Procedure
     .meta({
       openapi: {
         tags: ['lists'],
@@ -61,7 +61,7 @@ Not for: the units inside a thread (GET /threads/{threadSlug}/units).`,
           unitCount: unit_count,
         }));
     }),
-  getThreadUnits: protectedProcedure
+  getThreadUnits: v0Procedure
     .meta({
       openapi: {
         tags: ['lists'],

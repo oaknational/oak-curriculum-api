@@ -1,4 +1,4 @@
-import { protectedProcedure } from '@/lib/protect';
+import { v0Procedure } from '@/lib/protect';
 import { router } from '@/lib/trpc';
 import { keyStages } from '@/lib/keyStageAndSubjects';
 import * as z from 'zod/v4';
@@ -6,7 +6,7 @@ import { keyStageResponseSchema } from './schemas';
 import { errorResponses } from '@/lib/errorResponses';
 
 export const getKeyStages = router({
-  getKeyStages: protectedProcedure
+  getKeyStages: v0Procedure
     .meta({
       openapi: {
         tags: ['lists'],

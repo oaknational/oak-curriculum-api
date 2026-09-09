@@ -1,4 +1,4 @@
-import { protectedProcedure } from '@/lib/protect';
+import { v0Procedure } from '@/lib/protect';
 import { router } from '@/lib/trpc';
 import type { LessonContentView } from 'lib/owaClient';
 import { getClient, gql, lessonContentView } from 'lib/owaClient';
@@ -9,7 +9,7 @@ import { TRPCError } from '@trpc/server';
 import { errorResponses } from '@/lib/errorResponses';
 
 export const getLessonTranscript = router({
-  getLessonTranscript: protectedProcedure
+  getLessonTranscript: v0Procedure
     .meta({
       openapi: {
         method: 'GET',

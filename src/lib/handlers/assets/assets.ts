@@ -1,7 +1,7 @@
 import { TRPCError } from '@trpc/server';
 import { gql } from 'graphql-request';
 import { errorResponses } from '@/lib/errorResponses';
-import { protectedProcedure } from '@/lib/protect';
+import { v0Procedure } from '@/lib/protect';
 import { router } from '@/lib/trpc';
 import type {
   Download,
@@ -255,7 +255,7 @@ function assetDownloads(
 }
 
 export const getAssets = router({
-  getSequenceAssets: protectedProcedure
+  getSequenceAssets: v0Procedure
     .meta({
       openapi: {
         method: 'GET',
@@ -374,7 +374,7 @@ Not for: assets in a single programme (GET /programmes/{programme}/assets); a si
 
       return result;
     }),
-  // getUnitAssets: protectedProcedure
+  // getUnitAssets: v0Procedure
   //   .meta({
   //     openapi: {
   //       method: 'GET',
@@ -395,7 +395,7 @@ Not for: assets in a single programme (GET /programmes/{programme}/assets); a si
   //     const { unit } = input;
   //     return { unit };
   //   }),
-  getSubjectAssets: protectedProcedure
+  getSubjectAssets: v0Procedure
     .meta({
       openapi: {
         method: 'GET',
@@ -574,7 +574,7 @@ Not for: assets across a sequence (GET /sequences/{sequence}/assets); assets in 
 
       return result;
     }),
-  getLessonAssets: protectedProcedure
+  getLessonAssets: v0Procedure
     .meta({
       openapi: {
         method: 'GET',
@@ -600,7 +600,7 @@ Not for: streaming the file itself (GET /lessons/{lesson}/assets/{type}); bulk a
         assets: assetDownloads(ctx.major, lessonSlug, assets, type),
       } as LessonAssetsType;
     }),
-  getProgrammeAssets: protectedProcedure
+  getProgrammeAssets: v0Procedure
     .meta({
       openapi: {
         method: 'GET',
@@ -744,7 +744,7 @@ Not for: assets across a whole sequence (GET /sequences/{sequence}/assets); asse
         };
       });
     }),
-  getLessonAsset: protectedProcedure
+  getLessonAsset: v0Procedure
     .meta({
       openapi: {
         method: 'GET',

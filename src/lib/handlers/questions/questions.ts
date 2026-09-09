@@ -1,4 +1,4 @@
-import { protectedProcedure } from '@/lib/protect';
+import { v0Procedure } from '@/lib/protect';
 import { router } from '@/lib/trpc';
 import {
   getClient,
@@ -41,7 +41,7 @@ function hasQuestions(results: Record<QuizKey, Question[]>): boolean {
 }
 
 export const getQuestions = router({
-  getQuestionsForLessons: protectedProcedure
+  getQuestionsForLessons: v0Procedure
     .meta({
       openapi: {
         method: 'GET',
@@ -117,7 +117,7 @@ Not for: quiz questions across a sequence (GET /sequences/{sequence}/questions);
 
       return questionsForQuiz(lesson, input.filter);
     }),
-  getQuestionsForSequence: protectedProcedure
+  getQuestionsForSequence: v0Procedure
     .meta({
       openapi: {
         method: 'GET',
@@ -245,7 +245,7 @@ Not for: questions in a single programme (GET /programmes/{programme}/questions)
 
       return lessons;
     }),
-  getQuestionsForKeyStageAndSubject: protectedProcedure
+  getQuestionsForKeyStageAndSubject: v0Procedure
     .meta({
       openapi: {
         tags: ['questions'],
@@ -365,7 +365,7 @@ Not for: a single lesson's quiz (GET /lessons/{lesson}/quiz); questions across a
 
       return lessons;
     }),
-  getQuestionsForProgramme: protectedProcedure
+  getQuestionsForProgramme: v0Procedure
     .meta({
       openapi: {
         method: 'GET',
