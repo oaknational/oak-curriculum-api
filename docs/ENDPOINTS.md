@@ -60,7 +60,7 @@ Some operational route files export additional HTTP verbs from the same handler;
 the table lists the primary verb used by consumers.
 
 The `/api/admin/*` routes are gated by HTTP Basic auth in
-[`src/middleware.ts`](../src/middleware.ts), which matches any path under
+[`src/proxy.ts`](../src/proxy.ts), which matches any path under
 `/admin` or `/api/admin` against `AUTH_USERNAME` and `AUTH_PASSWORD`. They are
 internal tooling and are deliberately absent from `swagger.json`.
 
