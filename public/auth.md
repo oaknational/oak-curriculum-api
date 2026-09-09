@@ -46,6 +46,28 @@ Supported credential method:
 
 - Opaque API key in the HTTP `Authorization` header using the `Bearer` scheme.
 
+Rate limits:
+
+- Requests are rate limited per API key over a sliding one-hour window.
+- The default allowance is 1000 requests per hour. A key may be issued with a
+  different allowance, so treat the headers below as authoritative for your key.
+- Every rate-limited response carries `X-RateLimit-Limit`,
+  `X-RateLimit-Remaining` and `X-RateLimit-Reset`.
+- `GET /rate-limit` returns the same three values as JSON and does not count
+  against the allowance.
+- Once the allowance is spent, requests are rejected and the response carries
+  `X-Retry-After` holding the reset time in milliseconds since the Unix epoch.
+
+Support:
+
+- Report API bugs, data errors, and documentation that is wrong or unclear
+  through the API feedback form.
+- <https://bvumd.share.hsforms.com/2nacebr1eQuKMoA-vGpkjCA>
+- First response within five working days. GitHub issues and discussions are
+  turned off, so the form is the route that reaches the team.
+- Do not report security vulnerabilities through the form. Follow the
+  disclosure route in <https://www.thenational.academy/.well-known/security.txt>.
+
 Useful documentation:
 
 - API overview: `/docs/about-oaks-api/api-overview`

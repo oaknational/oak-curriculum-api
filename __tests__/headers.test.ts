@@ -162,5 +162,16 @@ describe('HTTP Headers - homepage agent discovery', () => {
     expect(authMd).toContain('No OAuth token endpoint');
     expect(authMd).toContain('Authorization: Bearer <API_KEY>');
     expect(authMd).toContain('Request an API key');
+    expect(authMd).toContain('Rate limits:');
+    expect(authMd).toContain(
+      'rate limited per API key over a sliding one-hour window',
+    );
+    expect(authMd).toContain('The default allowance is 1000 requests per hour');
+    expect(authMd).toContain('X-RateLimit-Remaining');
+    expect(authMd).toContain('Support:');
+    expect(authMd).toContain(
+      'https://bvumd.share.hsforms.com/2nacebr1eQuKMoA-vGpkjCA',
+    );
+    expect(authMd).toContain('First response within five working days');
   });
 });
