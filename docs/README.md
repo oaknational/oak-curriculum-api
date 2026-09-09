@@ -5,8 +5,12 @@ the [repository README](../README.md) and checked by the link-check workflow.
 
 ## Version framing
 
-The public API is **v0** (public alpha moving towards public beta). V0 work
-focuses on correctness and trust.
+The public API is **v1** (public alpha moving towards public beta), served at
+`/api/v1`. Work focuses on correctness and trust.
+
+`/api/v0` remains in place and frozen: it takes fixes, but new endpoints and
+fields land in `/api/v1` only. The URL major tracks the package major — see
+[RELEASING.md](RELEASING.md#the-url-major-is-the-semver-major).
 
 ## Using the API
 
