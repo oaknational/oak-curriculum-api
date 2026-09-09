@@ -64,3 +64,16 @@ test('reset is described as a clock-hour bucket, not a full reset', () => {
   expect(description).toContain('end of the current clock-hour bucket');
   expect(description).not.toContain('the current window resets');
 });
+
+test('the rate-limit endpoint does not claim the headers are on every response', async () => {
+  // The lesson-asset and bulk routes drop the rate-limit headers on their error
+  // responses, and none of the headers are CORS-exposed, so "every response" was
+  // never true. See MCP-718 and MCP-720.
+  const { openApiDocument } =
+    await import('@/lib/zod-openapi/schema/generateDocument');
+  const description =
+    openApiDocument.paths?.['/rate-limit']?.get?.description ?? '';
+
+  expect(description).not.toContain('headers of every response');
+  expect(description).toContain('headers of most responses');
+});
