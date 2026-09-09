@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.11.2](https://github.com/oaknational/oak-curriculum-api/compare/v0.11.1...v0.11.2) (2026-09-09)
+
+### Bug Fixes
+
+* we were missing child subjects from filters ([#357](https://github.com/oaknational/oak-curriculum-api/issues/357)) ([77ef3a6](https://github.com/oaknational/oak-curriculum-api/commit/77ef3a637696049f472a20b0397ef13a8ecddd81))
+
 ## [0.11.1](https://github.com/oaknational/oak-curriculum-api/compare/v0.11.0...v0.11.1) (2026-09-08)
 
 ### Bug Fixes

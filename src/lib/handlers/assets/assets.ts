@@ -130,7 +130,11 @@ export async function assetsForLesson(
   const attribution = tpcViewResult[lessonView][0];
 
   // validate the subject
-  if (!attribution.subjectSlug || !isSubjectAllowed(attribution.subjectSlug)) {
+  if (
+    !attribution ||
+    !attribution.subjectSlug ||
+    !isSubjectAllowed(attribution.subjectSlug)
+  ) {
     throw new TRPCError({
       message: 'Lesson not found',
       code: 'NOT_FOUND',
