@@ -41,6 +41,7 @@ import {
   parseQueryParams,
 } from '@/lib/analytics/posthogServer';
 import { errorFormatter } from '@/lib/trpc';
+import { withSuccessorLink } from '@/lib/api/versionHeaders';
 
 const storage = getGoogleCloudStorage();
 
@@ -252,6 +253,16 @@ const handler = async (
 };
 
 async function handlerWrapper(
+  major: ApiMajor,
+  req: NextRequest,
+  { params }: { params: Promise<{ lesson: string; type: string }> },
+): Promise<Response> {
+  // Wrapped once here so the successor link reaches the streamed 200, the
+  // video 302 and both error paths alike.
+  return withSuccessorLink(await route(major, req, { params }), major);
+}
+
+async function route(
   major: ApiMajor,
   req: NextRequest,
   { params }: { params: Promise<{ lesson: string; type: string }> },

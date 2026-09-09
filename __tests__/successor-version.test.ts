@@ -29,6 +29,11 @@ const trpcRoute = {
   v1: () => import('@/app/api/v1/[...trpc]/route'),
 } as const;
 
+const assetRoute = {
+  v0: () => import('@/app/api/v0/lessons/[lesson]/assets/[type]/route'),
+  v1: () => import('@/app/api/v1/lessons/[lesson]/assets/[type]/route'),
+} as const;
+
 const swaggerRoute = {
   v0: () => import('@/app/api/v0/swagger.json/route'),
   v1: () => import('@/app/api/v1/swagger.json/route'),
@@ -85,6 +90,39 @@ describe.each(API_MAJORS)('%s responses', (major) => {
 
       if (successor) {
         expect(res.headers.get('link')).toContain(expected);
+      } else {
+        expect(res.headers.get('link') ?? '').not.toContain(
+          'rel="successor-version"',
+        );
+      }
+    },
+  );
+});
+
+describe.each(API_MAJORS)('%s asset downloads', (major) => {
+  const successor = successorMajor(major);
+
+  it(
+    successor
+      ? 'advertise the successor, even on an error'
+      : 'advertise no successor',
+    async () => {
+      // Exercised through the error path, which needs no Cloud Storage: the
+      // header is applied to every response the route returns.
+      const { GET } = await assetRoute[major]();
+      const res = await GET(
+        {
+          url: `http://localhost:2727/api/${major}/lessons/nope/assets/worksheet`,
+          method: 'GET',
+          headers: new Headers({ authorization: 'Bearer test-key' }),
+        } as unknown as NextRequest,
+        { params: Promise.resolve({ lesson: 'nope', type: 'worksheet' }) },
+      );
+
+      if (successor) {
+        expect(res.headers.get('link')).toContain(
+          `</api/${successor}>; rel="successor-version"`,
+        );
       } else {
         expect(res.headers.get('link') ?? '').not.toContain(
           'rel="successor-version"',

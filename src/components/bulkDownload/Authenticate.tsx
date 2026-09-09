@@ -18,6 +18,7 @@ import CheckBox from '../CheckBox';
 import styled from 'styled-components';
 import { ButtonWithSpinner } from '../ButtonWithSpinner';
 import { useStableId } from '@/lib/useStableId';
+import { LATEST_API_MAJOR } from '@/lib/apiVersion';
 
 interface AuthenticateProps {
   hasSelectedSubject: () => boolean;
@@ -151,7 +152,7 @@ export function Authenticate({
         setApiKeyError(false);
       } else {
         // don't bother with API check if we haven't passed the initial checks
-        const res = await fetch('/api/v0/rate-limit', {
+        const res = await fetch(`/api/${LATEST_API_MAJOR}/rate-limit`, {
           headers: {
             'content-type': 'application/json',
             Authorization: `Bearer ${apiKey}`,
