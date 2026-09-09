@@ -181,7 +181,7 @@ Not for: all units across a sequence (GET /sequences/{sequence}/units); units in
       if (offset + limit < flatUnits.length) {
         ctx.resHeaders.set(
           'link',
-          `<${nextPageLink(ctx.req.url, offset, limit)}>; rel="next"`,
+          `<${nextPageLink(ctx.major, ctx.req.url, offset, limit)}>; rel="next"`,
         );
       }
 

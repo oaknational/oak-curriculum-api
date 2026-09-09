@@ -114,6 +114,7 @@ Example: keyStage=ks3, subject=maths, unit=perimeter-and-area.`,
       let next = null;
       if (lessons.length === limit) {
         next = nextPageLink(
+          ctx.major,
           ctx.req.url,
           offset,
           limit,
@@ -251,6 +252,7 @@ Example: keyStage=ks3, subject=maths, unit=perimeter-and-area.`,
       let next = null;
       if (lessons.length === limit) {
         next = nextPageLink(
+          ctx.major,
           ctx.req.url,
           offset,
           limit,

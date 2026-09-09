@@ -202,7 +202,7 @@ Not for: questions in a single programme (GET /programmes/{programme}/questions)
       if (data.length === limit) {
         ctx.resHeaders.set(
           'link',
-          `<${nextPageLink(ctx.req.url, offset, limit)}>; rel="next"`,
+          `<${nextPageLink(ctx.major, ctx.req.url, offset, limit)}>; rel="next"`,
         );
       }
 
@@ -310,7 +310,7 @@ Not for: a single lesson's quiz (GET /lessons/{lesson}/quiz); questions across a
       if (data.length === limit) {
         ctx.resHeaders.set(
           'link',
-          `<${nextPageLink(ctx.req.url, offset, limit)}>; rel="next"`,
+          `<${nextPageLink(ctx.major, ctx.req.url, offset, limit)}>; rel="next"`,
         );
       }
 
@@ -467,7 +467,7 @@ Not for: questions in a single lesson (GET /lessons/{lesson}/quiz); questions ac
       if (data.length === limit) {
         ctx.resHeaders.set(
           'link',
-          `<${nextPageLink(ctx.req.url, offset, limit)}>; rel="next"`,
+          `<${nextPageLink(ctx.major, ctx.req.url, offset, limit)}>; rel="next"`,
         );
       }
 

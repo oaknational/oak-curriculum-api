@@ -17,8 +17,8 @@ const handler = async (req: NextRequest): Promise<Response> => {
     createContext: async (opts) => {
       // trpc-to-openapi uses node-http adapter internally which provides res,
       // but the TypeScript types incorrectly show the fetch adapter signature
-      return createContext(
-        opts as unknown as Parameters<typeof createContext>[0],
+      return createContext('v0')(
+        opts as unknown as Parameters<ReturnType<typeof createContext>>[0],
       );
     },
     onError: (opts) => {

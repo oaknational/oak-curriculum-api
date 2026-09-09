@@ -1,4 +1,5 @@
-import { baseUrl } from '@/lib/baseUrl';
+import { LATEST_API_MAJOR } from '@/lib/apiVersion';
+import { apiBaseUrl } from '@/lib/baseUrl';
 import router from '@/lib/router';
 import { VERSION } from '@/lib/version';
 
@@ -77,7 +78,7 @@ export const openApiDocument = camelCaseOperationIds(
       generateOpenApiDocument(router, {
         title: 'Oak Curriculum API',
         version: VERSION,
-        baseUrl,
+        baseUrl: apiBaseUrl(LATEST_API_MAJOR),
         docsUrl: '/docs',
         description: `This Oak Curriculum API is an intermediary that enables software applications to communicate with each other to exchange - in this case - data and assets. Through the Oak Curriculum API, you will have access to a wide range of educational content across subjects for key stages 1-4.
 

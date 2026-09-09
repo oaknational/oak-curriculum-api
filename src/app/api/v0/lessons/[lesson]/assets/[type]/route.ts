@@ -51,7 +51,7 @@ const corsHeaders = {
   'access-control-allow-methods': 'GET, HEAD, OPTIONS',
   'access-control-allow-headers': 'Content-Type, Authorization',
   'access-control-expose-headers':
-    'Accept-Ranges, Content-Disposition, Content-Length, Content-Range',
+    'Accept-Ranges, Content-Disposition, Content-Length, Content-Range, link',
 } as const;
 
 function createCorsHeaders(): Headers {
@@ -87,6 +87,7 @@ const handler = async (
       user,
       resHeaders,
       req,
+      major: 'v0',
     } as unknown as Context;
 
     // manually check the protect
