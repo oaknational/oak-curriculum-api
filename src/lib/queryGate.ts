@@ -6,6 +6,7 @@ import {
   lessonRestrictionView,
 } from './owaClient';
 import { subjectSlugs } from './keyStageAndSubjects';
+import { childSubjects } from './oakConsts';
 
 const commonError =
   'Learn more about Oak errors: https://open-api.thenational.academy/docs/about-oaks-api/errors';
@@ -76,10 +77,8 @@ export function collapsedRestrictionStatus(
   }
 }
 
-export const blockedSubjects = ['financial-education'];
-
 export function isSubjectAllowed(subject: string): boolean {
-  const allowed = [...subjectSlugs, 'combined-science'];
+  const allowed = [...subjectSlugs, ...childSubjects];
   return allowed.includes(subject);
 }
 
