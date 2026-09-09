@@ -17,7 +17,7 @@ import { VERSION } from '@/lib/version';
  * static files, so this list cannot be derived — it is kept in step with the
  * directories by `__tests__/api-version.test.ts`.
  */
-export const API_MAJORS = ['v0'] as const;
+export const API_MAJORS = ['v0', 'v1'] as const;
 
 export type ApiMajor = (typeof API_MAJORS)[number];
 
@@ -27,9 +27,29 @@ export type ApiMajor = (typeof API_MAJORS)[number];
  */
 export const LATEST_API_MAJOR = `v${VERSION.split('.')[0]}` as ApiMajor;
 
+/**
+ * Where a major sits relative to the one the project version names.
+ *
+ * `pending` is the gap between merging a new major's routes and releasing the
+ * version that makes it current: the routes are live and serve correctly, but
+ * the project is still on the previous major. It resolves itself on release,
+ * with no code change.
+ */
+export type MajorStatus = 'frozen' | 'current' | 'pending';
+
+export function majorStatus(major: ApiMajor): MajorStatus {
+  if (major === LATEST_API_MAJOR) {
+    return 'current';
+  }
+
+  return API_MAJORS.indexOf(major) < API_MAJORS.indexOf(LATEST_API_MAJOR)
+    ? 'frozen'
+    : 'pending';
+}
+
 /** Frozen majors still take fixes; they take no new features. */
 export function isFrozen(major: ApiMajor): boolean {
-  return major !== LATEST_API_MAJOR;
+  return majorStatus(major) === 'frozen';
 }
 
 /** The major that supersedes `major`, if one exists. */

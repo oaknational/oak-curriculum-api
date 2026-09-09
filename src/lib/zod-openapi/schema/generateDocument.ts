@@ -1,5 +1,5 @@
 import type { ApiMajor } from '@/lib/apiVersion';
-import { isFrozen, successorMajor } from '@/lib/apiVersion';
+import { majorStatus, successorMajor } from '@/lib/apiVersion';
 import { apiBaseUrl } from '@/lib/baseUrl';
 import { VERSION } from '@/lib/version';
 import { routerForMajor } from '@/lib/versionedRouter';
@@ -117,8 +117,12 @@ function applyExampleMajor(
 function describeMajor(major: ApiMajor): string {
   const successor = successorMajor(major);
 
-  if (isFrozen(major) && successor) {
+  if (majorStatus(major) === 'frozen' && successor) {
     return `\n\nThis document describes \`/api/${major}\`, which is frozen: it continues to receive fixes, but new endpoints and fields land in \`/api/${successor}\` ([\`/api/${successor}/swagger.json\`](/api/${successor}/swagger.json)).`;
+  }
+
+  if (majorStatus(major) === 'pending') {
+    return `\n\nThis document describes \`/api/${major}\`, which is served but is not yet the current major. It becomes current with the next major release.`;
   }
 
   return `\n\nThis document describes \`/api/${major}\`, the current major.`;

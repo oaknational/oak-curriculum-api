@@ -6,6 +6,7 @@ import {
   API_MAJORS,
   LATEST_API_MAJOR,
   isFrozen,
+  majorStatus,
   successorMajor,
   type ApiMajor,
 } from '@/lib/apiVersion';
@@ -34,12 +35,19 @@ describe('the URL major and the semver major', () => {
     }
   });
 
-  it('freezes every major except the latest', () => {
-    expect(isFrozen(LATEST_API_MAJOR)).toBe(false);
+  it('freezes the majors behind the current one, and only those', () => {
+    // A major listed ahead of the project version is `pending`, not frozen:
+    // its routes are live but it only becomes current on the next major
+    // release. That gap closes on release, with no code change.
+    const current = API_MAJORS.indexOf(LATEST_API_MAJOR);
 
-    for (const major of API_MAJORS.filter((m) => m !== LATEST_API_MAJOR)) {
-      expect(isFrozen(major)).toBe(true);
-    }
+    API_MAJORS.forEach((major, index) => {
+      const expected =
+        index === current ? 'current' : index < current ? 'frozen' : 'pending';
+
+      expect(majorStatus(major), major).toBe(expected);
+      expect(isFrozen(major)).toBe(expected === 'frozen');
+    });
   });
 
   it('points each major at the one that follows it', () => {

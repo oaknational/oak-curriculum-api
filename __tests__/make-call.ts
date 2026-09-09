@@ -66,7 +66,10 @@ export function makeCaller(
   });
 }
 
-export function authedCaller(user: User | number = 1) {
+export function authedCaller(
+  user: User | number = 1,
+  major: ApiMajor = defaultMajor,
+) {
   const res = makeRes();
   const headers = makeResHeaders();
   return {
@@ -74,6 +77,7 @@ export function authedCaller(user: User | number = 1) {
       {
         user,
         res,
+        major,
       },
       false,
       headers as unknown as Headers,
