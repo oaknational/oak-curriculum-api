@@ -243,6 +243,32 @@ its URL segment always agree.
 The trade-off is that a fix to a frozen major does not move its document
 version, so that field alone will not tell a consumer the document changed.
 
+### Why the patch does not cycle
+
+The obvious objection is that a fix — a security fix especially — reaches a
+frozen major too, since every major shares one implementation, so its patch
+number ought to advance. It does not, deliberately:
+
+- **It cannot be derived.** At runtime there is one version string, not the
+  release history, so "patches since this major froze" is not recoverable from
+  it. Tracking the deployment's patch component goes *backwards* the first time
+  a minor ships: `1.0.1` → `1.1.0` would take `/api/v0` from `0.11.3` back to
+  `0.11.2`.
+- **Counting releases at build time would invent versions.** A derived
+  `0.11.5` matches no tag, no release and no changelog entry, so a consumer
+  looking it up finds nothing.
+- **It would not carry the signal anyway.** Any automatic scheme moves on
+  *every* release, v1-only features included, so it says "something shipped",
+  not "this major was patched".
+
+Which majors a fix affects is a judgement someone makes when they write it up,
+so it belongs in the release notes and CHANGELOG — the only channel that can
+state it. `info.version` answers a narrower question: which contract is this?
+For a frozen major that answer genuinely never changes.
+
+If an in-band "the build moved" signal is ever wanted, add it beside
+`info.version` (an `x-` extension) rather than overloading it.
+
 The `/changelog` and `/changelog/latest` endpoints were removed; GitHub Releases
 and [CHANGELOG.md](../CHANGELOG.md) replace them. The entries at `0.7.0` and
 below in that file are the hand-written historical record and sit below a marker
