@@ -1,7 +1,6 @@
 import type { ApiMajor } from '@/lib/apiVersion';
-import { majorStatus, successorMajor } from '@/lib/apiVersion';
+import { majorStatus, successorMajor, versionForMajor } from '@/lib/apiVersion';
 import { apiBaseUrl } from '@/lib/baseUrl';
-import { VERSION } from '@/lib/version';
 import { routerForMajor } from '@/lib/versionedRouter';
 
 import { generateOpenApiDocument, type OpenAPIObject } from 'trpc-to-openapi';
@@ -156,7 +155,7 @@ export function openApiDocumentFor(major: ApiMajor): OpenAPIObject {
         applyRequestMetadata(
           generateOpenApiDocument(router, {
             title: 'Oak Curriculum API',
-            version: VERSION,
+            version: versionForMajor(major),
             baseUrl: apiBaseUrl(major),
             docsUrl: '/docs',
             description: DESCRIPTION + describeMajor(major),

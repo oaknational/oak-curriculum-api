@@ -52,6 +52,29 @@ export function isFrozen(major: ApiMajor): boolean {
   return majorStatus(major) === 'frozen';
 }
 
+/**
+ * The version a frozen major is pinned at: the last release made while it was
+ * the current major.
+ *
+ * Without this a frozen major's OpenAPI document would report the deployment's
+ * version, so `/api/v0` would eventually advertise `1.4.0` — a version implying
+ * features it does not have, and a major that contradicts its own URL. Pin a
+ * major when it is frozen, to the final release before the bump.
+ */
+const FROZEN_AT: Partial<Record<ApiMajor, string>> = {
+  v0: '0.11.2',
+};
+
+/**
+ * The version a major's OpenAPI document reports.
+ *
+ * The current major tracks the deployment; a frozen one keeps the version it
+ * was last current at.
+ */
+export function versionForMajor(major: ApiMajor): string {
+  return FROZEN_AT[major] ?? VERSION;
+}
+
 /** The major that supersedes `major`, if one exists. */
 export function successorMajor(major: ApiMajor): ApiMajor | undefined {
   return API_MAJORS[API_MAJORS.indexOf(major) + 1];

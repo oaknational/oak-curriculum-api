@@ -136,11 +136,14 @@ serves its own URLs.
    mount point over the factories in `src/lib/api/`; nothing is duplicated.
 4. Mark anything the new major drops with `removedIn`. Anything it keeps needs
    no edit.
-5. Update the discovery surfaces: `public/.well-known/api-catalog`,
+5. Pin the outgoing major in `FROZEN_AT` to the last version released while it
+   was current — the release this bump replaces. Do it at merge time, so a late
+   fix to the old major is not left out.
+6. Update the discovery surfaces: `public/.well-known/api-catalog`,
    `public/robots.txt`, `public/auth.md`, the agent skill and its sha256 in
    `public/.well-known/agent-skills/index.json`, `next.config.mjs`, and
    `src/app/sitemap.ts`.
-6. Update [ENDPOINTS.md](ENDPOINTS.md) and the docs.
+7. Update [ENDPOINTS.md](ENDPOINTS.md) and the docs.
 
 Expect a short window between merging and releasing where the new major is
 `pending`: its routes are live and correct, but the project version still names
@@ -223,7 +226,22 @@ Expected: `minor`, `patch`, `major`, `null`, `null`.
 ## Where the version is exposed
 
 The only runtime surface is the OpenAPI document's `info.version`, visible in
-`/playground` and `swagger.json`, read from `src/lib/version.ts`.
+`/playground` and `swagger.json`.
+
+The **current** major reports the deployment's version, from
+[`src/lib/version.ts`](../src/lib/version.ts). A **frozen** major reports the
+version it was last current at, pinned in `FROZEN_AT` in
+[`src/lib/apiVersion.ts`](../src/lib/apiVersion.ts) — `/api/v0` reports `0.11.2`
+and always will.
+
+Without the pin, a frozen major would inherit the deployment's version, so
+`/api/v0` would advertise `1.4.0` after three `v1` features: a version implying
+endpoints it does not have, whose major contradicts its own URL.
+`__tests__/openapi-versions.test.ts` asserts that a major's reported version and
+its URL segment always agree.
+
+The trade-off is that a fix to a frozen major does not move its document
+version, so that field alone will not tell a consumer the document changed.
 
 The `/changelog` and `/changelog/latest` endpoints were removed; GitHub Releases
 and [CHANGELOG.md](../CHANGELOG.md) replace them. The entries at `0.7.0` and

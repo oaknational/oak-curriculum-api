@@ -62,6 +62,19 @@ describe.each(API_MAJORS)('the %s OpenAPI document', (major) => {
     }
   });
 
+  it('reports a version whose major matches its URL', () => {
+    // The point of pinning: a frozen `/api/v0` must never advertise a `1.x`
+    // version, which would imply features it does not have.
+    //
+    // A `pending` major is exempt: its routes are merged but the release that
+    // makes it current has not happened, so there is no version of it yet.
+    if (majorStatus(major) === 'pending') {
+      return;
+    }
+
+    expect(`v${document.info.version.split('.')[0]}`).toBe(major);
+  });
+
   it('says where it stands relative to the current major', () => {
     const description = document.info.description ?? '';
     const expected = {
