@@ -1,4 +1,4 @@
-import { protectedProcedure } from '@/lib/protect';
+import { v0Procedure } from '@/lib/protect';
 import { router } from '@/lib/trpc';
 import type { Sequence, SequenceView } from '@/lib/owaClient';
 import {
@@ -189,7 +189,7 @@ async function hasPublishedRowsForSequenceSlug(args: {
 }
 
 export const getSequences = router({
-  getSubjectSequence: protectedProcedure
+  getSubjectSequence: v0Procedure
     .meta({
       openapi: {
         tags: ['lists', 'sequences'],
@@ -253,7 +253,7 @@ Example: sequence=maths-primary or science-secondary-aqa.`,
         ks4ProgrammeFactors: subject.ks4ProgrammeFactors,
       };
     }),
-  getSequenceUnits: protectedProcedure
+  getSequenceUnits: v0Procedure
     .meta({
       openapi: {
         tags: ['units', 'sequences'],

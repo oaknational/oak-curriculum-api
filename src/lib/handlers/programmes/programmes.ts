@@ -1,4 +1,4 @@
-import { protectedProcedure } from '@/lib/protect';
+import { v0Procedure } from '@/lib/protect';
 import { router } from '@/lib/trpc';
 import * as z from 'zod/v4';
 import { errorResponses } from '@/lib/errorResponses';
@@ -22,7 +22,7 @@ import { subjectSlugSchema } from '@/lib/handlers/commonTypes';
 import { isSubjectAllowed } from '@/lib/queryGate';
 
 export const getAllProgrammesForSubject = router({
-  getAllProgrammesForSubject: protectedProcedure
+  getAllProgrammesForSubject: v0Procedure
     .meta({
       openapi: {
         tags: ['programmes'],
@@ -69,7 +69,7 @@ Not for: the metadata of one programme (GET /programmes/{programme}); the units,
         .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
     }),
 
-  getProgramme: protectedProcedure
+  getProgramme: v0Procedure
     .meta({
       openapi: {
         tags: ['programmes'],
@@ -154,7 +154,7 @@ Not for: the units, questions, or assets of one programme (GET /programmes/{prog
       };
     }),
 
-  getProgrammeUnits: protectedProcedure
+  getProgrammeUnits: v0Procedure
     .meta({
       openapi: {
         tags: ['programmes', 'units'],

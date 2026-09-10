@@ -353,3 +353,29 @@ div.swagger-ui,
     font-size: 1rem;
   }
 }
+
+/* API MAJOR SWITCHER */
+/* Chooses which major's OpenAPI document the playground loads */
+
+.api-major-switcher {
+  display: flex;
+  gap: 8px;
+  padding: 16px 20px 0;
+  font-family: 'Lexend', sans-serif;
+}
+
+.api-major-switcher button {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 6px 14px;
+  border: 1px solid var(--oak-black);
+  border-radius: 4px;
+  background-color: var(--oak-white);
+  color: var(--oak-black);
+  cursor: pointer;
+}
+
+.api-major-switcher button.is-selected {
+  background-color: var(--oak-black);
+  color: var(--oak-white);
+}

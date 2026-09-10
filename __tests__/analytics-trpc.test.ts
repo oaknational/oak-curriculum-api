@@ -60,6 +60,7 @@ const makeContext = (opts?: {
       set: vi.fn(),
     },
     rateLimit: undefined,
+    major: 'v0' as const,
     user: opts?.user || null,
   };
 };

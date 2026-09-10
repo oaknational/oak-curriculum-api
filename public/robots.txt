@@ -7,6 +7,7 @@ Allow: /.well-known/api-catalog
 Allow: /.well-known/agent-skills/
 Allow: /api/bulk/schema.json
 Allow: /api/v0/swagger.json
+Allow: /api/v1/swagger.json
 Allow: /docs/
 Allow: /playground
 
@@ -16,6 +17,7 @@ Disallow: /api/bulk
 Disallow: /api/health
 Disallow: /api/pingdom
 Disallow: /api/v0/
+Disallow: /api/v1/
 Disallow: /bulk-download/success
 
 Sitemap: https://open-api.thenational.academy/sitemap.xml

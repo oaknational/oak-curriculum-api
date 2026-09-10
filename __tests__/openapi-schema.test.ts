@@ -1,8 +1,14 @@
 import { it, expect } from 'vitest';
 import Ajv, { ErrorObject } from 'ajv';
 import addFormats from 'ajv-formats';
-import { openApiDocument } from '@/lib/zod-openapi/schema/generateDocument';
+import { openApiDocumentFor } from '@/lib/zod-openapi/schema/generateDocument';
+import { LATEST_API_MAJOR } from '@/lib/apiVersion';
+
 import type { OpenAPIV3 } from 'openapi-types';
+
+// The frozen majors are covered by the surface snapshot; this validates the
+// document the current major publishes.
+const openApiDocument = openApiDocumentFor(LATEST_API_MAJOR);
 
 // this object is no longer the same document type annoyingly, so casting as they are the same object
 const swaggerData: OpenAPIV3.Document =

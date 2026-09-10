@@ -1,4 +1,4 @@
-import { protectedProcedure } from '@/lib/protect';
+import { v0Procedure } from '@/lib/protect';
 import { router } from '@/lib/trpc';
 import {
   allKeyStageAndSubjectUnitsRequestSchema,
@@ -12,7 +12,7 @@ import { nextPageLink } from '@/lib/pagination';
 import { getClient, unitVariantLessonsView } from 'lib/owaClient';
 
 export const getAllKeyStageAndSubjectUnits = router({
-  getAllKeyStageAndSubjectUnits: protectedProcedure
+  getAllKeyStageAndSubjectUnits: v0Procedure
     .meta({
       openapi: {
         method: 'GET',
@@ -181,7 +181,7 @@ Not for: all units across a sequence (GET /sequences/{sequence}/units); units in
       if (offset + limit < flatUnits.length) {
         ctx.resHeaders.set(
           'link',
-          `<${nextPageLink(ctx.req.url, offset, limit)}>; rel="next"`,
+          `<${nextPageLink(ctx.major, ctx.req.url, offset, limit)}>; rel="next"`,
         );
       }
 

@@ -1,12 +1,15 @@
-import { baseUrl } from './baseUrl';
+import type { ApiMajor } from './apiVersion';
+import { apiBaseUrl } from './baseUrl';
 
 export function nextPageLink(
+  major: ApiMajor,
   requestUrl: string,
   offset: number,
   limit: number,
   options: { unit?: string } | undefined = undefined,
 ): string {
-  const url = new URL(requestUrl, `http://${baseUrl}`);
+  const base = apiBaseUrl(major);
+  const url = new URL(requestUrl, base);
   const searchParams = url.searchParams;
 
   searchParams.set('offset', (offset + limit).toString());
@@ -18,5 +21,5 @@ export function nextPageLink(
     }
   }
 
-  return `${baseUrl}${url.pathname}?${searchParams.toString()}`;
+  return `${base}${url.pathname}?${searchParams.toString()}`;
 }

@@ -1,12 +1,12 @@
 import { router } from '@/lib/trpc';
 import * as z from 'zod/v4';
 import { TRPCError } from '@trpc/server';
-import { protectedProcedure, getRateLimiter } from '../../protect';
+import { v0Procedure, getRateLimiter } from '../../protect';
 import { rateLimitResponseSchema } from './schemas/rateLimitResponse.schema';
 import { errorResponses } from '@/lib/errorResponses';
 
 export const getRateLimit = router({
-  getRateLimit: protectedProcedure
+  getRateLimit: v0Procedure
     .meta({
       openapi: {
         method: 'GET',

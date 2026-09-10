@@ -1,116 +1,116 @@
 config:
-    # This is a test server run by team Artillery
-    # It's designed to be highly scalable
-    target: '{{ $env.LOAD_TEST_TARGET_URL }}'
-    phases:
-        - duration: 10
-          arrivalRate: 1
-          rampTo: 5
-          name: Warm up phase
-        - duration: 10
-          arrivalRate: 5
-          rampTo: 10
-          name: Ramp up load
-        - duration: 10
-          arrivalRate: 10
-          rampTo: 30
-          name: Spike phase
-    # Load & configure a couple of useful plugins
-    # https://docs.art/reference/extensions
-    plugins:
-        ensure: {}
-        apdex: {}
-        metrics-by-endpoint: {}
-    apdex:
-        threshold: 100
-    ensure:
-        thresholds:
-            - http.response_time.p99: 100
-            - http.response_time.p95: 75
-    variables:
-        token: '{{ $env.OAK_API_AUTH_TOKEN }}'
+  # This is a test server run by team Artillery
+  # It's designed to be highly scalable
+  target: '{{ $env.LOAD_TEST_TARGET_URL }}'
+  phases:
+    - duration: 10
+      arrivalRate: 1
+      rampTo: 5
+      name: Warm up phase
+    - duration: 10
+      arrivalRate: 5
+      rampTo: 10
+      name: Ramp up load
+    - duration: 10
+      arrivalRate: 10
+      rampTo: 30
+      name: Spike phase
+  # Load & configure a couple of useful plugins
+  # https://docs.art/reference/extensions
+  plugins:
+    ensure: {}
+    apdex: {}
+    metrics-by-endpoint: {}
+  apdex:
+    threshold: 100
+  ensure:
+    thresholds:
+      - http.response_time.p99: 100
+      - http.response_time.p95: 75
+  variables:
+    token: '{{ $env.OAK_API_AUTH_TOKEN }}'
 scenarios:
-    - flow:
-          # downloads
-          - get:
-                url: '/download/imagining-you-are-the-characters-the-three-billy-goats-gruff/type/video'
-                headers:
-                    accept: application/json
-                    authorization: Bearer {{ token }}
-          # lists
-          - get:
-                url: '/key-stages'
-                headers:
-                    accept: application/json
-                    authorization: Bearer {{ token }}
-          - get:
-                url: '/key-stages/ks2/subject/english/lessons?offset=0&limit=100'
-                headers:
-                    accept: application/json
-                    authorization: Bearer {{ token }}
-          - get:
-                url: '/key-stages/ks1/subject/english/units'
-                headers:
-                    accept: application/json
-                    authorization: Bearer {{ token }}
-          - get:
-                url: '/key-stages/ks1/subjects'
-                headers:
-                    accept: application/json
-                    authorization: Bearer {{ token }}
-          - get:
-                url: '/subjects'
-                headers:
-                    accept: application/json
-                    authorization: Bearer {{ token }}
-          # assets
-          - get:
-                url: '/key-stages/ks1/subject/science/assets?type=worksheet&offset=0&limit=100'
-                headers:
-                    accept: application/json
-                    authorization: Bearer {{ token }}
-          - get:
-                url: '/lessons/nouns-singular-and-plural/assets?type=starterQuiz'
-                headers:
-                    accept: application/json
-                    authorization: Bearer {{ token }}
+  - flow:
+      # downloads
+      - get:
+          url: '/download/imagining-you-are-the-characters-the-three-billy-goats-gruff/type/video'
+          headers:
+            accept: application/json
+            authorization: Bearer {{ token }}
+      # lists
+      - get:
+          url: '/key-stages'
+          headers:
+            accept: application/json
+            authorization: Bearer {{ token }}
+      - get:
+          url: '/key-stages/ks2/subject/english/lessons?offset=0&limit=100'
+          headers:
+            accept: application/json
+            authorization: Bearer {{ token }}
+      - get:
+          url: '/key-stages/ks1/subject/english/units'
+          headers:
+            accept: application/json
+            authorization: Bearer {{ token }}
+      - get:
+          url: '/key-stages/ks1/subjects'
+          headers:
+            accept: application/json
+            authorization: Bearer {{ token }}
+      - get:
+          url: '/subjects'
+          headers:
+            accept: application/json
+            authorization: Bearer {{ token }}
+      # assets
+      - get:
+          url: '/key-stages/ks1/subject/science/assets?type=worksheet&offset=0&limit=100'
+          headers:
+            accept: application/json
+            authorization: Bearer {{ token }}
+      - get:
+          url: '/lessons/nouns-singular-and-plural/assets?type=starterQuiz'
+          headers:
+            accept: application/json
+            authorization: Bearer {{ token }}
 
-          # lessons
-          - get:
-                url: '/lessons/joining-using-and/quiz'
-                headers:
-                    accept: application/json
-                    authorization: Bearer {{ token }}
+      # lessons
+      - get:
+          url: '/lessons/joining-using-and/quiz'
+          headers:
+            accept: application/json
+            authorization: Bearer {{ token }}
 
-          - get:
-                url: '/lessons/joining-using-and/summary'
-                headers:
-                    accept: application/json
-                    authorization: Bearer {{ token }}
+      - get:
+          url: '/lessons/joining-using-and/summary'
+          headers:
+            accept: application/json
+            authorization: Bearer {{ token }}
 
-          # questions
-          - get:
-                url: '/key-stages/ks1/subject/history/questions?offset=0&limit=100'
-                headers:
-                    accept: application/json
-                    authorization: Bearer {{ token }}
+      # questions
+      - get:
+          url: '/key-stages/ks1/subject/history/questions?offset=0&limit=100'
+          headers:
+            accept: application/json
+            authorization: Bearer {{ token }}
 
-          # search
-          - get:
-                url: '/search/lessons?q=triangles'
-                headers:
-                    accept: application/json
-                    authorization: Bearer {{ token }}
+      # search
+      - get:
+          url: '/search/lessons?q=triangles'
+          headers:
+            accept: application/json
+            authorization: Bearer {{ token }}
 
-          - get:
-                url: '/search/transcripts?q=Who%20were%20the%20romans%3F'
-                headers:
-                    accept: application/json
-                    authorization: Bearer {{ token }}
+      - get:
+          url: '/search/transcripts?q=Who%20were%20the%20romans%3F'
+          headers:
+            accept: application/json
+            authorization: Bearer {{ token }}
 
-          # units
-          - get:
-                url: '/units/simple-compound-and-adverbial-complex-sentences/summary'
-                headers:
-                    accept: application/json
-                    authorization: Bearer {{ token }}
+      # units
+      - get:
+          url: '/units/simple-compound-and-adverbial-complex-sentences/summary'
+          headers:
+            accept: application/json
+            authorization: Bearer {{ token }}

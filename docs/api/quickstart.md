@@ -17,14 +17,14 @@ Authentication
 First request (subjects list)
 ```sh
 curl -H "Authorization: Bearer $API_KEY" \
-  http://localhost:2727/api/v0/subjects
+  http://localhost:2727/api/v1/subjects
 ```
 
 Lesson summary (lesson slug)
 - Replace `{lesson}` with a lesson slug.
 ```sh
 curl -H "Authorization: Bearer $API_KEY" \
-  http://localhost:2727/api/v0/lessons/{lesson}/summary
+  http://localhost:2727/api/v1/lessons/{lesson}/summary
 ```
 
 Bulk download request (POST)
