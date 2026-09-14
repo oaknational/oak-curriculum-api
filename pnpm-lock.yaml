@@ -244,8 +244,8 @@ importers:
         specifier: ^5.1.34
         version: 5.1.36
       '@types/swagger-ui-react':
-        specifier: ^4.18.3
-        version: 4.19.0
+        specifier: ^5.18.0
+        version: 5.18.0
       '@types/yazl':
         specifier: ^3.3.0
         version: 3.3.1
@@ -3326,8 +3326,8 @@ packages:
   '@types/styled-components@5.1.36':
     resolution: {integrity: sha512-pGMRNY5G2rNDKEv2DOiFYa7Ft1r0jrhmgBwHhOMzPTgCjO76bCot0/4uEfqj7K0Jf1KdQmDtAuaDk9EAs9foSw==}
 
-  '@types/swagger-ui-react@4.19.0':
-    resolution: {integrity: sha512-uScp1xkLZJej0bt3/lO4U11ywWEBnI5CFCR0tqp+5Rvxl1Mj1v6VkGED0W70jJwqlBvbD+/a6bDiK8rjepCr8g==}
+  '@types/swagger-ui-react@5.18.0':
+    resolution: {integrity: sha512-c2M9adVG7t28t1pq19K9Jt20VLQf0P/fwJwnfcmsVVsdkwCWhRmbKDu+tIs0/NGwJ/7GY8lBx+iKZxuDI5gDbw==}
 
   '@types/tar-stream@3.1.4':
     resolution: {integrity: sha512-921gW0+g29mCJX0fRvqeHzBlE/XclDaAG0Ousy1LCghsOhvaKacDeRGEVzQP9IPfKn8Vysy7FEXAIxycpc/CMg==}
@@ -13433,7 +13433,7 @@ snapshots:
       '@types/react': 18.3.31
       csstype: 3.2.3
 
-  '@types/swagger-ui-react@4.19.0':
+  '@types/swagger-ui-react@5.18.0':
     dependencies:
       '@types/react': 18.3.31
 

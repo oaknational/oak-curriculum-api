@@ -108,7 +108,7 @@
     "@types/react-highlight": "^0.12.8",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/styled-components": "^5.1.34",
-    "@types/swagger-ui-react": "^4.18.3",
+    "@types/swagger-ui-react": "^5.18.0",
     "@types/yazl": "^3.3.0",
     "@typescript-eslint/eslint-plugin": "^8.69.0",
     "@typescript-eslint/parser": "^8.69.0",
