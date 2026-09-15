@@ -6,12 +6,12 @@ while IFS='=' read -r key value; do
 done < <(grep -v '^#' .env | grep -v '^\s*$')
 set +a
 
-ROOT=http://${HOST:-localhost}:${PORT:-2727}/api/v0
+ROOT=http://${HOST:-localhost}:${PORT:-2727}/api/v1
 
 URL=$1
 
 if [[ $1 == "prod" ]]; then
-  ROOT=https://open-api.thenational.academy/api/v0
+  ROOT=https://open-api.thenational.academy/api/v1
   URL=$2
   shift 2
 elif [[ $2 != "" ]]; then

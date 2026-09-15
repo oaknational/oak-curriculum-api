@@ -5,7 +5,7 @@
 [![Lint](https://github.com/oaknational/oak-openapi/actions/workflows/lint.yml/badge.svg)](https://github.com/oaknational/oak-openapi/actions/workflows/lint.yml)
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
 [![Last commit](https://img.shields.io/github/last-commit/oaknational/oak-openapi)](https://github.com/oaknational/oak-openapi/commits/main)
-[![API status](https://img.shields.io/badge/API-v0%20public%20beta-green)](https://open-api.thenational.academy/)
+[![API status](https://img.shields.io/badge/API-v1%20public%20beta-green)](https://open-api.thenational.academy/)
 
 > **Licence:** this repository is published under the [MIT License](LICENSE).
 > When using this work, please credit "Oak National Academy". See
@@ -27,7 +27,7 @@ time.
 
 We have published this code so that anyone relying on the API can see exactly how
 it works, and so that the way Oak's curriculum data is shaped and shared is open
-to inspection. **The API is currently v0 — a public alpha moving towards public
+to inspection. **The API is currently v1 — a public alpha moving towards public
 beta**, so endpoints may still change.
 
 You do not need to read any further unless you are a software developer.
@@ -87,7 +87,7 @@ Every endpoint requires an API key. See [API keys](#api-keys).
 2. Install dependencies: `pnpm install`
 3. Start dev server: `pnpm dev`
 4. Open:
-   - API: `http://localhost:2727/api/v0/subjects`
+   - API: `http://localhost:2727/api/v1/subjects`
    - Playground: `http://localhost:2727/playground`
 
 ## Repository docs
@@ -265,7 +265,8 @@ The results.csv file is a CSV (without a header) that contains the URL and the l
 ├── public/              # Static assets, robots.txt, agent skill manifest, auth.md
 ├── src/
 │   ├── app/             # Next.js App Router — API routes and UI pages
-│   │   ├── api/v0/      # The public API surface
+│   │   ├── api/v0/      # The public API surface (frozen)
+│   │   ├── api/v1/      # The public API surface (current)
 │   │   └── api/admin/   # Basic-auth admin for API keys
 │   ├── cms/             # Sanity CMS integration (see src/cms/README.md)
 │   ├── components/      # React components for the site and playground
@@ -407,9 +408,10 @@ Only commits scoped to `api` produce a release, so `feat(api):` cuts a minor and
 [`.releaserc.json`](.releaserc.json), and the process is described in
 [docs/RELEASING.md](docs/RELEASING.md).
 
-The **API itself is v0** — a separate thing from the package version. While the
-API is v0, breaking changes may happen with notice rather than a major bump. Past
-releases are listed in [CHANGELOG.md](CHANGELOG.md) and on the
+The **URL major is the package major**: `1.x` is served at `/api/v1`. A breaking
+change bumps the major, which mints a new URL major and freezes the previous one
+to fixes — so `/api/v0` stays in place and keeps working. Past releases are
+listed in [CHANGELOG.md](CHANGELOG.md) and on the
 [releases page](https://github.com/oaknational/oak-openapi/releases).
 
 ## Support

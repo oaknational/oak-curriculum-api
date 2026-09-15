@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { protectedProcedure } from '@/lib/protect';
+import { v0Procedure } from '@/lib/protect';
 import { router } from '@/lib/trpc';
 import {
   searchTranscriptRequestSchema,
@@ -8,7 +8,7 @@ import {
 import { errorResponses } from '@/lib/errorResponses';
 
 export const searchTranscripts = router({
-  searchTranscripts: protectedProcedure
+  searchTranscripts: v0Procedure
     .meta({
       openapi: {
         method: 'GET',

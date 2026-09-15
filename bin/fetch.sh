@@ -1,10 +1,10 @@
 set -a
 . ./.env
 set +a
-ROOT=http://localhost:2727/api/v0
+ROOT=http://localhost:2727/api/v1
 
 if [[ $1 == "prod" ]]; then
-  ROOT=https://open-api.thenational.academy/api/v0
+  ROOT=https://open-api.thenational.academy/api/v1
 fi
 
 if [[ $API_KEY == "" ]]; then

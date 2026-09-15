@@ -8,6 +8,7 @@ const STATIC_PUBLIC_PATHS = [
   '/bulk-download',
   '/api/bulk/schema.json',
   '/api/v0/swagger.json',
+  '/api/v1/swagger.json',
   '/.well-known/api-catalog',
   '/.well-known/agent-skills/index.json',
 ] as const;

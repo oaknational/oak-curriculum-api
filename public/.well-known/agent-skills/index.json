@@ -4,9 +4,9 @@
     {
       "name": "oak-openapi",
       "type": "skill-md",
-      "description": "Use Oak National Academy's OpenAPI to retrieve UK curriculum data — key stages, subjects, units, lessons, quizzes, transcripts, and lesson assets.",
+      "description": "Use Oak National Academy's OpenAPI to retrieve UK curriculum data \u2014 key stages, subjects, units, lessons, quizzes, transcripts, and lesson assets.",
       "url": "/.well-known/agent-skills/oak-openapi/SKILL.md",
-      "digest": "sha256:f72103b06ca232e4e0b012c75d8f238b20eea5fce5c0b3cee4bad54461e62450"
+      "digest": "sha256:4aa20dbcfd4dad3daf83edea43f6e65032b2b01cbe25e5c5d2cf388e8a40589e"
     }
   ]
 }

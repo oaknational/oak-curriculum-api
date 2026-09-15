@@ -94,7 +94,7 @@ describe('HTTP Headers - Link header pagination', () => {
     expect(linkHeader).toContain('limit=10');
   });
 
-  it('should NOT return link header when results are less than the page size', async () => {
+  it('should NOT return a next link when results are less than the page size', async () => {
     // Mock OWA to return only 5 results (partial page when limit=10)
     mocks.owaClientRequestMock.mockResolvedValue({
       [unitVariantLessonsView]: Array(5).fill({
@@ -120,8 +120,9 @@ describe('HTTP Headers - Link header pagination', () => {
     const res = await GET(req);
 
     expect(res.status).toBe(200);
-    const linkHeader = res.headers.get('link');
-    expect(linkHeader).toBeNull();
+    // v0 always advertises its successor, so the header may be present; what
+    // matters is that it offers no further page.
+    expect(res.headers.get('link')).not.toContain('rel="next"');
   });
 });
 
@@ -138,8 +139,16 @@ describe('HTTP Headers - homepage agent discovery', () => {
     expect(linkHeader?.value).toContain(
       `<${apiCatalogPath}>; rel="api-catalog"`,
     );
+    // Both majors are described; the current one is listed first.
+    expect(linkHeader?.value).toContain(
+      '</api/v1/swagger.json>; rel="service-desc"',
+    );
     expect(linkHeader?.value).toContain(
       '</api/v0/swagger.json>; rel="service-desc"',
+    );
+    const value = linkHeader?.value ?? '';
+    expect(value.indexOf('/api/v1/swagger.json')).toBeLessThan(
+      value.indexOf('/api/v0/swagger.json'),
     );
     expect(linkHeader?.value).toContain(
       '</docs/about-oaks-api/api-overview>; rel="service-doc"',

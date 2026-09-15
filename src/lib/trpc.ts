@@ -5,15 +5,37 @@ import type { OpenApiMeta } from 'trpc-to-openapi';
 import { ZodError } from 'zod';
 
 import {
+  ApiRequestCapturePayload,
   captureApiRequestEvent,
   parseQueryParams,
 } from '@/lib/analytics/posthogServer';
+import type { ApiMajor } from '@/lib/apiVersion';
 import { getApiKeyFromRequest } from '@/lib/context';
 import type { Context } from '@/lib/context';
 
 const extraDebug = process.env.NODE_ENV === 'development';
 
-export const t = initTRPC.context<Context>().meta<OpenApiMeta>().create({
+/**
+ * Procedure metadata, extending `trpc-to-openapi`'s with our own keys.
+ *
+ * The `openapi` object is a closed type, so version metadata sits beside it
+ * rather than inside it. Intersecting on top of `OpenApiMeta` keeps its
+ * `Record<string, unknown>` index signature, which is what makes the router
+ * assignable to `OpenApiRouter`.
+ */
+export type ApiMeta = OpenApiMeta & {
+  /**
+   * The first major to serve this procedure. Absent means the latest major
+   * only, so a new procedure is kept out of every frozen major by default.
+   */
+  addedIn?: ApiMajor;
+  /** The first major to stop serving it, when an endpoint is superseded. */
+  removedIn?: ApiMajor;
+  /** Whether the call is exempt from consuming rate-limit quota. */
+  noCost?: boolean;
+};
+
+export const t = initTRPC.context<Context>().meta<ApiMeta>().create({
   transformer: superjson,
   errorFormatter,
 });
@@ -122,8 +144,9 @@ const analyticsMiddleware = t.middleware(async (opts) => {
           .then((value) => value)
           .catch(() => undefined);
 
-  const basePayload = {
+  const basePayload: ApiRequestCapturePayload = {
     apiKey,
+    apiMajor: opts.ctx.major,
     args,
     endpointPath,
     httpMethod,
@@ -131,6 +154,7 @@ const analyticsMiddleware = t.middleware(async (opts) => {
     source: 'trpc_middleware' as const,
     trpcPath: opts.path,
     userId: opts.ctx.user?.id,
+    success: false,
   };
 
   try {

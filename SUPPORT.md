@@ -2,14 +2,14 @@
 
 ## Where to ask
 
-| I want to…                                        | Go to                                                                 |
-| ------------------------------------------------- | --------------------------------------------------------------------- |
-| Report an API bug or request a feature            | [API feedback form](https://bvumd.share.hsforms.com/2nacebr1eQuKMoA-vGpkjCA) |
-| Report a data error or ask for a correction       | [API feedback form](https://bvumd.share.hsforms.com/2nacebr1eQuKMoA-vGpkjCA) |
-| Report a security vulnerability                   | [SECURITY.md](SECURITY.md) — **not** the form                          |
-| Report an accessibility barrier                   | [docs/accessibility.md](docs/accessibility.md)                          |
-| Ask about Oak more generally                      | [support.thenational.academy](https://support.thenational.academy/)     |
-| Read the API docs                                 | [open-api.thenational.academy](https://open-api.thenational.academy/)   |
+| I want to…                                  | Go to                                                                        |
+| ------------------------------------------- | ---------------------------------------------------------------------------- |
+| Report an API bug or request a feature      | [API feedback form](https://bvumd.share.hsforms.com/2nacebr1eQuKMoA-vGpkjCA) |
+| Report a data error or ask for a correction | [API feedback form](https://bvumd.share.hsforms.com/2nacebr1eQuKMoA-vGpkjCA) |
+| Report a security vulnerability             | [SECURITY.md](SECURITY.md) — **not** the form                                |
+| Report an accessibility barrier             | [docs/accessibility.md](docs/accessibility.md)                               |
+| Ask about Oak more generally                | [support.thenational.academy](https://support.thenational.academy/)          |
+| Read the API docs                           | [open-api.thenational.academy](https://open-api.thenational.academy/)        |
 
 GitHub issues and discussions are turned off on this repository. The feedback
 form is the route that reaches the team.
@@ -22,8 +22,7 @@ Triage is owned by the **@oaknational/devs** team at Oak National Academy.
 
 - **First response: within 5 working days.** That is an acknowledgement that a
   human has read your report and decided what happens next — not a fix.
-- We do not commit to a fix timescale. The API is currently **v0 (public alpha
-  moving towards public beta)**, and priorities are set against Oak's roadmap.
+- We do not commit to a fix timescale, and priorities are set against Oak's roadmap.
 - Oak works to UK term times. Responses over school holidays may be slower.
 
 ## What is in scope

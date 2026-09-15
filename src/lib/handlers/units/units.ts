@@ -1,4 +1,4 @@
-import { protectedProcedure } from '@/lib/protect';
+import { v0Procedure } from '@/lib/protect';
 import { router } from '@/lib/trpc';
 import { TRPCError } from '@trpc/server';
 import type { SequenceView } from 'lib/owaClient';
@@ -33,7 +33,7 @@ interface UnitWhere {
 }
 
 export const getUnits = router({
-  getUnit: protectedProcedure
+  getUnit: v0Procedure
     .meta({
       openapi: {
         method: 'GET',

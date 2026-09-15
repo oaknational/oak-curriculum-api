@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { NextRequest } from 'next/server';
 
+import { API_MAJORS, type ApiMajor } from '@/lib/apiVersion';
+
 vi.mock('@/lib/apikeys', () => ({
   findUserByKey: vi.fn().mockResolvedValue({
     id: 99,
@@ -23,10 +25,25 @@ vi.mock('@/lib/rateLimit', async (importOriginal: () => Promise<object>) => {
   };
 });
 
-async function callTrpcEndpoint(path: string): Promise<Response> {
-  const { GET } = await import('@/app/api/v0/[...trpc]/route');
+// Static thunks rather than a template-literal import: `@/` aliases are
+// resolved statically, and the route module must load after the mocks above.
+const trpcRoute = {
+  v0: () => import('@/app/api/v0/[...trpc]/route'),
+  v1: () => import('@/app/api/v1/[...trpc]/route'),
+} as const;
 
-  const req = new Request(`http://localhost:2727/api/v0${path}`, {
+const assetRoute = {
+  v0: () => import('@/app/api/v0/lessons/[lesson]/assets/[type]/route'),
+  v1: () => import('@/app/api/v1/lessons/[lesson]/assets/[type]/route'),
+} as const;
+
+async function callTrpcEndpoint(
+  major: ApiMajor,
+  path: string,
+): Promise<Response> {
+  const { GET } = await trpcRoute[major]();
+
+  const req = new Request(`http://localhost:2727/api/${major}${path}`, {
     method: 'GET',
     headers: {
       authorization: 'Bearer test-key',
@@ -37,13 +54,13 @@ async function callTrpcEndpoint(path: string): Promise<Response> {
 }
 
 async function callLessonAssetEndpoint(
+  major: ApiMajor,
   lesson: string,
   type: string,
 ): Promise<Response> {
-  const { GET } =
-    await import('@/app/api/v0/lessons/[lesson]/assets/[type]/route');
+  const { GET } = await assetRoute[major]();
 
-  const url = `http://localhost:2727/api/v0/lessons/${lesson}/assets/${type}`;
+  const url = `http://localhost:2727/api/${major}/lessons/${lesson}/assets/${type}`;
   const req = {
     nextUrl: new URL(url),
     url,
@@ -58,7 +75,7 @@ async function callLessonAssetEndpoint(
   });
 }
 
-describe('blocked subject endpoints return 404', () => {
+describe.each(API_MAJORS)('blocked subjects return 404 at %s', (major) => {
   it.each([
     '/programmes/financial-education-primary-year-1',
     '/programmes/financial-education-primary-year-1/units',
@@ -68,12 +85,13 @@ describe('blocked subject endpoints return 404', () => {
     '/lessons/how-much-money-have-i-got/quiz',
     '/lessons/how-much-money-have-i-got/assets',
   ])('GET %s returns 404', async (path) => {
-    const res = await callTrpcEndpoint(path);
+    const res = await callTrpcEndpoint(major, path);
     expect(res.status).toBe(404);
   });
 
   it('GET /lessons/how-much-money-have-i-got/assets/slideDeck returns 404', async () => {
     const res = await callLessonAssetEndpoint(
+      major,
       'how-much-money-have-i-got',
       'slideDeck',
     );

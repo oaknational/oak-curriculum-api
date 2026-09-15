@@ -109,30 +109,101 @@ The App needs `contents: write` on this repository and must be added to `main`'s
 bypass list. Without it the workflow fails at the push step, after having
 already tagged — so get it provisioned before the first `api` commit lands.
 
-## The URL major is not the semver major
+## The URL major is the semver major
 
-The public API is served under `/api/v0`. That segment comes from
-[`src/lib/apiVersion.ts`](../src/lib/apiVersion.ts) and is a **routing
-decision**, deliberately decoupled from the version.
+The public API is served under `/api/v1`. That segment is bound to the project
+version: `0.x` was served at `/api/v0`, `1.x` at `/api/v1`, `2.x` at `/api/v2`.
+A breaking change bumps the major, which mints a new URL major and freezes the
+previous one.
 
-This matters because `baseUrl` is interpolated into live response payloads —
-asset URLs and pagination links — so a major bump must never silently move the
-URL space out from under existing consumers.
+Because the binding is tight, `LATEST_API_MAJOR` in
+[`src/lib/apiVersion.ts`](../src/lib/apiVersion.ts) is **derived** from
+[`src/lib/version.ts`](../src/lib/version.ts) rather than maintained by hand —
+two sources of truth could disagree, one cannot. `API_MAJORS` is still written
+out, because Next resolves routes from static directories and the code cannot
+discover them; `__tests__/api-version.test.ts` keeps the two in step.
 
-Moving to `/api/v1` is manual work, not a side effect of a version bump:
+This matters because the base URL is interpolated into live response payloads —
+asset URLs and pagination links — so a bump must never move the URL space out
+from under existing consumers. It does not: every major stays mounted, and each
+serves its own URLs.
 
-1. Create `src/app/api/v1/` alongside `v0`.
-2. Update `API_MAJOR` in `src/lib/apiVersion.ts`.
-3. Decide what `/api/v0` does — it stays in place taking security patches only,
-   and should tell callers that `v1` exists.
-4. Update [ENDPOINTS.md](ENDPOINTS.md) and the docs.
+### Cutting a new major
 
-## Releasing on 0.x
+1. Write the breaking change (see below). It releases the new version.
+2. Add the major to `API_MAJORS`.
+3. Create the three route files under `src/app/api/v<n>/`. Each is a six-line
+   mount point over the factories in `src/lib/api/`; nothing is duplicated.
+4. Mark anything the new major drops with `removedIn`. Anything it keeps needs
+   no edit.
+5. Pin the outgoing major in `FROZEN_AT` to the last version released while it
+   was current — the release this bump replaces. Do it at merge time, so a late
+   fix to the old major is not left out.
+6. Update the discovery surfaces: `public/.well-known/api-catalog`,
+   `public/robots.txt`, `public/auth.md`, the agent skill and its sha256 in
+   `public/.well-known/agent-skills/index.json`, `next.config.mjs`, and
+   `src/app/sitemap.ts`.
+7. Update [ENDPOINTS.md](ENDPOINTS.md) and the docs.
 
-The project is on `0.x`, where the semver spec permits anything to change at any
-time — `0.6.0` shipped a breaking change as a minor. The move to `1.0.0` happens
-the first time someone writes `feat(api)!:` or a `BREAKING CHANGE:` footer.
-Write one deliberately, not by accident.
+Expect a short window between merging and releasing where the new major is
+`pending`: its routes are live and correct, but the project version still names
+the previous one, so that is still the current major. It resolves itself when
+the release deploys, with no code change.
+
+### Keeping an old major frozen
+
+A frozen major takes fixes, but no new features. Two mechanisms hold that, and
+both are needed:
+
+- **`addedIn` / `removedIn`** keep new and superseded procedures out. A
+  procedure written with `protectedProcedure` has no `addedIn` and is served
+  only at the latest major, so forgetting to think about versions freezes the
+  old ones rather than leaking into them. `v0Procedure` is the marker for
+  everything that predates the split.
+- **The contract snapshots** in `__tests__/__snapshots__/` catch everything
+  else. Metadata cannot stop a shared Zod schema gaining a field, because the
+  schemas are shared on purpose; the snapshot turns that into a CI failure.
+
+Read a snapshot diff by which major it is on. On the current major it is
+expected, and worth eyeballing as the API change it represents. On a frozen
+major it is a red flag: justify it in the PR as a fix rather than a feature, or
+rework it as a superseding procedure.
+
+### Superseding an endpoint
+
+`addedIn` gates whole procedures, and tRPC fixes `.output()` at definition time,
+so a response shape cannot be chosen per request. To diverge an endpoint, keep
+the old procedure and mark it `removedIn`, then add a twin at the same
+`openapi.path` under a different router key:
+
+```ts
+getLesson: v0Procedure
+  .meta({ removedIn: 'v2', openapi: { path: '/lessons/{lesson}/summary', ... } })
+  .output(lessonSummaryResponseSchemaV1),
+
+getLessonV2: protectedProcedure
+  .meta({ openapi: { path: '/lessons/{lesson}/summary', operationId: 'getLessonsGetLesson', ... } })
+  .output(lessonSummaryResponseSchema),
+```
+
+Each major's router holds exactly one of them, so there is no route collision
+and each document describes one operation. Set `operationId` explicitly on the
+twin so generated clients keep a stable name — operation ids are otherwise
+identical across majors, deliberately, since renaming them would break anyone
+who upgrades.
+
+Duplication is paid at the point of divergence, not up front. That is the whole
+reason the majors share one router.
+
+## Releasing on 1.x
+
+The `0.x` licence to change anything at any time is spent. A breaking change now
+needs a real major, which is also a new URL major — so it is a bigger commitment
+than it was, and worth batching.
+
+Note that commitlint rejects the `feat(api)!:` shorthand: its parser does not
+accept the `!` marker, so use a `BREAKING CHANGE:` footer instead. The analyser
+treats both as major, and the footer is what reaches the release notes.
 
 ## Testing the rules
 
@@ -155,7 +226,48 @@ Expected: `minor`, `patch`, `major`, `null`, `null`.
 ## Where the version is exposed
 
 The only runtime surface is the OpenAPI document's `info.version`, visible in
-`/playground` and `swagger.json`, read from `src/lib/version.ts`.
+`/playground` and `swagger.json`.
+
+The **current** major reports the deployment's version, from
+[`src/lib/version.ts`](../src/lib/version.ts). A **frozen** major reports the
+version it was last current at, pinned in `FROZEN_AT` in
+[`src/lib/apiVersion.ts`](../src/lib/apiVersion.ts) — `/api/v0` reports `0.11.2`
+and always will.
+
+Without the pin, a frozen major would inherit the deployment's version, so
+`/api/v0` would advertise `1.4.0` after three `v1` features: a version implying
+endpoints it does not have, whose major contradicts its own URL.
+`__tests__/openapi-versions.test.ts` asserts that a major's reported version and
+its URL segment always agree.
+
+The trade-off is that a fix to a frozen major does not move its document
+version, so that field alone will not tell a consumer the document changed.
+
+### Why the patch does not cycle
+
+The obvious objection is that a fix — a security fix especially — reaches a
+frozen major too, since every major shares one implementation, so its patch
+number ought to advance. It does not, deliberately:
+
+- **It cannot be derived.** At runtime there is one version string, not the
+  release history, so "patches since this major froze" is not recoverable from
+  it. Tracking the deployment's patch component goes *backwards* the first time
+  a minor ships: `1.0.1` → `1.1.0` would take `/api/v0` from `0.11.3` back to
+  `0.11.2`.
+- **Counting releases at build time would invent versions.** A derived
+  `0.11.5` matches no tag, no release and no changelog entry, so a consumer
+  looking it up finds nothing.
+- **It would not carry the signal anyway.** Any automatic scheme moves on
+  *every* release, v1-only features included, so it says "something shipped",
+  not "this major was patched".
+
+Which majors a fix affects is a judgement someone makes when they write it up,
+so it belongs in the release notes and CHANGELOG — the only channel that can
+state it. `info.version` answers a narrower question: which contract is this?
+For a frozen major that answer genuinely never changes.
+
+If an in-band "the build moved" signal is ever wanted, add it beside
+`info.version` (an `x-` extension) rather than overloading it.
 
 The `/changelog` and `/changelog/latest` endpoints were removed; GitHub Releases
 and [CHANGELOG.md](../CHANGELOG.md) replace them. The entries at `0.7.0` and
