@@ -109,6 +109,9 @@ describe('tRPC analytics middleware', () => {
     expect(message.distinctId).toBe('api-user:42');
     expect(message.properties.success).toBe(true);
     expect(message.properties.error_code).toBeUndefined();
+    // The property PostHog is segmented on; pinned here because the mapping
+    // from payload to property name is otherwise untested.
+    expect(message.properties.api_major).toBe('v0');
     expect(message.properties.args).toEqual({
       includeUnits: true,
       subject: 'maths',

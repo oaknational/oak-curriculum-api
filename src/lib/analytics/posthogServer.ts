@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto';
 import { PostHog } from 'posthog-node';
 
+import type { ApiMajor } from '@/lib/apiVersion';
+
 export const POSTHOG_CAPTURE_EVENT = 'API Request';
 const FALLBACK_DISTINCT_ID = 'api-anonymous';
 
@@ -9,6 +11,14 @@ type QueryParamValue = string | string[];
 export interface ApiRequestCapturePayload {
   url?: string;
   apiKey?: string | null;
+  /**
+   * The URL major the request arrived on, for the versioned API.
+   *
+   * Kept separate from `endpointPath` rather than folded into it, so that
+   * charts built on the version-free path stay continuous across the split and
+   * can still be broken down by major. Absent for unversioned routes.
+   */
+  apiMajor?: ApiMajor;
   args?: unknown;
   durationMs?: number;
   endpointPath: string;
@@ -170,6 +180,7 @@ const buildCaptureBody = (
     distinctId,
     properties: {
       $current_url: payload.url,
+      api_major: payload.apiMajor,
       args: serialiseAnalyticsValue(payload.args),
       duration_ms: payload.durationMs,
       endpoint_path: payload.endpointPath,

@@ -5,6 +5,7 @@ import type { OpenApiMeta } from 'trpc-to-openapi';
 import { ZodError } from 'zod';
 
 import {
+  ApiRequestCapturePayload,
   captureApiRequestEvent,
   parseQueryParams,
 } from '@/lib/analytics/posthogServer';
@@ -143,8 +144,9 @@ const analyticsMiddleware = t.middleware(async (opts) => {
           .then((value) => value)
           .catch(() => undefined);
 
-  const basePayload = {
+  const basePayload: ApiRequestCapturePayload = {
     apiKey,
+    apiMajor: opts.ctx.major,
     args,
     endpointPath,
     httpMethod,
@@ -152,6 +154,7 @@ const analyticsMiddleware = t.middleware(async (opts) => {
     source: 'trpc_middleware' as const,
     trpcPath: opts.path,
     userId: opts.ctx.user?.id,
+    success: false,
   };
 
   try {
