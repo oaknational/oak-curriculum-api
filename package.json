@@ -62,7 +62,7 @@
     "posthog-node": "^5.52.3",
     "react-highlight": "^0.15.0",
     "react-markdown": "^10.1.0",
-    "react-syntax-highlighter": "^15.6.1",
+    "react-syntax-highlighter": "^16.1.1",
     "sanity": "^3.99.0",
     "slugify": "^1.6.6",
     "styled-components": "^6",
