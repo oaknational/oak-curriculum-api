@@ -31,7 +31,7 @@ importers:
         version: 3.20.2(@portabletext/react@4.0.3(react@19.2.8))(@tiptap/core@2.27.2(@tiptap/pm@2.27.2))(@tiptap/pm@2.27.2)(@types/react@18.3.31)(next-cloudinary@6.18.8(next@16.3.4(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(next@16.3.4(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(styled-components@6.5.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8))
       '@oaknational/oak-curriculum-schema':
         specifier: ^2.0.0
-        version: 2.15.0(zod@4.5.4)
+        version: 2.15.0(zod@4.6.5)
       '@portabletext/react':
         specifier: ^4.0.3
         version: 4.0.3(react@19.2.8)
@@ -99,11 +99,11 @@ importers:
         specifier: ^8.14.0
         version: 8.23.0
       posthog-js:
-        specifier: ^1.428.0
-        version: 1.428.0(@types/react@18.3.31)(react@19.2.8)
+        specifier: ^1.433.4
+        version: 1.433.4(@types/react@18.3.31)(react@19.2.8)
       posthog-node:
-        specifier: ^5.51.7
-        version: 5.51.7(rxjs@7.8.2)
+        specifier: ^5.52.3
+        version: 5.52.3(rxjs@7.8.2)
       react-highlight:
         specifier: ^0.15.0
         version: 0.15.0
@@ -133,7 +133,7 @@ importers:
         version: 3.2.1
       trpc-to-openapi:
         specifier: 3.3.0
-        version: 3.3.0(@trpc/server@11.18.0(typescript@5.9.3))(zod-openapi@5.4.6(zod@4.5.4))(zod@4.5.4)
+        version: 3.3.0(@trpc/server@11.18.0(typescript@5.9.3))(zod-openapi@5.4.6(zod@4.6.5))(zod@4.6.5)
       uuid:
         specifier: ^14.0.2
         version: 14.0.2
@@ -144,11 +144,11 @@ importers:
         specifier: ^3.3.1
         version: 3.3.1
       zod:
-        specifier: ^4.5.4
-        version: 4.5.4
+        specifier: ^4.6.5
+        version: 4.6.5
       zod-openapi:
         specifier: ^5.4.6
-        version: 5.4.6(zod@4.5.4)
+        version: 5.4.6(zod@4.6.5)
     devDependencies:
       '@babel/core':
         specifier: ^7.27.4
@@ -241,8 +241,8 @@ importers:
         specifier: ^15.5.13
         version: 15.5.13
       '@types/swagger-ui-react':
-        specifier: ^4.18.3
-        version: 4.19.0
+        specifier: ^5.18.0
+        version: 5.18.0
       '@types/yazl':
         specifier: ^3.3.0
         version: 3.3.1
@@ -2332,14 +2332,14 @@ packages:
     resolution: {integrity: sha512-2e6i2gSQsrA/5OL5Gm4/9bxB9MNO73Fa47zj+0mT93xkoQUCGCWX5fZh1YBJ86hszaRYlqvqG08oULxvvPPp/Q==}
     engines: {node: ^14.13.1 || >=16.0.0 || >=18.0.0}
 
-  '@posthog/browser-common@0.8.0':
-    resolution: {integrity: sha512-tkjmpyH2Dkkodc5w5k6CBVVdTmebbip7q1s5zfc7XoIZX3wg4bdIWvI0nnYEpCENFv9CUzbOMX1wtI5tsH4g6w==}
+  '@posthog/browser-common@0.8.3':
+    resolution: {integrity: sha512-4Hlbwyn+Hioc2+pjqSGWMTDrA5XsDshssPnGfv34khPKoJaeBe2YvPvsEPoH78jezOS6Wo3LJvCPhqyolg3S8w==}
 
-  '@posthog/core@1.51.0':
-    resolution: {integrity: sha512-LilmmtjcrjV1LgaVNQXrAUt4IXcWIYMrwEtx6VJUUFDeBBdmeI99jshKGtAWugYeB3Wkcp9xQIVCrxIYRpNiRA==}
+  '@posthog/core@1.54.1':
+    resolution: {integrity: sha512-UvpnMylZ25ncVGi1jJjZlrN09VOdwYy34t1fh61T6aNZhtRA5aIwLIvaD6nOftOhi8d/DBCZi43wTjzhVlMotw==}
 
-  '@posthog/types@1.409.1':
-    resolution: {integrity: sha512-lA2sSGQUdVknSQl93uN9eUXDwkCMjAuthq24GONGHzMWwVygsKNHlWCnlJsVv2giDokj2p1NopO4zsE2S7gYjA==}
+  '@posthog/types@1.412.0':
+    resolution: {integrity: sha512-EP+lSTnEmftW/slhGXsuGcYAygO4oho3hjWqObP+GeceZ+6qcwK9qZwVRqJjsiZAl0xLPy5s0U0SZqGKayFyeQ==}
 
   '@prettier/plugin-xml@3.4.2':
     resolution: {integrity: sha512-/UyNlHfkuLXG6Ed85KB0WBF283xn2yavR+UtRibBRUcvEJId2DSLdGXwJ/cDa1X++SWDPzq3+GSFniHjkNy7yg==}
@@ -3315,8 +3315,8 @@ packages:
   '@types/speakingurl@13.0.6':
     resolution: {integrity: sha512-ywkRHNHBwq0mFs/2HRgW6TEBAzH66G8f2Txzh1aGR0UC9ZoAUHfHxLZGDhwMpck4BpSnB61eNFIFmlV+TJ+KUA==}
 
-  '@types/swagger-ui-react@4.19.0':
-    resolution: {integrity: sha512-uScp1xkLZJej0bt3/lO4U11ywWEBnI5CFCR0tqp+5Rvxl1Mj1v6VkGED0W70jJwqlBvbD+/a6bDiK8rjepCr8g==}
+  '@types/swagger-ui-react@5.18.0':
+    resolution: {integrity: sha512-c2M9adVG7t28t1pq19K9Jt20VLQf0P/fwJwnfcmsVVsdkwCWhRmbKDu+tIs0/NGwJ/7GY8lBx+iKZxuDI5gDbw==}
 
   '@types/tar-stream@3.1.4':
     resolution: {integrity: sha512-921gW0+g29mCJX0fRvqeHzBlE/XclDaAG0Ousy1LCghsOhvaKacDeRGEVzQP9IPfKn8Vysy7FEXAIxycpc/CMg==}
@@ -7494,8 +7494,8 @@ packages:
     resolution: {integrity: sha512-9ZhXKM/rw350N1ovuWHbGxnGh/SNJ4cnxHiM0rxE4VN41wsg8P8zWn9hv/buK00RP4WvlOyr/RBDiptyxVbkZQ==}
     engines: {node: '>=0.10.0'}
 
-  posthog-js@1.428.0:
-    resolution: {integrity: sha512-LQd8Ou0QaXIuSMpRk0GB+SJjFb0z94vlF1dz1EitirqRaKOBQbJ2zGRuuJSmj2AmYwb4zba7dd9PzwQbrcWhIg==}
+  posthog-js@1.433.4:
+    resolution: {integrity: sha512-6OiSinv4tX2dZ3oc7fjzBOPLq3ouMbXk1y/DhyEh2vh+zh0m1WEIIyf5VtwcFFLOw2zEoGn1xXPXqt62eEV5uA==}
     peerDependencies:
       '@types/react': '>=16.8.0'
       react: '>=16.8.0'
@@ -7505,8 +7505,8 @@ packages:
       react:
         optional: true
 
-  posthog-node@5.51.7:
-    resolution: {integrity: sha512-QzUQ0S7afLIivL1mQvZ1qv3/o179ds1Zze7Zf4JDhjVlJ1mFTyu42cwFQHrD0VQpPXhIVKOq7AvSrF8Bt8yonQ==}
+  posthog-node@5.52.3:
+    resolution: {integrity: sha512-eRmstlXCltl9VxKTOghckk2HvnLkYSAbqW+1fAbIeQKTXcf9jK6ns2MKM9Mcb8AzUMoR3QpNNeWAgGEXtSmVgQ==}
     engines: {node: ^20.20.0 || >=22.22.0}
     peerDependencies:
       rxjs: ^7.0.0
@@ -9636,8 +9636,8 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zod@4.5.4:
-    resolution: {integrity: sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA==}
+  zod@4.6.5:
+    resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
 
   zustand@5.0.15:
     resolution: {integrity: sha512-MpSEjRiBkA9crSYeOUH32rJC7SVqAbm0Fqcqge/bUi2PPoLcBWKOsG+C8mevmpr8TwXHBVkChbbJiyvkE+i/3A==}
@@ -11602,10 +11602,10 @@ snapshots:
       - '@tiptap/pm'
       - '@types/react'
 
-  '@oaknational/oak-curriculum-schema@2.15.0(zod@4.5.4)':
+  '@oaknational/oak-curriculum-schema@2.15.0(zod@4.6.5)':
     dependencies:
-      zod: 4.5.4
-      zod-to-camel-case: 0.5.0(zod@4.5.4)
+      zod: 4.6.5
+      zod-to-camel-case: 0.5.0(zod@4.6.5)
 
   '@oclif/core@4.13.5':
     dependencies:
@@ -11790,16 +11790,16 @@ snapshots:
 
   '@portabletext/types@2.0.15': {}
 
-  '@posthog/browser-common@0.8.0':
+  '@posthog/browser-common@0.8.3':
     dependencies:
-      '@posthog/core': 1.51.0
-      '@posthog/types': 1.409.1
+      '@posthog/core': 1.54.1
+      '@posthog/types': 1.412.0
 
-  '@posthog/core@1.51.0':
+  '@posthog/core@1.54.1':
     dependencies:
-      '@posthog/types': 1.409.1
+      '@posthog/types': 1.412.0
 
-  '@posthog/types@1.409.1': {}
+  '@posthog/types@1.412.0': {}
 
   '@prettier/plugin-xml@3.4.2(prettier@3.9.6)':
     dependencies:
@@ -13411,7 +13411,7 @@ snapshots:
 
   '@types/speakingurl@13.0.6': {}
 
-  '@types/swagger-ui-react@4.19.0':
+  '@types/swagger-ui-react@5.18.0':
     dependencies:
       '@types/react': 18.3.31
 
@@ -15320,8 +15320,8 @@ snapshots:
       '@babel/parser': 7.29.8
       eslint: 9.39.5(jiti@2.7.0)(supports-color@8.1.1)
       hermes-parser: 0.25.1
-      zod: 4.5.4
-      zod-validation-error: 4.0.2(zod@4.5.4)
+      zod: 4.6.5
+      zod-validation-error: 4.0.2(zod@4.6.5)
     transitivePeerDependencies:
       - supports-color
 
@@ -17989,11 +17989,11 @@ snapshots:
     dependencies:
       xtend: 4.0.2
 
-  posthog-js@1.428.0(@types/react@18.3.31)(react@19.2.8):
+  posthog-js@1.433.4(@types/react@18.3.31)(react@19.2.8):
     dependencies:
-      '@posthog/browser-common': 0.8.0
-      '@posthog/core': 1.51.0
-      '@posthog/types': 1.409.1
+      '@posthog/browser-common': 0.8.3
+      '@posthog/core': 1.54.1
+      '@posthog/types': 1.412.0
       core-js: 3.50.0
       dompurify: 3.4.14
       fflate: 0.4.9
@@ -18007,9 +18007,9 @@ snapshots:
     transitivePeerDependencies:
       - preact-render-to-string
 
-  posthog-node@5.51.7(rxjs@7.8.2):
+  posthog-node@5.52.3(rxjs@7.8.2):
     dependencies:
-      '@posthog/core': 1.51.0
+      '@posthog/core': 1.54.1
     optionalDependencies:
       rxjs: 7.8.2
 
@@ -19796,14 +19796,14 @@ snapshots:
 
   trough@2.2.0: {}
 
-  trpc-to-openapi@3.3.0(@trpc/server@11.18.0(typescript@5.9.3))(zod-openapi@5.4.6(zod@4.5.4))(zod@4.5.4):
+  trpc-to-openapi@3.3.0(@trpc/server@11.18.0(typescript@5.9.3))(zod-openapi@5.4.6(zod@4.6.5))(zod@4.6.5):
     dependencies:
       '@trpc/server': 11.18.0(typescript@5.9.3)
       co-body: 6.2.0
       h3: 1.15.11
       openapi3-ts: 4.4.0
-      zod: 4.5.4
-      zod-openapi: 5.4.6(zod@4.5.4)
+      zod: 4.6.5
+      zod-openapi: 5.4.6(zod@4.6.5)
     optionalDependencies:
       '@rollup/rollup-linux-x64-gnu': 4.6.1
 
@@ -20573,21 +20573,21 @@ snapshots:
       compress-commons: 6.0.2
       readable-stream: 4.7.0
 
-  zod-openapi@5.4.6(zod@4.5.4):
+  zod-openapi@5.4.6(zod@4.6.5):
     dependencies:
-      zod: 4.5.4
+      zod: 4.6.5
 
-  zod-to-camel-case@0.5.0(zod@4.5.4):
+  zod-to-camel-case@0.5.0(zod@4.6.5):
     dependencies:
-      zod: 4.5.4
+      zod: 4.6.5
 
-  zod-validation-error@4.0.2(zod@4.5.4):
+  zod-validation-error@4.0.2(zod@4.6.5):
     dependencies:
-      zod: 4.5.4
+      zod: 4.6.5
 
   zod@3.25.76: {}
 
-  zod@4.5.4: {}
+  zod@4.6.5: {}
 
   zustand@5.0.15(@types/react@18.3.31)(immer@10.2.0)(react@19.2.8)(use-sync-external-store@1.6.0(react@19.2.8)):
     optionalDependencies:

@@ -58,8 +58,8 @@
     "openapi-types": "^12.1.3",
     "openapi3-ts": "^4.5.0",
     "pg": "^8.14.0",
-    "posthog-js": "^1.428.0",
-    "posthog-node": "^5.51.7",
+    "posthog-js": "^1.433.4",
+    "posthog-node": "^5.52.3",
     "react-highlight": "^0.15.0",
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^15.6.1",
@@ -73,7 +73,7 @@
     "uuid": "^14.0.2",
     "vite-plugin-graphql-loader": "^4.0.4",
     "yazl": "^3.3.1",
-    "zod": "^4.5.4",
+    "zod": "^4.6.5",
     "zod-openapi": "^5.4.6"
   },
   "devDependencies": {
@@ -107,7 +107,7 @@
     "@types/react-dom": "^18.2.25",
     "@types/react-highlight": "^0.12.8",
     "@types/react-syntax-highlighter": "^15.5.13",
-    "@types/swagger-ui-react": "^4.18.3",
+    "@types/swagger-ui-react": "^5.18.0",
     "@types/yazl": "^3.3.0",
     "@typescript-eslint/eslint-plugin": "^8.69.0",
     "@typescript-eslint/parser": "^8.69.0",
