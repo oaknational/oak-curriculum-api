@@ -77,9 +77,9 @@
     "zod-openapi": "^5.4.6"
   },
   "devDependencies": {
-    "@commitlint/cli": "^19.6.0",
-    "@commitlint/config-conventional": "^19.6.0",
-    "@commitlint/types": "^19.5.0",
+    "@commitlint/cli": "^21.2.2",
+    "@commitlint/config-conventional": "^21.2.2",
+    "@commitlint/types": "^21.2.0",
     "@eslint/js": "^9.39.2",
     "@prettier/plugin-xml": "^3.4.1",
     "@semantic-release/changelog": "^7.0.0",
