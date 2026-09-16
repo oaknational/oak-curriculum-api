@@ -153,7 +153,7 @@ export default function DocsNav({
       <OakBox $display={['block', 'none']}>
         {/* mobile nav button */}
         <JauntyAngleLabel
-          y="5px"
+          $y="5px"
           $background="lemon"
           as="span"
           $clickThrough={true}
