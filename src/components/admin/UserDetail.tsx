@@ -9,13 +9,13 @@ import {
   OakInlineBanner,
   OakLabel,
   OakLI,
-  OakLoadingSpinner,
   OakP,
   OakSecondaryButton,
   OakTagFunctional,
   OakTextInput,
   OakUL,
 } from '@oaknational/oak-components';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
@@ -176,7 +176,7 @@ export function UserDetail({ id }: { id: number }): React.ReactElement {
   if (loading) {
     return (
       <OakFlex $justifyContent="center" $pv="spacing-48">
-        <OakLoadingSpinner />
+        <LoadingSpinner />
       </OakFlex>
     );
   }
