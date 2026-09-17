@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { NextRequest } from 'next/server';
 import { unitVariantLessonsView } from '@/lib/owaClient';
+import { LATEST_API_MAJOR } from '@/lib/apiVersion';
 import getConfig, {
   apiCatalogPath,
   homepageDiscoveryLinkHeader,
@@ -177,6 +178,7 @@ describe('HTTP Headers - homepage agent discovery', () => {
     );
     expect(authMd).toContain('The default allowance is 1000 requests per hour');
     expect(authMd).toContain('X-RateLimit-Remaining');
+    expect(authMd).toContain(`GET /api/${LATEST_API_MAJOR}/rate-limit`);
     expect(authMd).toContain('Support:');
     expect(authMd).toContain(
       'https://bvumd.share.hsforms.com/2nacebr1eQuKMoA-vGpkjCA',
