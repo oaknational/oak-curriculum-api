@@ -1,7 +1,7 @@
 import * as z from 'zod/v4';
 import { canonicalUrlSchema, oakUrlSchema } from '@/lib/handlers/commonTypes';
 import { unitProgrammeFactorsSchema } from '@/lib/handlers/unitProgrammeFactors';
-import example from './lessonSummaryResponse.example.json' assert { type: 'json' };
+import example from './lessonSummaryResponse.example.json' with { type: 'json' };
 
 export const lessonSummaryResponseSchema = z
   .object({

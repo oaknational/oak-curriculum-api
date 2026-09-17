@@ -12,7 +12,7 @@ import {
   parseQueryParams,
 } from '@/lib/analytics/posthogServer';
 export const dynamic = 'force-dynamic';
-import schema from './schema.json/schema.json' assert { type: 'json' };
+import schema from './schema.json/schema.json' with { type: 'json' };
 
 const bucketName = process.env.BULK_DATA_BUCKET || 'oak-prod-ldn-bulk-uploader';
 const endpointPath = '/api/bulk';

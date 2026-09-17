@@ -1,5 +1,5 @@
 import * as z from 'zod/v4';
-import example from './transcriptResponse.example.json' assert { type: 'json' };
+import example from './transcriptResponse.example.json' with { type: 'json' };
 
 export const transcriptResponseSchema = z
   .object({

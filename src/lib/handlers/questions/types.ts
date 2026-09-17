@@ -5,7 +5,7 @@ import {
   lessonTitleSchema,
 } from '@/lib/handlers/commonTypes';
 
-import example from './schemas/sharedQuiz.example.json' assert { type: 'json' };
+import example from './schemas/sharedQuiz.example.json' with { type: 'json' };
 
 export const multipleChoiceLit = z.literal('multiple-choice');
 export const shortAnswerLit = z.literal('short-answer');
