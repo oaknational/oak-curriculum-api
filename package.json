@@ -121,7 +121,7 @@
     "postcss": "^8.5.28",
     "prettier": "^3.4.1",
     "prettier-plugin-embed": "^0.5.1",
-    "prisma": "^5.21.1",
+    "prisma": "^7.10.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "renvy": "^4.1.0",
