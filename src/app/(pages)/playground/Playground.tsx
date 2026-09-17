@@ -1,12 +1,17 @@
 'use client';
+import type { ComponentProps } from 'react';
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
-import type { SwaggerUIProps } from 'swagger-ui-react';
+import type SwaggerUIComponent from 'swagger-ui-react';
 
 import type { ApiMajor } from '@/lib/apiVersion';
 import { API_MAJORS, LATEST_API_MAJOR, majorStatus } from '@/lib/apiVersion';
 import 'swagger-ui-react/swagger-ui.css';
 import '@/app/(pages)/playground/playground.css';
+
+// @types/swagger-ui-react 5 exports SwaggerUIProps from a subpath its
+// `exports` map does not publish, so the props have to come off the component.
+type SwaggerUIProps = ComponentProps<typeof SwaggerUIComponent>;
 
 const SwaggerUI = dynamic<SwaggerUIProps>(() => import('swagger-ui-react'), {
   ssr: false,

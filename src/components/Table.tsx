@@ -30,7 +30,7 @@ const Td = styled.td`
     top: 0;
   }
 
-  :last-child {
+  p:last-child {
     margin-bottom: 0;
   }
 `;

@@ -27,6 +27,7 @@ fields land in `/api/v1` only. The URL major tracks the package major — see
 - [`../src/cms/README.md`](../src/cms/README.md) — CMS integration.
 - [`../infrastructure/README.md`](../infrastructure/README.md) — Terraform and hosting.
 - [`../.github/workflows/README.md`](../.github/workflows/README.md) — what each CI workflow does.
+- [`styled-components.md`](styled-components.md) — the styled-components 6 rules and the oak-components workarounds they force.
 
 ## Policies and records
 
