@@ -39,7 +39,7 @@
     "@portabletext/react": "^4.0.3",
     "@prisma/client": "^5.22.0",
     "@prisma/extension-accelerate": "^2.0.2",
-    "@sanity/icons": "^3.7.0",
+    "@sanity/icons": "^5.2.2",
     "@sanity/image-url": "^2.1.1",
     "@sanity/vision": "3",
     "@trpc/server": "^11.8.1",
