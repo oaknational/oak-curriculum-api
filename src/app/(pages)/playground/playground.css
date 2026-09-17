@@ -173,6 +173,10 @@ div.swagger-ui,
 .swagger-ui .authorization__btn .unlocked {
   fill: var(--oak-black);
   opacity: 1;
+
+  path {
+    fill: var(--oak-black);
+  }
 }
 
 .swagger-ui .copy-to-clipboard {
