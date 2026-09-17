@@ -27,7 +27,7 @@ importers:
         specifier: ^16.3.4
         version: 16.3.4(eslint@9.39.5(jiti@2.7.0)(supports-color@8.1.1))
       '@oaknational/oak-components':
-        specifier: ^3.20.0
+        specifier: 3.20.2
         version: 3.20.2(@portabletext/react@4.0.3(react@19.3.0))(@tiptap/core@2.27.2(@tiptap/pm@2.27.2))(@tiptap/pm@2.27.2)(@types/react@19.3.0)(next-cloudinary@6.18.8(next@16.3.4(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@24.13.4)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0))(next@16.3.4(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@24.13.4)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(styled-components@6.5.3(react-dom@19.3.0(react@19.3.0))(react@19.3.0))
       '@oaknational/oak-curriculum-schema':
         specifier: ^2.0.0

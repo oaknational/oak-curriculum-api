@@ -18,6 +18,21 @@ updates:
         dependency-type: "development"
         update-types: ["minor", "patch"]
 
+    # oak-components is bumped by hand, never by Dependabot. The library is
+    # still catching up to styled-components 6 (see docs/styled-components.md),
+    # and src/components/LoadingSpinner.tsx and src/components/ButtonWithSpinner.tsx
+    # both work around bugs that oaknational/oak-components#770 fixes. When that
+    # ships, those two files have to be deleted in the same commit or every
+    # spinner draws twice.
+    #
+    # That PR is 39 `fix:` commits with no `feat:` and no breaking-change
+    # footer, so it will release as a patch and would otherwise arrive inside
+    # production-minor-and-patch. Tests are skipped on Dependabot PRs (see
+    # .github/workflows/test.yml), and the double ring is CSS rather than
+    # types, so neither the test job nor lint would catch it.
+    ignore:
+      - dependency-name: "@oaknational/oak-components"
+
   # Every action used in .github/workflows, not just Oak's own. Actions are
   # pinned to commit SHAs, and Dependabot updates the SHA and the version
   # comment together.

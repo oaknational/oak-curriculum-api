@@ -57,6 +57,14 @@ PR 770 replaces the pseudo-element with a real child element. **Both files must
 be deleted in the same commit that takes the fix**, or every spinner draws
 twice — once from oak-components and once from the override.
 
+Because of that, `@oaknational/oak-components` is pinned to an exact version in
+`package.json` and listed under `ignore` in
+[`.github/dependabot.yml`](../.github/dependabot.yml). It is bumped by hand.
+Without that, 770 would arrive on its own: it is 39 `fix:` commits with no
+`feat:` and no breaking-change footer, so it releases as a patch and would land
+in Dependabot's `production-minor-and-patch` group — where the test job is
+skipped by design and lint cannot see a CSS regression.
+
 ### Public prop renames to expect
 
 770 renames these exported props to their transient forms. None of them are used
