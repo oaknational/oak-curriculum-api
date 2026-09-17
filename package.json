@@ -36,7 +36,7 @@
     "@next/eslint-plugin-next": "^16.3.4",
     "@oaknational/oak-components": "3.20.2",
     "@oaknational/oak-curriculum-schema": "^2.0.0",
-    "@portabletext/react": "^4.0.3",
+    "@portabletext/react": "^8.0.1",
     "@prisma/client": "^5.22.0",
     "@prisma/extension-accelerate": "^2.0.2",
     "@sanity/icons": "^3.7.0",
