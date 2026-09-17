@@ -195,15 +195,19 @@ plan, not a completed change.
    already recorded in `FROZEN_AT`. Generalise as `release/<n>.x` per frozen major.
 2. **Make semantic-release multi-branch.** Add the maintenance branch to
    `.releaserc.json`'s `branches`, per
-   [semantic-release's workflow configuration](https://github.com/semantic-release/semantic-release/blob/master/docs/usage/workflow-configuration.md):
+   [Release Workflow Configuration](https://semantic-release.org/foundation/workflow-configuration/)
+   and the
+   [maintenance releases recipe](https://semantic-release.org/recipes/release-workflow/maintenance-releases/):
 
    ```json
-   "branches": [{ "name": "release/0.x", "range": "0.x", "channel": "0.x" }, "main"]
+   "branches": [{ "name": "release/0.x", "range": "0.x" }, "main"]
    ```
 
    A fix on the maintenance branch then tags `0.11.3` instead of contributing
-   nothing. The range guard is what stops a stray `feat` on that branch
-   releasing a `1.x`.
+   nothing. `range` is what stops a stray `feat` on that branch releasing a
+   `1.x`; it is required here because the branch is not itself named `N.x`.
+   `channel` is left at its default — it is an npm dist-tag, and this package
+   is `private`.
 
 3. **Decide the backport direction and write it down.** The RFC accepts manual
    backporting. Fix-forward — land on `main`, cherry-pick to `release/0.x` — is
