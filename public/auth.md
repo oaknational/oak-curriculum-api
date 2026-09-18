@@ -58,6 +58,14 @@ Rate limits:
 - Once the allowance is spent, requests are rejected and the response carries
   `X-Retry-After` holding the reset time in milliseconds since the Unix epoch.
 
+Cross-origin requests:
+
+- Every response carries `Access-Control-Allow-Origin: *`, so a browser client
+  may call the API directly.
+- `Link`, `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset` and
+  `X-Retry-After` are named in `Access-Control-Expose-Headers`. Without that a
+  browser hides them from JavaScript, whatever the response says.
+
 Support:
 
 - Report API bugs, data errors, and documentation that is wrong or unclear
