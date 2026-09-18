@@ -111,6 +111,10 @@ already tagged — so get it provisioned before the first `api` commit lands.
 
 ## The URL major is the semver major
 
+For the day-to-day decision of which majors a change should reach — and what has
+to change before majors can live on separate branches, per RFC-52 — see
+[VERSIONING.md](VERSIONING.md).
+
 The public API is served under `/api/v1`. That segment is bound to the project
 version: `0.x` was served at `/api/v0`, `1.x` at `/api/v1`, `2.x` at `/api/v2`.
 A breaking change bumps the major, which mints a new URL major and freezes the

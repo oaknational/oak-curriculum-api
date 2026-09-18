@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import { OakJauntyAngleLabel as _OakJauntyAngleLabel } from '@oaknational/oak-components';
 
 interface JauntyAngleLabelProps {
-  y?: string;
+  $y?: string;
   $clickThrough?: boolean;
   $error?: boolean;
 }
@@ -18,7 +18,7 @@ export const JauntyAngleLabel = styled(
   position: absolute;
   padding: 4px 8px;
   transform: rotate(-1.5deg)
-    translateY(${(props: JauntyAngleLabelProps) => props.y || '-15px'})
+    translateY(${(props: JauntyAngleLabelProps) => props.$y || '-15px'})
     translateX(8px);
 
   ${(props: JauntyAngleLabelProps) =>
