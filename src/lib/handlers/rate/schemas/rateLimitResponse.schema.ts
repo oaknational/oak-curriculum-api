@@ -1,5 +1,5 @@
 import * as z from 'zod/v4';
-import example from './rateLimitResponse.example.json' assert { type: 'json' };
+import example from './rateLimitResponse.example.json' with { type: 'json' };
 
 export const rateLimitResponseSchema = z
   .object({

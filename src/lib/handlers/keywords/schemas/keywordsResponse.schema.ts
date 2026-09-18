@@ -1,5 +1,5 @@
 import * as z from 'zod/v4';
-import example from './keywordsResponse.example.json' assert { type: 'json' };
+import example from './keywordsResponse.example.json' with { type: 'json' };
 
 export const keywordsResponseSchema = z
   .array(

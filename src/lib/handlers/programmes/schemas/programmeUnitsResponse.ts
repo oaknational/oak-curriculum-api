@@ -1,5 +1,5 @@
 import * as z from 'zod/v4';
-import example from './programmeUnitsResponse.example.json' assert { type: 'json' };
+import example from './programmeUnitsResponse.example.json' with { type: 'json' };
 
 export const programmeUnitsResponseSchema = z
   .array(

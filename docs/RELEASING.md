@@ -1,7 +1,7 @@
 # Releasing
 
 This project is versioned with [semantic versioning](https://semver.org) and
-released automatically by [semantic-release](https://semantic-release.gitbook.io)
+released automatically by [semantic-release](https://semantic-release.org/)
 from conventional commit messages.
 
 **The version tracks the API contract.** Only commits scoped `api` move it.
