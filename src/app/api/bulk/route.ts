@@ -34,6 +34,7 @@ const handler = async (req: NextRequest): Promise<Response> => {
   const queryParams = parseQueryParams(req.url);
   let args: { subjects?: string[] } | undefined;
   let userId: number | undefined;
+  let company: string | null | undefined;
 
   const resHeaders = new Headers();
 
@@ -42,6 +43,7 @@ const handler = async (req: NextRequest): Promise<Response> => {
 
     const user = await withUser(req, apiKey);
     userId = user?.id;
+    company = user?.company;
 
     const ctx = {
       user,
@@ -101,6 +103,7 @@ const handler = async (req: NextRequest): Promise<Response> => {
       url: req.url,
       apiKey,
       args,
+      company,
       durationMs: Date.now() - startedAt,
       endpointPath,
       httpMethod: req.method || 'POST',
@@ -123,6 +126,7 @@ const handler = async (req: NextRequest): Promise<Response> => {
       url: req.url,
       apiKey,
       args,
+      company,
       durationMs: Date.now() - startedAt,
       endpointPath,
       errorCode,

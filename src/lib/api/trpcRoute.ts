@@ -54,6 +54,7 @@ export function createTrpcHandler(major: ApiMajor) {
           // From the factory, not the context: an unrouted request may not
           // have got far enough to build one.
           apiMajor: major,
+          company: ctx?.user?.company,
           endpointPath: opts.path || '/unknown',
           httpMethod: req.method || 'UNKNOWN',
           source: 'trpc_on_error',

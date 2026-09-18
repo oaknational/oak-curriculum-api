@@ -79,6 +79,7 @@ const handler = async (
   const queryParams = parseQueryParams(req.url);
   let args: { lesson: string; type: string } | undefined;
   let userId: number | undefined;
+  let company: string | null | undefined;
 
   const resHeaders = createCorsHeaders();
 
@@ -86,6 +87,7 @@ const handler = async (
     // 1. get the user
     const user = await withUser(req, apiKey);
     userId = user?.id;
+    company = user?.company;
     const ctx = {
       user,
       resHeaders,
@@ -173,6 +175,7 @@ const handler = async (
         url: req.url,
         apiKey,
         args,
+        company,
         durationMs: Date.now() - startedAt,
         apiMajor: major,
         endpointPath,
@@ -208,6 +211,7 @@ const handler = async (
         url: req.url,
         apiKey,
         args,
+        company,
         durationMs: Date.now() - startedAt,
         apiMajor: major,
         endpointPath,
@@ -241,6 +245,7 @@ const handler = async (
       url: req.url,
       apiKey,
       args,
+      company,
       durationMs: Date.now() - startedAt,
       apiMajor: major,
       endpointPath,

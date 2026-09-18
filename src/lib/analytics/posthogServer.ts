@@ -20,6 +20,11 @@ export interface ApiRequestCapturePayload {
    */
   apiMajor?: ApiMajor;
   args?: unknown;
+  /**
+   * The requesting user's `company`, as they typed it when signing up. Hashed
+   * before it leaves here — see `createCompanyHash`.
+   */
+  company?: string | null;
   durationMs?: number;
   endpointPath: string;
   errorCode?: string | null;
@@ -134,6 +139,11 @@ export const serialiseAnalyticsValue = (value: unknown): unknown => {
   }
 };
 
+/** Truncated sha256: short enough to read in PostHog, wide enough not to collide. */
+const hashToHex = (value: string): string => {
+  return createHash('sha256').update(value).digest('hex').slice(0, 16);
+};
+
 export const createApiKeyFingerprint = (
   apiKey: string | null | undefined,
 ): string | undefined => {
@@ -141,9 +151,81 @@ export const createApiKeyFingerprint = (
     return undefined;
   }
 
-  const hash = createHash('sha256').update(apiKey).digest('hex');
   const suffix = apiKey.slice(-4);
-  return `sha256:${hash.slice(0, 16)}:${suffix}`;
+  return `sha256:${hashToHex(apiKey)}:${suffix}`;
+};
+
+/**
+ * Values people type into the company field to mean "I haven't got one". These
+ * are not companies, so they must not collapse 144-odd unrelated users into a
+ * single "n/a" organisation.
+ *
+ * Deliberately short: the real data contains genuine three- and four-letter
+ * companies ("oat", "ona", "mei"), so anything ambiguous stays out.
+ */
+const PLACEHOLDER_COMPANIES = new Set([
+  '-',
+  'n.a.',
+  'n/a',
+  'na',
+  'nil',
+  'none',
+  'null',
+]);
+
+/**
+ * Lower-cases and strips whitespace so that "Vision", "vision" and "Vis ion"
+ * are one organisation rather than three. Returns undefined for anything that
+ * isn't a usable company name.
+ */
+export const normaliseCompanyName = (
+  company: string | null | undefined,
+): string | undefined => {
+  if (!company) {
+    return undefined;
+  }
+
+  const normalised = company.toLowerCase().replace(/\s+/g, '');
+
+  if (!normalised || PLACEHOLDER_COMPANIES.has(normalised)) {
+    return undefined;
+  }
+
+  return normalised;
+};
+
+export interface CompanyHash {
+  hash: string;
+  /**
+   * Which input the hash was taken of. `api_key` means the user gave no usable
+   * company, so the hash stands for that one user rather than an organisation
+   * — worth excluding when counting organisations.
+   */
+  source: 'company' | 'api_key';
+}
+
+/**
+ * A stable, non-reversible id for the organisation behind a request, so that
+ * twenty teachers at one school read as one user of the API.
+ *
+ * Falls back to the API key when there's no usable company name: without it
+ * those requests would share one bucket and look like a single huge customer.
+ */
+export const createCompanyHash = (opts: {
+  company?: string | null;
+  apiKey?: string | null;
+}): CompanyHash | undefined => {
+  const company = normaliseCompanyName(opts.company);
+
+  if (company) {
+    return { hash: hashToHex(company), source: 'company' };
+  }
+
+  if (opts.apiKey) {
+    return { hash: hashToHex(opts.apiKey), source: 'api_key' };
+  }
+
+  return undefined;
 };
 
 export const getDistinctId = (opts: {
@@ -170,6 +252,10 @@ const buildCaptureBody = (
   properties: Record<string, unknown>;
 } => {
   const apiKeyFingerprint = createApiKeyFingerprint(payload.apiKey);
+  const companyHash = createCompanyHash({
+    company: payload.company,
+    apiKey: payload.apiKey,
+  });
   const distinctId = getDistinctId({
     userId: payload.userId,
     apiKey: payload.apiKey,
@@ -182,6 +268,8 @@ const buildCaptureBody = (
       $current_url: payload.url,
       api_major: payload.apiMajor,
       args: serialiseAnalyticsValue(payload.args),
+      company_hash: companyHash?.hash,
+      company_hash_source: companyHash?.source,
       duration_ms: payload.durationMs,
       endpoint_path: payload.endpointPath,
       error_code: payload.errorCode || undefined,

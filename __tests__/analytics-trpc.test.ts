@@ -4,7 +4,10 @@ import * as z from 'zod/v4';
 
 import type { User } from '@/lib/apikeys';
 import { createCallerFactory, publicProcedure, router } from '@/lib/trpc';
-import { POSTHOG_CAPTURE_EVENT } from '@/lib/analytics/posthogServer';
+import {
+  createCompanyHash,
+  POSTHOG_CAPTURE_EVENT,
+} from '@/lib/analytics/posthogServer';
 
 const mocks = vi.hoisted(() => ({
   captureMock: vi.fn(),
@@ -121,6 +124,52 @@ describe('tRPC analytics middleware', () => {
       subject: 'maths',
       tag: ['one', 'two'],
     });
+  });
+
+  it('captures a company hash so users at one company group together', async () => {
+    const caller = createCaller(
+      makeContext({
+        user: {
+          id: 42,
+          key: 'analytics-test-api-key',
+          company: 'Oak National Academy',
+        },
+      }),
+    );
+
+    await caller.ok({ includeUnits: true, subject: 'maths' });
+
+    const [message] = mocks.captureMock.mock.calls[0] as [
+      { properties: Record<string, unknown> },
+    ];
+
+    expect(message.properties.company_hash).toEqual(
+      createCompanyHash({ company: 'oaknationalacademy' })?.hash,
+    );
+    expect(message.properties.company_hash_source).toBe('company');
+  });
+
+  it('falls back to an API-key hash when the user gave no company', async () => {
+    const caller = createCaller(
+      makeContext({
+        user: {
+          id: 43,
+          key: 'analytics-test-api-key',
+          company: 'N/A',
+        },
+      }),
+    );
+
+    await caller.ok({ includeUnits: true, subject: 'maths' });
+
+    const [message] = mocks.captureMock.mock.calls[0] as [
+      { properties: Record<string, unknown> },
+    ];
+
+    expect(message.properties.company_hash).toEqual(
+      createCompanyHash({ apiKey: 'analytics-test-api-key' })?.hash,
+    );
+    expect(message.properties.company_hash_source).toBe('api_key');
   });
 
   it('captures failed requests with error code', async () => {

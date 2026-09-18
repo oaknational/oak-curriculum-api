@@ -148,6 +148,7 @@ const analyticsMiddleware = t.middleware(async (opts) => {
     apiKey,
     apiMajor: opts.ctx.major,
     args,
+    company: opts.ctx.user?.company,
     endpointPath,
     httpMethod,
     queryParams,
