@@ -146,7 +146,9 @@ serves its own URLs.
 6. Update the discovery surfaces: `public/.well-known/api-catalog`,
    `public/robots.txt`, `public/auth.md`, the agent skill and its sha256 in
    `public/.well-known/agent-skills/index.json`, `next.config.mjs`, and
-   `src/app/sitemap.ts`.
+   `src/app/sitemap.ts`. `__tests__/agent-doc-routes.test.ts` checks the paths
+   in the static ones against the routes each major serves, so a missed edit
+   there fails CI rather than sending agents to a 404.
 7. Update [ENDPOINTS.md](ENDPOINTS.md) and the docs.
 
 Expect a short window between merging and releasing where the new major is
