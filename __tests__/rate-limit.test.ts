@@ -1,6 +1,17 @@
-import { expect, test } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
+import { FakeRateLimit, fakeRateLimit } from './fakeRateLimit';
 import { authedCaller } from './make-call';
-import { User } from '@/lib/apikeys';
+import type { User } from '@/lib/apikeys';
+
+// These tests have `@/lib/rateLimit` under test, so they can't use the blanket
+// stub in `./helper` — but they mustn't talk to the real Redis either, or every
+// run spends production quota and litters it with `rateLimit:*` records that
+// `bin/clean-test-rate-limits.ts` then has to clear up. Swapping out the
+// Upstash client leaves all of our own wiring exercised. Vitest hoists this
+// above the imports above.
+vi.mock('@upstash/ratelimit', () => ({ Ratelimit: FakeRateLimit }));
+
+beforeEach(() => fakeRateLimit.reset());
 
 test('rate limit reduces', async () => {
   const user: User = {
@@ -40,6 +51,8 @@ test('custom rate limit', async () => {
   const { caller } = authedCaller(user);
 
   const beforeRequest = await caller.getRateLimit.getRateLimit();
+
+  expect(beforeRequest.remaining).toBe(3);
 
   for (let i = 0; i < beforeRequest.remaining - 1; i++) {
     await caller.getSubjects.getAllSubjects();
