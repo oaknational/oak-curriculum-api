@@ -41,20 +41,21 @@ import {
   parseQueryParams,
 } from '@/lib/analytics/posthogServer';
 import { errorFormatter } from '@/lib/trpc';
+import { corsHeaders } from '@/lib/api/cors';
 import { withSuccessorLink } from '@/lib/api/versionHeaders';
 
 const storage = getGoogleCloudStorage();
 
-const corsHeaders = {
-  'access-control-allow-origin': '*',
-  'access-control-allow-methods': 'GET, HEAD, OPTIONS',
-  'access-control-allow-headers': 'Content-Type, Authorization',
-  'access-control-expose-headers':
-    'Accept-Ranges, Content-Disposition, Content-Length, Content-Range, link',
-} as const;
+/** Downloads stream, resume and arrive named, so those headers go too. */
+const assetCorsHeaders = corsHeaders('GET, HEAD, OPTIONS', [
+  'Accept-Ranges',
+  'Content-Disposition',
+  'Content-Length',
+  'Content-Range',
+]);
 
 function createCorsHeaders(): Headers {
-  return new Headers(corsHeaders);
+  return new Headers(assetCorsHeaders);
 }
 
 const hasErrorCode = (error: unknown): error is { code: string } => {
@@ -301,7 +302,7 @@ async function route(
         {
           status,
           headers: {
-            ...corsHeaders,
+            ...assetCorsHeaders,
             'Content-Type': 'application/json',
           },
         },
@@ -316,7 +317,7 @@ async function route(
     return new NextResponse(JSON.stringify({ message, code }), {
       status: statusCode,
       headers: {
-        ...corsHeaders,
+        ...assetCorsHeaders,
         'Content-Type': 'application/json',
       },
     });

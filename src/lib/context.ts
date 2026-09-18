@@ -1,3 +1,4 @@
+import { API_METHODS, corsHeaders } from '@/lib/api/cors';
 import type { User } from '@/lib/apikeys';
 import { findUserByKey } from '@/lib/apikeys';
 import type { ApiMajor } from '@/lib/apiVersion';
@@ -33,8 +34,6 @@ export interface Context {
 const createContextWithUser =
   (major: ApiMajor) =>
   async ({ req, info, res }: FetchCreateContextFnOptions): Promise<Context> => {
-    // low fat cors
-
     const headers = new Headers(req.headers);
     const resHeaders = {
       set: (key: string, value: string) => {
@@ -46,12 +45,9 @@ const createContextWithUser =
       },
     };
 
-    resHeaders.set('access-control-allow-origin', '*');
-    resHeaders.set('access-control-allow-methods', 'GET, POST, OPTIONS');
-    resHeaders.set(
-      'access-control-allow-headers',
-      'Content-Type, Authorization',
-    );
+    for (const [key, value] of Object.entries(corsHeaders(API_METHODS))) {
+      resHeaders.set(key, value);
+    }
 
     const apiKey = getApiKeyFromRequest(req);
     const user = await withUser(req, apiKey);

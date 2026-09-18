@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.1](https://github.com/oaknational/oak-curriculum-api/compare/v1.0.0...v1.0.1) (2026-09-18)
+
+### Bug Fixes
+
+* expose `link` and rate limit header on CORS ([86b5240](https://github.com/oaknational/oak-curriculum-api/commit/86b52400644cb872a1bdab0c335bc7d7bbc2913c))
+
 ## [1.0.0](https://github.com/oaknational/oak-curriculum-api/compare/v0.11.2...v1.0.0) (2026-09-15)
 
 ### ⚠ BREAKING CHANGES

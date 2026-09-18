@@ -41,6 +41,10 @@ Swagger UI
 Errors and rate limits
 - Errors follow tRPC error codes (see [`README.md`](../../README.md) for examples).
 - Rate-limit headers are returned on tRPC routes.
+- Responses are CORS-open, and the headers a client needs to read — `Link` and
+  the `X-RateLimit-*` set — are named in `Access-Control-Expose-Headers` by
+  [`src/lib/api/cors.ts`](../../src/lib/api/cors.ts). A header added without
+  being listed there is invisible to browser callers.
 
 Related docs
 - [`docs/ENDPOINTS.md`](../ENDPOINTS.md) (endpoint-to-source-file index)

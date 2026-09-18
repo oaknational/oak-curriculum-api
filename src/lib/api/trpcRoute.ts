@@ -9,6 +9,7 @@ import type { ApiMajor } from '@/lib/apiVersion';
 import { createContext, getApiKeyFromRequest } from '@/lib/context';
 import { routerForMajor } from '@/lib/versionedRouter';
 
+import { API_METHODS, corsHeaders } from './cors';
 import { withSuccessorLink } from './versionHeaders';
 
 /**
@@ -74,10 +75,6 @@ export function createTrpcHandler(major: ApiMajor) {
 export function trpcPreflight(): Response {
   return new Response(null, {
     status: 204,
-    headers: {
-      'access-control-allow-origin': '*',
-      'access-control-allow-methods': 'GET, POST, OPTIONS',
-      'access-control-allow-headers': 'Content-Type, Authorization',
-    },
+    headers: corsHeaders(API_METHODS),
   });
 }
