@@ -177,6 +177,7 @@ describe('HTTP Headers - homepage agent discovery', () => {
     );
     expect(authMd).toContain('The default allowance is 1000 requests per hour');
     expect(authMd).toContain('X-RateLimit-Remaining');
+    expect(authMd).toContain('GET /api/v0/rate-limit');
     expect(authMd).toContain('Support:');
     expect(authMd).toContain(
       'https://bvumd.share.hsforms.com/2nacebr1eQuKMoA-vGpkjCA',
