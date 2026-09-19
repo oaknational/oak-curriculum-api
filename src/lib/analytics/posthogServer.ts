@@ -4,9 +4,16 @@ import { PostHog } from 'posthog-node';
 import type { ApiMajor } from '@/lib/apiVersion';
 
 export const POSTHOG_CAPTURE_EVENT = 'API Request';
+export const POSTHOG_API_KEY_CREATED_EVENT = 'API Key Created';
 const FALLBACK_DISTINCT_ID = 'api-anonymous';
 
 type QueryParamValue = string | string[];
+
+interface CaptureBody {
+  distinctId: string;
+  event: string;
+  properties: Record<string, unknown>;
+}
 
 export interface ApiRequestCapturePayload {
   url?: string;
@@ -34,6 +41,16 @@ export interface ApiRequestCapturePayload {
     'trpc_middleware' | 'trpc_on_error' | 'bulk_route' | 'lesson_assets_route';
   success: boolean;
   trpcPath?: string | null;
+  userId?: number | string | null;
+}
+
+export interface ApiKeyCreatedCapturePayload {
+  /** The key just issued. Only ever sent on as a fingerprint and a hash. */
+  apiKey: string;
+  /** The company the key was registered to, hashed like every other event. */
+  company?: string | null;
+  rateLimit?: number;
+  source: 'admin_users_route';
   userId?: number | string | null;
 }
 
@@ -284,8 +301,16 @@ const buildCaptureBody = (
   };
 };
 
-export const captureApiRequestEvent = (
-  payload: ApiRequestCapturePayload,
+/**
+ * Builds and sends one event, swallowing every failure: analytics must never
+ * interfere with an API response or with issuing a key.
+ *
+ * The body is built inside the try so that a malformed payload is logged
+ * rather than thrown at the caller.
+ */
+const captureEvent = (
+  buildBody: () => CaptureBody,
+  context: Record<string, unknown>,
 ): void => {
   const client = getPostHogClient();
   if (!client) {
@@ -293,15 +318,55 @@ export const captureApiRequestEvent = (
   }
 
   try {
-    const captureBody = buildCaptureBody(payload);
-
-    client.capture(captureBody);
+    client.capture(buildBody());
   } catch (error: unknown) {
-    // Analytics must never interfere with API responses.
     console.error('posthog capture failed', {
       message: error instanceof Error ? error.message : String(error),
-      source: payload.source,
-      trpcPath: payload.trpcPath || undefined,
+      ...context,
     });
   }
+};
+
+export const captureApiRequestEvent = (
+  payload: ApiRequestCapturePayload,
+): void => {
+  captureEvent(() => buildCaptureBody(payload), {
+    source: payload.source,
+    trpcPath: payload.trpcPath || undefined,
+  });
+};
+
+/**
+ * One key issued. Emitted from the admin route rather than from `addUser`, so
+ * that `@/lib/apikeys` — imported by every request path and by the CLI scripts
+ * — doesn't drag `posthog-node` in with it.
+ */
+export const captureApiKeyCreatedEvent = (
+  payload: ApiKeyCreatedCapturePayload,
+): void => {
+  captureEvent(
+    () => {
+      const companyHash = createCompanyHash({
+        company: payload.company,
+        apiKey: payload.apiKey,
+      });
+
+      return {
+        event: POSTHOG_API_KEY_CREATED_EVENT,
+        distinctId: getDistinctId({
+          userId: payload.userId,
+          apiKey: payload.apiKey,
+        }),
+        properties: {
+          api_key_fingerprint: createApiKeyFingerprint(payload.apiKey),
+          company_hash: companyHash?.hash,
+          company_hash_source: companyHash?.source,
+          rate_limit: payload.rateLimit,
+          source: payload.source,
+          user_id: payload.userId ?? undefined,
+        },
+      };
+    },
+    { source: payload.source },
+  );
 };

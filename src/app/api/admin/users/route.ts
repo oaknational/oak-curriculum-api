@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+import { captureApiKeyCreatedEvent } from '@/lib/analytics/posthogServer';
 import {
   addUser,
   findUserByEmail,
@@ -81,6 +82,14 @@ export async function POST(req: NextRequest): Promise<Response> {
         new Error('User was not readable immediately after creation'),
       );
     }
+
+    captureApiKeyCreatedEvent({
+      apiKey: user.key,
+      company: user.company,
+      rateLimit: user.rateLimit,
+      source: 'admin_users_route',
+      userId: user.id,
+    });
 
     return NextResponse.json<AdminUserResponse>(
       { user: toAdminUser(user) },

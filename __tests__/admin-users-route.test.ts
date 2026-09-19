@@ -1,8 +1,23 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import type { NextRequest } from 'next/server';
+import type {
+  AdminRollKeyResponse,
+  AdminUser,
+  AdminUserDetailResponse,
+  AdminUsersResponse,
+} from '@/app/api/admin/schemas';
 import { fakeRedis } from './fakeRedis';
 
+const mocks = vi.hoisted(() => ({
+  captureApiKeyCreatedEventMock: vi.fn(),
+}));
+
 vi.mock('@/lib/redis', () => ({ redis: fakeRedis }));
+
+vi.mock('@/lib/analytics/posthogServer', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  captureApiKeyCreatedEvent: mocks.captureApiKeyCreatedEventMock,
+}));
 
 vi.mock('@/lib/rateLimit', async (importOriginal: () => Promise<object>) => {
   const actual = await importOriginal();
@@ -45,18 +60,25 @@ function params(id: string): { params: Promise<{ id: string }> } {
   return { params: Promise.resolve({ id }) };
 }
 
+async function readJson<T>(res: Response): Promise<T> {
+  return (await res.json()) as T;
+}
+
 async function seed(body: Record<string, unknown> = alice): Promise<number> {
   const res = await createUser(request('/api/admin/users', body));
-  const { user } = await res.json();
+  const { user } = await readJson<{ user: AdminUser }>(res);
   return user.id;
 }
 
 describe('POST /api/admin/users', () => {
-  beforeEach(() => fakeRedis.reset());
+  beforeEach(() => {
+    fakeRedis.reset();
+    mocks.captureApiKeyCreatedEventMock.mockReset();
+  });
 
   it('creates a user and returns the key', async () => {
     const res = await createUser(request('/api/admin/users', alice));
-    const body = await res.json();
+    const body = await readJson<{ user: AdminUser }>(res);
 
     expect(res.status).toBe(201);
     expect(body.user).toMatchObject({ id: 1, ...alice, rateLimit: 1000 });
@@ -69,19 +91,43 @@ describe('POST /api/admin/users', () => {
       request('/api/admin/users', { ...alice, rateLimit: 0 }),
     );
 
-    expect((await res.json()).user.rateLimit).toBe(0);
+    expect((await readJson<{ user: AdminUser }>(res)).user.rateLimit).toBe(0);
   });
 
   it('reports field-level issues for an invalid body', async () => {
     const res = await createUser(
       request('/api/admin/users', { ...alice, email: 'not-an-email' }),
     );
-    const body = await res.json();
+    const body = await readJson<{ issues: { path: string }[] }>(res);
 
     expect(res.status).toBe(400);
     expect(body.issues).toContainEqual(
       expect.objectContaining({ path: 'email' }),
     );
+  });
+
+  it('tracks the new key in analytics', async () => {
+    const res = await createUser(request('/api/admin/users', alice));
+    const { user } = await readJson<{ user: AdminUser }>(res);
+
+    expect(mocks.captureApiKeyCreatedEventMock).toHaveBeenCalledTimes(1);
+    expect(mocks.captureApiKeyCreatedEventMock).toHaveBeenCalledWith({
+      apiKey: user.key,
+      company: alice.company,
+      rateLimit: 1000,
+      source: 'admin_users_route',
+      userId: user.id,
+    });
+  });
+
+  it('tracks nothing when creation is refused', async () => {
+    await seed();
+    mocks.captureApiKeyCreatedEventMock.mockReset();
+
+    const res = await createUser(request('/api/admin/users', alice));
+
+    expect(res.status).toBe(409);
+    expect(mocks.captureApiKeyCreatedEventMock).not.toHaveBeenCalled();
   });
 
   it('refuses a duplicate email rather than orphaning the first key', async () => {
@@ -101,16 +147,16 @@ describe('GET /api/admin/users', () => {
 
   it('lists users newest first with a total', async () => {
     const res = await listUsers(request('/api/admin/users'));
-    const body = await res.json();
+    const body = await readJson<AdminUsersResponse>(res);
 
     expect(res.status).toBe(200);
-    expect(body.users.map((user: { id: number }) => user.id)).toEqual([2, 1]);
+    expect(body.users.map((user) => user.id)).toEqual([2, 1]);
     expect(body).toMatchObject({ total: 2, limit: 50, offset: 0 });
   });
 
   it('filters by search', async () => {
     const res = await listUsers(request('/api/admin/users?search=bloggs'));
-    const body = await res.json();
+    const body = await readJson<AdminUsersResponse>(res);
 
     expect(body.total).toBe(1);
     expect(body.users[0].name).toBe('Bob Bloggs');
@@ -133,7 +179,7 @@ describe('GET /api/admin/users/[id]', () => {
       request(`/api/admin/users/${id}`),
       params(`${id}`),
     );
-    const body = await res.json();
+    const body = await readJson<AdminUserDetailResponse>(res);
 
     expect(res.status).toBe(200);
     expect(body.user).toMatchObject(alice);
@@ -154,7 +200,9 @@ describe('GET /api/admin/users/[id]', () => {
       params(`${id}`),
     );
 
-    expect((await res.json()).user.requests).toBe(0);
+    expect((await readJson<AdminUserDetailResponse>(res)).user.requests).toBe(
+      0,
+    );
   });
 
   it('404s for an unknown id', async () => {
@@ -180,7 +228,7 @@ describe('PATCH /api/admin/users/[id]', () => {
       request(`/api/admin/users/${id}`, { rateLimit: 5000 }),
       params(`${id}`),
     );
-    const { user } = await res.json();
+    const { user } = await readJson<{ user: AdminUser }>(res);
 
     expect(res.status).toBe(200);
     expect(user).toMatchObject({ ...alice, rateLimit: 5000 });
@@ -221,7 +269,9 @@ describe('PATCH /api/admin/users/[id]', () => {
     );
 
     expect(res.status).toBe(200);
-    expect((await res.json()).user.name).toBe('Renamed');
+    expect((await readJson<{ user: AdminUser }>(res)).user.name).toBe(
+      'Renamed',
+    );
   });
 });
 
@@ -245,13 +295,13 @@ describe('POST /api/admin/users/[id]/roll-key', () => {
       request(`/api/admin/users/${id}`),
       params(`${id}`),
     );
-    const previous = (await before.json()).user.key;
+    const previous = (await readJson<AdminUserDetailResponse>(before)).user.key;
 
     const res = await rollKey(
       request(`/api/admin/users/${id}/roll-key`, { confirm: 'roll' }),
       params(`${id}`),
     );
-    const body = await res.json();
+    const body = await readJson<AdminRollKeyResponse>(res);
 
     expect(res.status).toBe(200);
     expect(body.previousKey).toBe(previous);
