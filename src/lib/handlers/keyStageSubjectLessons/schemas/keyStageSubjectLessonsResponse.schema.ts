@@ -1,6 +1,6 @@
 import * as z from 'zod/v4';
 
-import example from './keyStageSubjectLessonsResponse.example.json' assert { type: 'json' };
+import example from './keyStageSubjectLessonsResponse.example.json' with { type: 'json' };
 
 export const keyStageSubjectLessonsResponseSchema = z
   .array(

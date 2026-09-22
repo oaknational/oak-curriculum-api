@@ -11,7 +11,7 @@ Start here
 Discovery
 
 - The homepage returns RFC 8288 `Link` response headers for agent discovery:
-  `/.well-known/api-catalog` as `api-catalog`, `/api/v0/swagger.json` as
+  `/.well-known/api-catalog` as `api-catalog`, `/api/v1/swagger.json` as
   `service-desc`, plus the API overview and playground as `service-doc`.
 - The API catalogue is published as a Linkset document at
   `/.well-known/api-catalog`.

@@ -1,5 +1,47 @@
 # Changelog
 
+## [1.0.1](https://github.com/oaknational/oak-curriculum-api/compare/v1.0.0...v1.0.1) (2026-09-18)
+
+### Bug Fixes
+
+* expose `link` and rate limit header on CORS ([86b5240](https://github.com/oaknational/oak-curriculum-api/commit/86b52400644cb872a1bdab0c335bc7d7bbc2913c))
+
+## [1.0.0](https://github.com/oaknational/oak-curriculum-api/compare/v0.11.2...v1.0.0) (2026-09-15)
+
+### ⚠ BREAKING CHANGES
+
+* The API's URL major is bound to the package major, so 1.0.0 is
+served at /api/v1. /api/v0 stays in place, frozen to fixes, and continues to
+serve identical responses — no existing consumer needs to change anything today.
+
+This is the deliberate 0.x to 1.0.0 move: the API leaves public alpha, and from
+here a breaking change mints /api/v2 and freezes /api/v1 rather than changing a
+live major in place.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+
+### Features
+
+* advertise /api/v1 as the successor to /api/v0 ([e1baeb6](https://github.com/oaknational/oak-curriculum-api/commit/e1baeb68476903affe449eac8cbddf5ec7420c10))
+* serve the API at /api/v1 alongside the frozen /api/v0 ([a1fc931](https://github.com/oaknational/oak-curriculum-api/commit/a1fc93179bb299c3887c3280c6cdb1eee52148fa))
+
+### Bug Fixes
+
+* let a frozen document link to its successor ([8313e2e](https://github.com/oaknational/oak-curriculum-api/commit/8313e2e98897c848e5b532ec060fa52c77e583a0))
+* pin a frozen major's OpenAPI version to when it was last current ([2fc1add](https://github.com/oaknational/oak-curriculum-api/commit/2fc1add50c6eb583feea583e1e81291f3580d654))
+
+## [0.11.2](https://github.com/oaknational/oak-curriculum-api/compare/v0.11.1...v0.11.2) (2026-09-09)
+
+### Bug Fixes
+
+* we were missing child subjects from filters ([#357](https://github.com/oaknational/oak-curriculum-api/issues/357)) ([77ef3a6](https://github.com/oaknational/oak-curriculum-api/commit/77ef3a637696049f472a20b0397ef13a8ecddd81))
+
+## [0.11.1](https://github.com/oaknational/oak-curriculum-api/compare/v0.11.0...v0.11.1) (2026-09-08)
+
+### Bug Fixes
+
+* some lesson assets from science were 404'ing ([#355](https://github.com/oaknational/oak-curriculum-api/issues/355)) ([900613f](https://github.com/oaknational/oak-curriculum-api/commit/900613fbff8735846f101ae2607c584ce7d0eac7))
+
 ## [0.11.0](https://github.com/oaknational/oak-openapi/compare/v0.10.0...v0.11.0) (2026-08-14)
 
 ### Features

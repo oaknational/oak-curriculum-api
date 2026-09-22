@@ -1,14 +1,7 @@
 import { vi, expect, test } from 'vitest';
-import {
-  getLessonAsset,
-  makeCaller,
-  mockWithUser,
-  optionsLessonAsset,
-} from './helper';
+import { getLessonAsset, makeCaller, optionsLessonAsset } from './helper';
 import { getVideoFromMux } from '@/lib/handlers/assets/helpers';
 import placeholderVideos from '@/lib/queryGateData/placeholderVideoLessons.json' with { type: 'json' };
-
-mockWithUser();
 
 vi.mock('@google-cloud/storage', () => {
   class StorageMock {

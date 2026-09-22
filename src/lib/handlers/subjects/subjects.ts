@@ -1,4 +1,4 @@
-import { protectedProcedure } from '@/lib/protect';
+import { v0Procedure } from '@/lib/protect';
 import { router } from '@/lib/trpc';
 import * as z from 'zod/v4';
 import { subjectSlugs } from '@/lib/keyStageAndSubjects';
@@ -20,7 +20,7 @@ import {
 } from './schemas';
 
 export const getSubjects = router({
-  getAllSubjects: protectedProcedure
+  getAllSubjects: v0Procedure
     .meta({
       openapi: {
         tags: ['lists'],
@@ -38,7 +38,7 @@ Not for: a single subject (GET /subjects/{subject}); the key stages or year grou
     .query(() => {
       return subjectSlugs;
     }),
-  getSubject: protectedProcedure
+  getSubject: v0Procedure
     .meta({
       openapi: {
         tags: ['lists'],
@@ -58,7 +58,7 @@ Example: subject=maths.`,
     .query(({ input }) => {
       return getSubjectFromProgrammes(input.subject);
     }),
-  getSubjectKeyStages: protectedProcedure
+  getSubjectKeyStages: v0Procedure
     .meta({
       openapi: {
         tags: ['lists'],
@@ -78,7 +78,7 @@ Example: 'subject=history'.`,
     .query(async ({ input }) => {
       return phaseToKeyStages(await getSubjectPhase(input.subject));
     }),
-  getSubjectYears: protectedProcedure
+  getSubjectYears: v0Procedure
     .meta({
       openapi: {
         tags: ['lists'],

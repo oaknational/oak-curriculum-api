@@ -56,6 +56,7 @@ describe('sitemap route', () => {
 
     expect(urls).toContain('http://localhost:2727/');
     expect(urls).toContain('http://localhost:2727/api/v0/swagger.json');
+    expect(urls).toContain('http://localhost:2727/api/v1/swagger.json');
     expect(urls).not.toContain(
       'http://localhost:2727/docs/about-oaks-api/terms',
     );

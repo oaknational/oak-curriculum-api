@@ -1,7 +1,7 @@
 import { TRPCError } from '@trpc/server';
 import { gql } from 'graphql-request';
 import { errorResponses } from '@/lib/errorResponses';
-import { protectedProcedure } from '@/lib/protect';
+import { v0Procedure } from '@/lib/protect';
 import { router } from '@/lib/trpc';
 import type {
   Download,
@@ -18,11 +18,15 @@ import {
   sequenceView,
   sequenceViewWhereInput,
 } from '@/lib/owaClient';
-import { subjectSlugs } from '@/lib/keyStageAndSubjects';
-import { baseUrl } from '@/lib/baseUrl';
+import type { ApiMajor } from '@/lib/apiVersion';
+import { apiBaseUrl } from '@/lib/baseUrl';
 import { getOakUrlForLesson } from '@/lib/canonicalUrls';
 
-import { getLessonsRestrictions, isLessonRestricted } from '@/lib/queryGate';
+import {
+  getLessonsRestrictions,
+  isLessonRestricted,
+  isSubjectAllowed,
+} from '@/lib/queryGate';
 import { sequenceWhere } from '../sequences/sequences';
 import { nextPageLink } from '@/lib/pagination';
 import { downloadTypeEnum } from './types';
@@ -128,8 +132,9 @@ export async function assetsForLesson(
 
   // validate the subject
   if (
+    !attribution ||
     !attribution.subjectSlug ||
-    !subjectSlugs.includes(attribution.subjectSlug)
+    !isSubjectAllowed(attribution.subjectSlug)
   ) {
     throw new TRPCError({
       message: 'Lesson not found',
@@ -159,10 +164,12 @@ interface AssetDownload {
 }
 
 function assetDownloads(
+  major: ApiMajor,
   lessonSlug: string,
   download: Download,
   filter?: DownloadTypeEnum,
 ): AssetDownload[] {
+  const baseUrl = apiBaseUrl(major);
   const assetUrls = [];
 
   if (download.slideDeck && download.slideDeck.bucket_path) {
@@ -248,7 +255,7 @@ function assetDownloads(
 }
 
 export const getAssets = router({
-  getSequenceAssets: protectedProcedure
+  getSequenceAssets: v0Procedure
     .meta({
       openapi: {
         method: 'GET',
@@ -263,7 +270,7 @@ Not for: assets in a single programme (GET /programmes/{programme}/assets); a si
     })
     .input(sequenceAssetsRequestSchema)
     .output(sequenceAssetsResponseSchema)
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const { sequence, type, year } = input;
       const client = getClient();
 
@@ -361,13 +368,13 @@ Not for: assets in a single programme (GET /programmes/{programme}/assets); a si
           lessonSlug,
           lessonTitle: d.lessonTitle,
           attribution: mappedAttribution.length ? mappedAttribution : undefined,
-          assets: assetDownloads(lessonSlug, d, type),
+          assets: assetDownloads(ctx.major, lessonSlug, d, type),
         };
       });
 
       return result;
     }),
-  // getUnitAssets: protectedProcedure
+  // getUnitAssets: v0Procedure
   //   .meta({
   //     openapi: {
   //       method: 'GET',
@@ -388,7 +395,7 @@ Not for: assets in a single programme (GET /programmes/{programme}/assets); a si
   //     const { unit } = input;
   //     return { unit };
   //   }),
-  getSubjectAssets: protectedProcedure
+  getSubjectAssets: v0Procedure
     .meta({
       openapi: {
         method: 'GET',
@@ -479,7 +486,7 @@ Not for: assets across a sequence (GET /sequences/{sequence}/assets); assets in 
       if (offset + limit < allLessonSlugs.length) {
         ctx.resHeaders.set(
           'link',
-          `<${nextPageLink(ctx.req.url, offset, limit, unit ? { unit } : undefined)}>; rel="next"`,
+          `<${nextPageLink(ctx.major, ctx.req.url, offset, limit, unit ? { unit } : undefined)}>; rel="next"`,
         );
       }
 
@@ -561,13 +568,13 @@ Not for: assets across a sequence (GET /sequences/{sequence}/assets); assets in 
           lessonSlug,
           lessonTitle: d.lessonTitle,
           attribution: mappedAttribution.length ? mappedAttribution : undefined,
-          assets: assetDownloads(lessonSlug, d, typeFilter),
+          assets: assetDownloads(ctx.major, lessonSlug, d, typeFilter),
         };
       });
 
       return result;
     }),
-  getLessonAssets: protectedProcedure
+  getLessonAssets: v0Procedure
     .meta({
       openapi: {
         method: 'GET',
@@ -582,7 +589,7 @@ Not for: streaming the file itself (GET /lessons/{lesson}/assets/{type}); bulk a
     })
     .input(lessonAssetsRequestSchema)
     .output(lessonAssetsResponseSchema)
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const { lesson: lessonSlug, type } = input;
 
       const { assets, attribution } = await assetsForLesson(lessonSlug);
@@ -590,10 +597,10 @@ Not for: streaming the file itself (GET /lessons/{lesson}/assets/{type}); bulk a
       return {
         oakUrl: getOakUrlForLesson(lessonSlug),
         attribution,
-        assets: assetDownloads(lessonSlug, assets, type),
+        assets: assetDownloads(ctx.major, lessonSlug, assets, type),
       } as LessonAssetsType;
     }),
-  getProgrammeAssets: protectedProcedure
+  getProgrammeAssets: v0Procedure
     .meta({
       openapi: {
         method: 'GET',
@@ -640,7 +647,7 @@ Not for: assets across a whole sequence (GET /sequences/{sequence}/assets); asse
       }
 
       // validate the subject
-      if (!subjectSlugs.includes(rows[0].subject_slug)) {
+      if (!isSubjectAllowed(rows[0].subject_slug)) {
         throw new TRPCError({
           message: 'Programme not found',
           code: 'NOT_FOUND',
@@ -658,7 +665,7 @@ Not for: assets across a whole sequence (GET /sequences/{sequence}/assets); asse
       if (lessonSlugs.length === limit) {
         ctx.resHeaders.set(
           'link',
-          `<${nextPageLink(ctx.req.url, offset, limit)}>; rel="next"`,
+          `<${nextPageLink(ctx.major, ctx.req.url, offset, limit)}>; rel="next"`,
         );
       }
 
@@ -733,11 +740,11 @@ Not for: assets across a whole sequence (GET /sequences/{sequence}/assets); asse
           lessonSlug,
           lessonTitle: d.lessonTitle,
           attribution: mappedAttribution.length ? mappedAttribution : undefined,
-          assets: assetDownloads(lessonSlug, d, typeFilter),
+          assets: assetDownloads(ctx.major, lessonSlug, d, typeFilter),
         };
       });
     }),
-  getLessonAsset: protectedProcedure
+  getLessonAsset: v0Procedure
     .meta({
       openapi: {
         method: 'GET',

@@ -1,8 +1,17 @@
 'use client';
+import type { ComponentProps } from 'react';
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
-import type { SwaggerUIProps } from 'swagger-ui-react';
+import type SwaggerUIComponent from 'swagger-ui-react';
+
+import type { ApiMajor } from '@/lib/apiVersion';
+import { API_MAJORS, LATEST_API_MAJOR, majorStatus } from '@/lib/apiVersion';
 import 'swagger-ui-react/swagger-ui.css';
 import '@/app/(pages)/playground/playground.css';
+
+// @types/swagger-ui-react 5 exports SwaggerUIProps from a subpath its
+// `exports` map does not publish, so the props have to come off the component.
+type SwaggerUIProps = ComponentProps<typeof SwaggerUIComponent>;
 
 const SwaggerUI = dynamic<SwaggerUIProps>(() => import('swagger-ui-react'), {
   ssr: false,
@@ -211,11 +220,38 @@ const interceptResponse: NonNullable<SwaggerUIProps['responseInterceptor']> = (
   return res;
 };
 
+const MAJOR_LABEL: Record<ReturnType<typeof majorStatus>, string> = {
+  current: '',
+  frozen: ' (frozen)',
+  pending: ' (not yet current)',
+};
+
 export default function Playground(): React.ReactElement {
+  const [major, setMajor] = useState<ApiMajor>(LATEST_API_MAJOR);
+
   return (
     <>
+      {API_MAJORS.length > 1 && (
+        <nav className="api-major-switcher" aria-label="API version">
+          {API_MAJORS.map((candidate) => (
+            <button
+              key={candidate}
+              type="button"
+              onClick={() => setMajor(candidate)}
+              aria-current={candidate === major}
+              className={candidate === major ? 'is-selected' : undefined}
+            >
+              {candidate}
+              {MAJOR_LABEL[majorStatus(candidate)]}
+            </button>
+          ))}
+        </nav>
+      )}
       <SwaggerUI
-        url={`/api/v0/swagger.json`}
+        // Remounts on change: swagger-ui keeps its spec, deep links and
+        // try-it-out state in a store that does not expect the URL to move.
+        key={major}
+        url={`/api/${major}/swagger.json`}
         tryItOutEnabled={true}
         requestSnippetsEnabled={true}
         plugins={[addFollowRedirectsFlag]}

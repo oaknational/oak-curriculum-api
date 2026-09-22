@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NextRequest } from 'next/server';
-import { middleware } from '@/middleware';
+import { proxy } from '@/proxy';
 
 function makeRequest(
   path: string,
@@ -12,13 +12,13 @@ function makeRequest(
   });
 }
 
-describe('markdown negotiation middleware', () => {
+describe('markdown negotiation proxy', () => {
   it('rewrites public HTML paths when Accept includes text/markdown', () => {
     const req = makeRequest('/docs/about-oaks-api/api-overview?tab=intro', {
       accept: 'text/markdown, text/html;q=0.9',
     });
 
-    const res = middleware(req);
+    const res = proxy(req);
     const rewrite = res.headers.get('x-middleware-rewrite');
 
     expect(rewrite).toBeTruthy();
@@ -34,7 +34,7 @@ describe('markdown negotiation middleware', () => {
       accept: 'text/html,application/xhtml+xml',
     });
 
-    const res = middleware(req);
+    const res = proxy(req);
 
     expect(res.headers.get('x-middleware-rewrite')).toBeNull();
   });
@@ -44,7 +44,7 @@ describe('markdown negotiation middleware', () => {
       accept: 'text/markdown',
     });
 
-    const res = middleware(req);
+    const res = proxy(req);
 
     expect(res.headers.get('x-middleware-rewrite')).toBeNull();
   });
@@ -52,7 +52,7 @@ describe('markdown negotiation middleware', () => {
   it.each(['/admin', '/admin/users', '/api/admin/users'])(
     'does not rewrite %s, so it cannot skip the basic auth check',
     (path) => {
-      const res = middleware(makeRequest(path, { accept: 'text/markdown' }));
+      const res = proxy(makeRequest(path, { accept: 'text/markdown' }));
 
       expect(res.headers.get('x-middleware-rewrite')).toBeNull();
       expect(res.status).toBe(401);
@@ -141,7 +141,7 @@ describe('markdown proxy route', () => {
     expect(res.headers.get('x-markdown-tokens')).toBeNull();
   });
 
-  it('supports path extraction from middleware forwarded header', async () => {
+  it('supports path extraction from proxy forwarded header', async () => {
     global.fetch = vi.fn().mockResolvedValue(
       new Response('<html><body><h1>From rewrite</h1></body></html>', {
         status: 200,

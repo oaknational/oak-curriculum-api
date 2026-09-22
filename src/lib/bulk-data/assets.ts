@@ -13,6 +13,17 @@ import { logError } from './logger';
 import { createWriteStream } from 'node:fs';
 import { LessonWithTranscripts } from '../owaClient';
 
+/**
+ * tar-stream v3 ships streamx types. streamx and Node streams interoperate at
+ * runtime but are not structurally compatible, so piping across the boundary
+ * between them needs a cast.
+ */
+const asNodeWritable = (stream: ReturnType<Pack['entry']>) =>
+  stream as unknown as NodeJS.WritableStream;
+
+const asStreamxWritable = (stream: NodeJS.WritableStream) =>
+  stream as unknown as Parameters<Pack['pipe']>[0];
+
 export async function downloadQuiz(
   key: ValidDownloadTypes,
   assetLinks: LessonAssetsMap,
@@ -131,7 +142,7 @@ export async function addStorageAssetToTar(
         },
       );
 
-      nodeStream.pipe(entry);
+      nodeStream.pipe(asNodeWritable(entry));
       nodeStream.on('error', (err: Error) => {
         logError(`Stream error: ${err}`);
         reject(err);
@@ -156,26 +167,26 @@ export function buildAssetPacks(
     `${sequenceDir}/${slug}-worksheets.tar`,
   );
   const worksheetsPack = tar.pack();
-  worksheetsPack.pipe(worksheetsOutput);
+  worksheetsPack.pipe(asStreamxWritable(worksheetsOutput));
 
   // Create slide decks tarball
   const slideDecksOutput = createWriteStream(
     `${sequenceDir}/${slug}-slide-decks.tar`,
   );
   const slideDecksPack = tar.pack();
-  slideDecksPack.pipe(slideDecksOutput);
+  slideDecksPack.pipe(asStreamxWritable(slideDecksOutput));
 
   // Create quizzes tarball
   const quizzesOutput = createWriteStream(`${sequenceDir}/${slug}-quizzes.tar`);
   const quizzesPack = tar.pack();
-  quizzesPack.pipe(quizzesOutput);
+  quizzesPack.pipe(asStreamxWritable(quizzesOutput));
 
   // Create supplementary resources tarball
   const resourcesOutput = createWriteStream(
     `${sequenceDir}/${slug}-resources.tar`,
   );
   const resourcesPack = tar.pack();
-  resourcesPack.pipe(resourcesOutput);
+  resourcesPack.pipe(asStreamxWritable(resourcesOutput));
 
   // Create asset packs object
   assetPacks.worksheets = worksheetsPack;

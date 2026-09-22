@@ -1,6 +1,6 @@
 import { sequenceSchema } from '@/lib/handlers/sequences/types';
 import * as z from 'zod/v4';
-import example from './sequenceUnitsResponse.example.json' assert { type: 'json' };
+import example from './sequenceUnitsResponse.example.json' with { type: 'json' };
 
 export const sequenceUnitsResponseSchema = z
   .array(sequenceSchema)

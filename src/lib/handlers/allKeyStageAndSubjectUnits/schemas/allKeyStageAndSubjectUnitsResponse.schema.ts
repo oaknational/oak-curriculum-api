@@ -1,5 +1,5 @@
 import * as z from 'zod/v4';
-import example from './allKeyStageAndSubjectUnitsResponse.example.json' assert { type: 'json' };
+import example from './allKeyStageAndSubjectUnitsResponse.example.json' with { type: 'json' };
 
 const examBoardSchema = z.object({
   title: z.string().describe('The title of the exam board'),

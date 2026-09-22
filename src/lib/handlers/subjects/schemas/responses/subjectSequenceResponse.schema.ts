@@ -4,7 +4,7 @@ import {
   keyStagesResult,
   ks4ProgrammeFactorsResult,
 } from '@/lib/handlers/subjects/types';
-import example from './subjectSequenceResponse.example.json' assert { type: 'json' };
+import example from './subjectSequenceResponse.example.json' with { type: 'json' };
 
 export const subjectSequenceResponseSchema = z
   .object({

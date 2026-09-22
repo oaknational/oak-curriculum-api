@@ -1,5 +1,5 @@
 import groupBy from 'object.groupby';
-import { protectedProcedure } from '@/lib/protect';
+import { v0Procedure } from '@/lib/protect';
 import { router } from '@/lib/trpc';
 import { TRPCError } from '@trpc/server';
 import {
@@ -10,7 +10,6 @@ import {
   lessonSearchView,
   lessonView,
 } from 'lib/owaClient';
-import { subjectSlugs } from '@/lib/keyStageAndSubjects';
 import type { LessonSearchView, LessonView } from 'lib/owaClient';
 import * as z from 'zod/v4';
 import { errorResponses } from '@/lib/errorResponses';
@@ -20,6 +19,7 @@ import {
   collapsedRestrictionStatuses,
   highestRestrictionLevel,
   isLessonRestricted,
+  isSubjectAllowed,
 } from '@/lib/queryGate';
 import {
   getUnitProgrammeFactorsFromLesson,
@@ -54,7 +54,7 @@ export const checkRestrictedLessonsResponseSchema = z
   });
 
 export const getLessons = router({
-  postCheckRestrictedLessons: protectedProcedure
+  postCheckRestrictedLessons: v0Procedure
     .meta({
       openapi: {
         method: 'POST',
@@ -114,7 +114,7 @@ Not for: checking a single lesson (GET /lessons/{lesson}/summary); searching les
 
       return results;
     }),
-  getLesson: protectedProcedure
+  getLesson: v0Procedure
     .meta({
       openapi: {
         method: 'GET',
@@ -189,7 +189,7 @@ Example slug: imagining-you-are-the-characters-the-three-billy-goats-gruff.`,
       }
 
       // validate the subject
-      if (!data[0].subjectSlug || !subjectSlugs.includes(data[0].subjectSlug)) {
+      if (!data[0].subjectSlug || !isSubjectAllowed(data[0].subjectSlug)) {
         throw new TRPCError({
           message: 'Lesson not found',
           code: 'NOT_FOUND',
@@ -261,7 +261,7 @@ Example slug: imagining-you-are-the-characters-the-three-billy-goats-gruff.`,
         });
       }
     }),
-  searchByTextSimilarity: protectedProcedure
+  searchByTextSimilarity: v0Procedure
     .meta({
       openapi: {
         method: 'GET',

@@ -5,9 +5,12 @@
 We continuously update and improve Oak National Academy's product and codebase,
 including patching security vulnerabilities.
 
-The public API is **v0** (public alpha moving towards public beta). Only the
-version currently deployed at `open-api.thenational.academy` is supported —
-fixes are rolled forward, not backported to earlier tags.
+Only the version currently deployed at `open-api.thenational.academy` is
+supported — fixes are rolled forward, not backported to earlier git tags.
+
+That is compatible with `/api/v0` being frozen. Both majors are served from the
+same deployment, so a fix reaches them at once: `/api/v0` is frozen to new
+**features**, not to fixes.
 
 | Version                                  | Supported          |
 | ---------------------------------------- | ------------------ |

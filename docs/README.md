@@ -5,8 +5,11 @@ the [repository README](../README.md) and checked by the link-check workflow.
 
 ## Version framing
 
-The public API is **v0** (public alpha moving towards public beta). V0 work
-focuses on correctness and trust.
+The public API is **v1** served at `/api/v1`. Work focuses on correctness and trust.
+
+`/api/v0` remains in place and frozen: it takes fixes, but new endpoints and
+fields land in `/api/v1` only. The URL major tracks the package major — see
+[RELEASING.md](RELEASING.md#the-url-major-is-the-semver-major).
 
 ## Using the API
 
@@ -19,10 +22,12 @@ focuses on correctness and trust.
 
 - [`../CONTRIBUTING.md`](../CONTRIBUTING.md) — how to contribute, and who can.
 - [`RELEASING.md`](RELEASING.md) — how a release happens and what triggers one.
+- [`VERSIONING.md`](VERSIONING.md) — which majors a change reaches, and the move to branched majors.
 - [`../README_BULK_DOWNLOAD.md`](../README_BULK_DOWNLOAD.md) — bulk pipeline guide.
 - [`../src/cms/README.md`](../src/cms/README.md) — CMS integration.
 - [`../infrastructure/README.md`](../infrastructure/README.md) — Terraform and hosting.
 - [`../.github/workflows/README.md`](../.github/workflows/README.md) — what each CI workflow does.
+- [`styled-components.md`](styled-components.md) — the styled-components 6 rules and the oak-components workarounds they force.
 
 ## Policies and records
 

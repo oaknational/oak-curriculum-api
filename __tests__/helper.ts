@@ -8,6 +8,18 @@ import type { NextRequest } from 'next/server';
 import { vi } from 'vitest';
 export * from './make-call';
 
+vi.mock('@/lib/context', () => {
+  const user = { id: 1, name: 'Test User', key: 'test-user', rateLimit: 0 };
+  return {
+    getApiKeyFromRequest: vi.fn().mockReturnValue('test-user'),
+    withUser: vi.fn().mockResolvedValue(user),
+    Context: vi.fn().mockImplementation(() => ({
+      user,
+      resHeaders: new Headers(),
+    })),
+  };
+});
+
 vi.mock('@/lib/rateLimit', async (importOriginal: () => Promise<object>) => {
   const actual = await importOriginal();
   return {
@@ -34,20 +46,6 @@ export function extractCauseFromTRPCError(
     }
   }
   return undefined;
-}
-
-export function mockWithUser() {
-  vi.mock('@/lib/context', () => {
-    const user = { id: 1, name: 'Test User', key: 'test-user', rateLimit: 0 };
-    return {
-      getApiKeyFromRequest: vi.fn().mockReturnValue('test-user'),
-      withUser: vi.fn().mockResolvedValue(user),
-      Context: vi.fn().mockImplementation(() => ({
-        user,
-        resHeaders: new Headers(),
-      })),
-    };
-  });
 }
 
 // create getLessonAsset using the exports

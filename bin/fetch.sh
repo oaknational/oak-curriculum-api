@@ -1,10 +1,10 @@
 set -a
 . ./.env
 set +a
-ROOT=http://localhost:2727/api/v0
+ROOT=http://localhost:2727/api/v1
 
 if [[ $1 == "prod" ]]; then
-  ROOT=https://open-api.thenational.academy/api/v0
+  ROOT=https://open-api.thenational.academy/api/v1
 fi
 
 if [[ $API_KEY == "" ]]; then
@@ -102,5 +102,5 @@ get "/units/life-in-a-capital-city-london-cardiff-776/summary" '.unitTitle == "W
 
 get "/key-stages/ks3/subject/english/assets?unit=victorian-childhood-non-fiction-reading-and-writing&offset=0&limit=10" 'map(.assets | map(select(.type == "exitQuiz"))) | flatten | length > 0'
 
-get $FILTER
+# get $FILTER
 title "FIN $TESTS tests run"

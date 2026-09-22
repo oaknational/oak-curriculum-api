@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { NextRequest } from 'next/server';
 import { unitVariantLessonsView } from '@/lib/owaClient';
+import { LATEST_API_MAJOR } from '@/lib/apiVersion';
 import getConfig, {
   apiCatalogPath,
   homepageDiscoveryLinkHeader,
@@ -94,7 +95,7 @@ describe('HTTP Headers - Link header pagination', () => {
     expect(linkHeader).toContain('limit=10');
   });
 
-  it('should NOT return link header when results are less than the page size', async () => {
+  it('should NOT return a next link when results are less than the page size', async () => {
     // Mock OWA to return only 5 results (partial page when limit=10)
     mocks.owaClientRequestMock.mockResolvedValue({
       [unitVariantLessonsView]: Array(5).fill({
@@ -120,8 +121,9 @@ describe('HTTP Headers - Link header pagination', () => {
     const res = await GET(req);
 
     expect(res.status).toBe(200);
-    const linkHeader = res.headers.get('link');
-    expect(linkHeader).toBeNull();
+    // v0 always advertises its successor, so the header may be present; what
+    // matters is that it offers no further page.
+    expect(res.headers.get('link')).not.toContain('rel="next"');
   });
 });
 
@@ -138,8 +140,16 @@ describe('HTTP Headers - homepage agent discovery', () => {
     expect(linkHeader?.value).toContain(
       `<${apiCatalogPath}>; rel="api-catalog"`,
     );
+    // Both majors are described; the current one is listed first.
+    expect(linkHeader?.value).toContain(
+      '</api/v1/swagger.json>; rel="service-desc"',
+    );
     expect(linkHeader?.value).toContain(
       '</api/v0/swagger.json>; rel="service-desc"',
+    );
+    const value = linkHeader?.value ?? '';
+    expect(value.indexOf('/api/v1/swagger.json')).toBeLessThan(
+      value.indexOf('/api/v0/swagger.json'),
     );
     expect(linkHeader?.value).toContain(
       '</docs/about-oaks-api/api-overview>; rel="service-doc"',
@@ -162,5 +172,17 @@ describe('HTTP Headers - homepage agent discovery', () => {
     expect(authMd).toContain('No OAuth token endpoint');
     expect(authMd).toContain('Authorization: Bearer <API_KEY>');
     expect(authMd).toContain('Request an API key');
+    expect(authMd).toContain('Rate limits:');
+    expect(authMd).toContain(
+      'rate limited per API key over a sliding one-hour window',
+    );
+    expect(authMd).toContain('The default allowance is 1000 requests per hour');
+    expect(authMd).toContain('X-RateLimit-Remaining');
+    expect(authMd).toContain(`GET /api/${LATEST_API_MAJOR}/rate-limit`);
+    expect(authMd).toContain('Support:');
+    expect(authMd).toContain(
+      'https://bvumd.share.hsforms.com/2nacebr1eQuKMoA-vGpkjCA',
+    );
+    expect(authMd).toContain('First response within five working days');
   });
 });

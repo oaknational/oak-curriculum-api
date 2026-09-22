@@ -1,4 +1,4 @@
-import { protectedProcedure } from '@/lib/protect';
+import { v0Procedure } from '@/lib/protect';
 import { router } from '@/lib/trpc';
 
 import type { UnitVariantLessonsView } from 'lib/owaClient';
@@ -9,7 +9,7 @@ import { phaseToKeyStageMap } from '@/lib/oakConsts';
 import { nextPageLink } from '@/lib/pagination';
 
 export const getKeywords = router({
-  getKeywords: protectedProcedure
+  getKeywords: v0Procedure
     .meta({
       openapi: {
         method: 'GET',
@@ -128,7 +128,7 @@ export const getKeywords = router({
       if (offset + limit < keywords.length) {
         ctx.resHeaders.set(
           'link',
-          `<${nextPageLink(ctx.req.url, offset, limit)}>; rel="next"`,
+          `<${nextPageLink(ctx.major, ctx.req.url, offset, limit)}>; rel="next"`,
         );
       }
 

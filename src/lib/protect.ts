@@ -1,21 +1,18 @@
 import { TRPCError } from '@trpc/server';
 import { publicProcedure, t } from '@/lib/trpc';
+import type { ApiMeta } from '@/lib/trpc';
 import type { RateLimitInfo } from './rateLimit';
 import { getRateLimiter } from './rateLimit';
 import type { Context } from './context';
-import type { OpenApiMeta } from 'trpc-to-openapi';
 
 // Re-exported for the existing callers; it lives in ./rateLimit so that code
 // needing a rate limiter doesn't have to pull in tRPC (and posthog-node) too.
 export { getRateLimiter };
 
-const protectLogic = async (
-  ctx: Context,
-  meta?: OpenApiMeta,
-): Promise<void> => {
+const protectLogic = async (ctx: Context, meta?: ApiMeta): Promise<void> => {
   const { user, resHeaders } = ctx;
 
-  const noCost: boolean = (meta?.noCost as boolean) || false;
+  const noCost = meta?.noCost ?? false;
 
   if (!user) {
     throw new TRPCError({
@@ -46,7 +43,7 @@ const protectLogic = async (
 export const protect = async (opts: {
   ctx: Context;
   next: (opts?: { ctx?: Context }) => Promise<unknown>;
-  meta?: OpenApiMeta;
+  meta?: ApiMeta;
 }): Promise<unknown> => {
   const { ctx, next, meta } = opts;
 
@@ -62,3 +59,14 @@ const protectMiddleware = t.middleware(async ({ ctx, next, meta }) => {
 });
 
 export const protectedProcedure = publicProcedure.use(protectMiddleware);
+
+/**
+ * A procedure that has been served since `/api/v0`, and so appears in every
+ * major.
+ *
+ * `/api/v0` is frozen, so nothing new joins this list — new work uses
+ * `protectedProcedure`, whose absent `addedIn` defaults to the latest major.
+ * When v0 is eventually retired, deleting this export forces every call site to
+ * be revisited.
+ */
+export const v0Procedure = protectedProcedure.meta({ addedIn: 'v0' });

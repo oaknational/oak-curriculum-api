@@ -6,7 +6,8 @@ export const apiCatalogContentType = `application/linkset+json; profile="${apiCa
 export const apiCatalogLinkHeader = `<${apiCatalogPath}>; rel="api-catalog"; type="application/linkset+json"; profile="${apiCatalogProfile}"; title="API catalog"`;
 export const homepageDiscoveryLinkHeader = [
   apiCatalogLinkHeader,
-  '</api/v0/swagger.json>; rel="service-desc"; type="application/json"; title="OpenAPI description"',
+  '</api/v1/swagger.json>; rel="service-desc"; type="application/json"; title="OpenAPI description"',
+  '</api/v0/swagger.json>; rel="service-desc"; type="application/json"; title="OpenAPI description (v0, frozen)"',
   '</docs/about-oaks-api/api-overview>; rel="service-doc"; type="text/html"; title="API overview"',
   '</playground>; rel="service-doc"; type="text/html"; title="Interactive API playground"',
 ].join(', ');

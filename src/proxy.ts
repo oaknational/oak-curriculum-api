@@ -51,7 +51,7 @@ function shouldRequestMarkdown(req: NextRequest): boolean {
     .some((value) => value.trim().startsWith(MARKDOWN_ACCEPT));
 }
 
-export function middleware(req: NextRequest): NextResponse {
+export function proxy(req: NextRequest): NextResponse {
   if (shouldRequestMarkdown(req)) {
     const originalPath = `${req.nextUrl.pathname}${req.nextUrl.search}`;
     const buildVersion = getMarkdownBuildVersion();

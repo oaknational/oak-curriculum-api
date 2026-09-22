@@ -1,4 +1,4 @@
-import { protectedProcedure } from '@/lib/protect';
+import { v0Procedure } from '@/lib/protect';
 import { router } from '@/lib/trpc';
 import {
   getClient,
@@ -14,7 +14,11 @@ import type {
   UnitVariantLessonsView,
 } from 'lib/owaClient';
 
-import { getLessonsRestrictions, isLessonRestricted } from '../../queryGate';
+import {
+  getLessonsRestrictions,
+  isLessonRestricted,
+  isSubjectAllowed,
+} from '../../queryGate';
 import type { Question, QuizKey } from './types';
 import { TRPCError } from '@trpc/server';
 import { sequenceWhere } from '../sequences/sequences';
@@ -31,14 +35,13 @@ import {
 } from './schemas';
 import { nextPageLink } from '@/lib/pagination';
 import { errorResponses } from '@/lib/errorResponses';
-import { subjectSlugs } from '@/lib/keyStageAndSubjects';
 
 function hasQuestions(results: Record<QuizKey, Question[]>): boolean {
   return results.starterQuiz.length > 0 || results.exitQuiz.length > 0;
 }
 
 export const getQuestions = router({
-  getQuestionsForLessons: protectedProcedure
+  getQuestionsForLessons: v0Procedure
     .meta({
       openapi: {
         method: 'GET',
@@ -101,7 +104,7 @@ Not for: quiz questions across a sequence (GET /sequences/{sequence}/questions);
       const lesson = data[0];
 
       // validate the subject
-      if (!lesson.subjectSlug || !subjectSlugs.includes(lesson.subjectSlug)) {
+      if (!lesson.subjectSlug || !isSubjectAllowed(lesson.subjectSlug)) {
         throw new TRPCError({
           message: 'Programme not found',
           code: 'NOT_FOUND',
@@ -114,7 +117,7 @@ Not for: quiz questions across a sequence (GET /sequences/{sequence}/questions);
 
       return questionsForQuiz(lesson, input.filter);
     }),
-  getQuestionsForSequence: protectedProcedure
+  getQuestionsForSequence: v0Procedure
     .meta({
       openapi: {
         method: 'GET',
@@ -199,7 +202,7 @@ Not for: questions in a single programme (GET /programmes/{programme}/questions)
       if (data.length === limit) {
         ctx.resHeaders.set(
           'link',
-          `<${nextPageLink(ctx.req.url, offset, limit)}>; rel="next"`,
+          `<${nextPageLink(ctx.major, ctx.req.url, offset, limit)}>; rel="next"`,
         );
       }
 
@@ -242,7 +245,7 @@ Not for: questions in a single programme (GET /programmes/{programme}/questions)
 
       return lessons;
     }),
-  getQuestionsForKeyStageAndSubject: protectedProcedure
+  getQuestionsForKeyStageAndSubject: v0Procedure
     .meta({
       openapi: {
         tags: ['questions'],
@@ -307,7 +310,7 @@ Not for: a single lesson's quiz (GET /lessons/{lesson}/quiz); questions across a
       if (data.length === limit) {
         ctx.resHeaders.set(
           'link',
-          `<${nextPageLink(ctx.req.url, offset, limit)}>; rel="next"`,
+          `<${nextPageLink(ctx.major, ctx.req.url, offset, limit)}>; rel="next"`,
         );
       }
 
@@ -362,7 +365,7 @@ Not for: a single lesson's quiz (GET /lessons/{lesson}/quiz); questions across a
 
       return lessons;
     }),
-  getQuestionsForProgramme: protectedProcedure
+  getQuestionsForProgramme: v0Procedure
     .meta({
       openapi: {
         method: 'GET',
@@ -408,7 +411,7 @@ Not for: questions in a single lesson (GET /lessons/{lesson}/quiz); questions ac
       }
 
       // validate the subject
-      if (!subjectSlugs.includes(rows[0].subject_slug)) {
+      if (!isSubjectAllowed(rows[0].subject_slug)) {
         throw new TRPCError({
           message: 'Programme not found',
           code: 'NOT_FOUND',
@@ -464,7 +467,7 @@ Not for: questions in a single lesson (GET /lessons/{lesson}/quiz); questions ac
       if (data.length === limit) {
         ctx.resHeaders.set(
           'link',
-          `<${nextPageLink(ctx.req.url, offset, limit)}>; rel="next"`,
+          `<${nextPageLink(ctx.major, ctx.req.url, offset, limit)}>; rel="next"`,
         );
       }
 

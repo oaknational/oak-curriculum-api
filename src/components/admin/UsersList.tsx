@@ -5,12 +5,12 @@ import {
   OakFlex,
   OakHeading,
   OakInlineBanner,
-  OakLoadingSpinner,
   OakP,
   OakPagination,
   OakSecondaryButton,
   OakTextInput,
 } from '@oaknational/oak-components';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useStableId } from '@/lib/useStableId';
@@ -133,7 +133,7 @@ export function UsersList(): React.ReactElement {
         </OakP>
       ) : loading ? (
         <OakFlex $justifyContent="center" $pv="spacing-48">
-          <OakLoadingSpinner />
+          <LoadingSpinner />
         </OakFlex>
       ) : error ? (
         <OakInlineBanner isOpen type="error" title="Error" message={error} />

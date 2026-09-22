@@ -1,6 +1,6 @@
 import * as z from 'zod/v4';
 import { oakUrlSchema } from '@/lib/handlers/commonTypes';
-import example from './lessonSearchResponse.example.json' assert { type: 'json' };
+import example from './lessonSearchResponse.example.json' with { type: 'json' };
 
 export const lessonSearchResultSchema = z.object({
   lessonSlug: z.string().meta({ description: 'The lesson slug identifier' }),

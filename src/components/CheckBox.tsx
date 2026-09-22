@@ -36,7 +36,7 @@ const HiddenCheckbox = styled.input.attrs({ type: 'checkbox' })`
   width: 1px;
 `;
 
-const StyledCheckbox = styled.div<{ checked: boolean; $hasError?: boolean }>`
+const StyledCheckbox = styled.div<{ $checked: boolean; $hasError?: boolean }>`
   width: 28px;
   height: 28px;
   border-radius: 2px;
@@ -52,7 +52,7 @@ const StyledCheckbox = styled.div<{ checked: boolean; $hasError?: boolean }>`
   }
 
   ${(props) =>
-    props.checked &&
+    props.$checked &&
     `
     background: #222; /* New background when checked */
     border-color: #CACACA;
@@ -122,7 +122,7 @@ const CheckBox: React.FC<CheckBoxProps> = ({
       <StyledCheckbox
         aria-hidden
         onClick={handleCheckboxChange}
-        checked={checked}
+        $checked={checked}
         $hasError={$hasError}
       >
         {checked && <CheckMarkIcon />}

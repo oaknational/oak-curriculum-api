@@ -1,7 +1,7 @@
 import * as z from 'zod/v4';
 import { downloadTypeEnum } from '@/lib/handlers/assets/types';
 import { limitSchema, offsetSchema } from '@/lib/handlers/commonTypes';
-import example from './programmeAssets.example.json' assert { type: 'json' };
+import example from './programmeAssets.example.json' with { type: 'json' };
 
 export const programmeAssetsRequestSchema = z
   .object({

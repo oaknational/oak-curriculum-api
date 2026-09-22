@@ -5,6 +5,7 @@ import {
   lessonView,
   unitVariantLessonsView,
 } from '@/lib/owaClient';
+import { API_MAJORS } from '@/lib/apiVersion';
 
 const mocks = vi.hoisted(() => ({
   owaClientRequestMock: vi.fn(),
@@ -196,6 +197,62 @@ describe('programme assets and questions endpoints', () => {
       lessonSlugs: ['variables-and-data-types'],
     });
   });
+
+  it.each(API_MAJORS)(
+    'builds asset URLs for the major the request arrived on (%s)',
+    async (major) => {
+      // The end-to-end proof that the major reaches the payload: the same
+      // handler and schemas produce a download URL under the caller's major.
+      mocks.owaClientRequestMock.mockResolvedValueOnce({
+        [unitVariantLessonsView]: [
+          {
+            lesson_slug: 'variables-and-data-types',
+            unit_slug: 'variables',
+            subject_slug: 'computing',
+          },
+        ],
+      });
+      mocks.owaClientRequestMock.mockResolvedValueOnce({
+        [lessonRestrictionView]: [],
+      });
+      mocks.owaClientRequestMock.mockResolvedValueOnce({
+        [downloadView]: [
+          {
+            lessonSlug: 'variables-and-data-types',
+            lessonTitle: 'Variables and data types',
+            slideDeck: {
+              label: 'Slide Deck',
+              bucket_path: 'LESS-ID/slidedeck/PDF.pdf',
+            },
+          },
+        ],
+      });
+      mocks.owaClientRequestMock.mockResolvedValueOnce({
+        [lessonView]: [
+          {
+            lessonSlug: 'variables-and-data-types',
+            tpcWorks: [],
+            tpcMedia: [],
+          },
+        ],
+      });
+
+      const { authedCaller } = await import('./helper');
+      const { caller } = authedCaller(1, major);
+
+      const result = await caller.getAssets.getProgrammeAssets({
+        programme: 'computing-secondary-year-7',
+      });
+
+      expect(result[0]?.assets[0]?.url).toContain(
+        `/api/${major}/lessons/variables-and-data-types/assets/slideDeck`,
+      );
+
+      for (const other of API_MAJORS.filter((m) => m !== major)) {
+        expect(result[0]?.assets[0]?.url).not.toContain(`/api/${other}/`);
+      }
+    },
+  );
 
   it('/key-stages/{keyStage}/subject/{subject}/assets filters restricted lessons before fetching downloads', async () => {
     mocks.owaClientRequestMock.mockResolvedValueOnce({

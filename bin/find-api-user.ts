@@ -97,4 +97,4 @@ if (str.startsWith('since:')) {
   data = (await listUsers({ search: str, limit: 100 })).users;
 }
 
-console.log(data);
+console.log(JSON.stringify(data, null, 2));

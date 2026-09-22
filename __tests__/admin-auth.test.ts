@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach, afterAll, vi } from 'vitest';
 import { NextRequest } from 'next/server';
-import { middleware } from '@/middleware';
+import { proxy } from '@/proxy';
 
 const USERNAME = 'admin-test';
 const PASSWORD = 'admin-secret';
@@ -16,7 +16,7 @@ function makeRequest(path: string, authorization?: string): NextRequest {
   });
 }
 
-describe('admin basic auth middleware', () => {
+describe('admin basic auth proxy', () => {
   beforeEach(() => {
     // `pnpm test` loads the developer's real .env, so these must be stubbed or
     // the results differ between machines and CI.
@@ -31,7 +31,7 @@ describe('admin basic auth middleware', () => {
   it.each(['/admin', '/admin/users/1', '/api/admin/users'])(
     'challenges %s when no credentials are sent',
     (path) => {
-      const res = middleware(makeRequest(path));
+      const res = proxy(makeRequest(path));
 
       expect(res.status).toBe(401);
       expect(res.headers.get('WWW-Authenticate')).toBe('Basic');
@@ -39,13 +39,13 @@ describe('admin basic auth middleware', () => {
   );
 
   it('rejects the wrong password', () => {
-    const res = middleware(makeRequest('/admin', basic(USERNAME, 'nope')));
+    const res = proxy(makeRequest('/admin', basic(USERNAME, 'nope')));
 
     expect(res.status).toBe(401);
   });
 
   it('rejects the wrong username', () => {
-    const res = middleware(makeRequest('/admin', basic('nope', PASSWORD)));
+    const res = proxy(makeRequest('/admin', basic('nope', PASSWORD)));
 
     expect(res.status).toBe(401);
   });
@@ -53,7 +53,7 @@ describe('admin basic auth middleware', () => {
   it.each(['/admin', '/admin/users/1', '/api/admin/users'])(
     'allows %s with the right credentials',
     (path) => {
-      const res = middleware(makeRequest(path, basic(USERNAME, PASSWORD)));
+      const res = proxy(makeRequest(path, basic(USERNAME, PASSWORD)));
 
       expect(res.status).toBe(200);
     },
@@ -62,7 +62,7 @@ describe('admin basic auth middleware', () => {
   it.each(['/', '/docs/about-oaks-api/api-overview', '/api/v0/swagger.json'])(
     'leaves %s unauthenticated',
     (path) => {
-      expect(middleware(makeRequest(path)).status).toBe(200);
+      expect(proxy(makeRequest(path)).status).toBe(200);
     },
   );
 });
