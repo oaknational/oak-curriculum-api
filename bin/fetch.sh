@@ -102,5 +102,5 @@ get "/units/life-in-a-capital-city-london-cardiff-776/summary" '.unitTitle == "W
 
 get "/key-stages/ks3/subject/english/assets?unit=victorian-childhood-non-fiction-reading-and-writing&offset=0&limit=10" 'map(.assets | map(select(.type == "exitQuiz"))) | flatten | length > 0'
 
-get $FILTER
+# get $FILTER
 title "FIN $TESTS tests run"
