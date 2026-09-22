@@ -22,10 +22,12 @@ fields land in `/api/v1` only. The URL major tracks the package major — see
 
 - [`../CONTRIBUTING.md`](../CONTRIBUTING.md) — how to contribute, and who can.
 - [`RELEASING.md`](RELEASING.md) — how a release happens and what triggers one.
+- [`VERSIONING.md`](VERSIONING.md) — which majors a change reaches, and the move to branched majors.
 - [`../README_BULK_DOWNLOAD.md`](../README_BULK_DOWNLOAD.md) — bulk pipeline guide.
 - [`../src/cms/README.md`](../src/cms/README.md) — CMS integration.
 - [`../infrastructure/README.md`](../infrastructure/README.md) — Terraform and hosting.
 - [`../.github/workflows/README.md`](../.github/workflows/README.md) — what each CI workflow does.
+- [`styled-components.md`](styled-components.md) — the styled-components 6 rules and the oak-components workarounds they force.
 
 ## Policies and records
 

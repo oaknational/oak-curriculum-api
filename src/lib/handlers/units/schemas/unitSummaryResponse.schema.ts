@@ -1,7 +1,7 @@
 import * as z from 'zod/v4';
 import { categorySchema, threadSchema } from '@/lib/handlers/units/types';
 import { unitProgrammeFactorsSchema } from '@/lib/handlers/unitProgrammeFactors';
-import example from './unitSummaryResponse.example.json' assert { type: 'json' };
+import example from './unitSummaryResponse.example.json' with { type: 'json' };
 
 export const unitSummaryResponseSchema = z
   .object({

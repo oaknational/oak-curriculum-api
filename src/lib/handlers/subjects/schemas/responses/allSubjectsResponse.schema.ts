@@ -1,6 +1,6 @@
 import { subjectSlugs } from '@/lib/keyStageAndSubjects';
 import * as z from 'zod/v4';
-import example from './allSubjectsResponse.example.json' assert { type: 'json' };
+import example from './allSubjectsResponse.example.json' with { type: 'json' };
 
 export const allSubjectsResponseSchema = z
   .array(z.enum(subjectSlugs as [string]))

@@ -53,10 +53,18 @@ Rate limits:
   different allowance, so treat the headers below as authoritative for your key.
 - Every rate-limited response carries `X-RateLimit-Limit`,
   `X-RateLimit-Remaining` and `X-RateLimit-Reset`.
-- `GET /rate-limit` returns the same three values as JSON and does not count
-  against the allowance.
+- `GET /api/v1/rate-limit` returns the same three values as JSON and does not
+  count against the allowance.
 - Once the allowance is spent, requests are rejected and the response carries
   `X-Retry-After` holding the reset time in milliseconds since the Unix epoch.
+
+Cross-origin requests:
+
+- Every response carries `Access-Control-Allow-Origin: *`, so a browser client
+  may call the API directly.
+- `Link`, `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset` and
+  `X-Retry-After` are named in `Access-Control-Expose-Headers`. Without that a
+  browser hides them from JavaScript, whatever the response says.
 
 Support:
 

@@ -1,5 +1,5 @@
 import { keyStagesResult } from '@/lib/handlers/subjects/types';
-import example from './subjectKeyStagesResponse.example.json' assert { type: 'json' };
+import example from './subjectKeyStagesResponse.example.json' with { type: 'json' };
 
 export const subjectKeyStagesResponseSchema = keyStagesResult.meta({
   description:

@@ -1,7 +1,7 @@
 # Releasing
 
 This project is versioned with [semantic versioning](https://semver.org) and
-released automatically by [semantic-release](https://semantic-release.gitbook.io)
+released automatically by [semantic-release](https://semantic-release.org/)
 from conventional commit messages.
 
 **The version tracks the API contract.** Only commits scoped `api` move it.
@@ -111,6 +111,10 @@ already tagged — so get it provisioned before the first `api` commit lands.
 
 ## The URL major is the semver major
 
+For the day-to-day decision of which majors a change should reach — and what has
+to change before majors can live on separate branches, per RFC-52 — see
+[VERSIONING.md](VERSIONING.md).
+
 The public API is served under `/api/v1`. That segment is bound to the project
 version: `0.x` was served at `/api/v0`, `1.x` at `/api/v1`, `2.x` at `/api/v2`.
 A breaking change bumps the major, which mints a new URL major and freezes the
@@ -142,7 +146,9 @@ serves its own URLs.
 6. Update the discovery surfaces: `public/.well-known/api-catalog`,
    `public/robots.txt`, `public/auth.md`, the agent skill and its sha256 in
    `public/.well-known/agent-skills/index.json`, `next.config.mjs`, and
-   `src/app/sitemap.ts`.
+   `src/app/sitemap.ts`. `__tests__/agent-doc-routes.test.ts` checks the paths
+   in the static ones against the routes each major serves, so a missed edit
+   there fails CI rather than sending agents to a 404.
 7. Update [ENDPOINTS.md](ENDPOINTS.md) and the docs.
 
 Expect a short window between merging and releasing where the new major is

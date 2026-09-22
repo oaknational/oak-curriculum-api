@@ -69,7 +69,14 @@ function camelCaseOperationIds(document: OpenAPIObject): OpenAPIObject {
   return document;
 }
 
-const DESCRIPTION = `This Oak Curriculum API is an intermediary that enables software applications to communicate with each other to exchange - in this case - data and assets. Through the Oak Curriculum API, you will have access to a wide range of educational content across subjects for key stages 1-4.
+function getDescriptionForMajor(major: ApiMajor): string {
+  return `This Oak Curriculum API is an intermediary that enables software applications to communicate with each other to exchange - in this case - data and assets. Through the Oak Curriculum API, you will have access to a wide range of educational content across subjects for key stages 1-4.
+
+${describeMajor(major)}
+
+### Changelog
+
+All notable changes to this API are documented in our [GitHub repository release pages](https://github.com/oaknational/oak-curriculum-api/releases).
 
 ### How could you use this API?
 
@@ -84,6 +91,7 @@ To give you some inspiration, here are just a few examples of how you could use 
 
 Full documentation for the Oak Curriculum API is available on the URL below:
 `;
+}
 
 /**
  * The major each example URL in the schemas is written against.
@@ -158,7 +166,7 @@ export function openApiDocumentFor(major: ApiMajor): OpenAPIObject {
             version: versionForMajor(major),
             baseUrl: apiBaseUrl(major),
             docsUrl: '/docs',
-            description: DESCRIPTION + describeMajor(major),
+            description: getDescriptionForMajor(major),
             securitySchemes: {
               bearerAuth,
             },
