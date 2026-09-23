@@ -25,6 +25,7 @@ const trpcErrorCodeToHttpStatus: Record<string, number> = {
   INTERNAL_SERVER_ERROR: 500,
 };
 import {
+  getSignedAssetUrl,
   getVideoFromMux,
   listFilesWithMimeType,
 } from '@/lib/handlers/assets/helpers';
@@ -46,7 +47,10 @@ import { withSuccessorLink } from '@/lib/api/versionHeaders';
 
 const storage = getGoogleCloudStorage();
 
-/** Downloads stream, resume and arrive named, so those headers go too. */
+// Every download is a redirect, so the bytes never carry our CORS headers —
+// the browser applies the *bucket's* CORS to the signed URL it follows. These
+// stay exposed for the redirect itself, and because HEAD callers still read
+// them off the 302.
 const assetCorsHeaders = corsHeaders('GET, HEAD, OPTIONS', [
   'Accept-Ranges',
   'Content-Disposition',
@@ -116,6 +120,10 @@ const handler = async (
 
     const asset = assets[type as DownloadTypeEnum];
 
+    // every asset type redirects: videos to the CDN, everything else to a
+    // short-lived signed URL on the storage bucket
+    let location: string;
+
     if (type !== 'video') {
       let { bucket_path } = asset as SignedAsset;
       const { bucket_name } = asset as SignedAsset;
@@ -152,38 +160,12 @@ const handler = async (
 
       const filename = `${lesson}_${type.toLocaleLowerCase()}.${ext.toLowerCase()}`;
 
-      const stream = storage
-        .bucket(bucket_name)
-        .file(bucket_path)
-        .createReadStream();
-
-      // we need to convert the stream to a BodyInit even though it's a ReadableStream
-      // and ReadableStreams are allowed to be passed to new Response(s) - but there's
-      // something weird in the types that requires it to be converted to a BodyInit
-      const res = new NextResponse(stream as unknown as BodyInit, {
-        headers: resHeaders,
-      });
-      res.headers.set('Content-Type', 'application/octet-stream');
-      res.headers.set(
-        'Content-Disposition',
-        `attachment; filename="${filename}"`,
+      location = await getSignedAssetUrl(
+        storage,
+        bucket_name,
+        bucket_path,
+        filename,
       );
-
-      captureApiRequestEvent({
-        url: req.url,
-        apiKey,
-        args,
-        durationMs: Date.now() - startedAt,
-        apiMajor: major,
-        endpointPath,
-        httpMethod: req.method || 'GET',
-        queryParams,
-        source: 'lesson_assets_route',
-        success: true,
-        userId,
-      });
-
-      return res;
     } else {
       const { stream } = asset as Video;
       let { download } = asset as Video;
@@ -204,31 +186,33 @@ const handler = async (
       const url = new URL(download || stream);
       url.hostname = new URL(assetBaseVideoUrl).hostname;
 
-      captureApiRequestEvent({
-        url: req.url,
-        apiKey,
-        args,
-        durationMs: Date.now() - startedAt,
-        apiMajor: major,
-        endpointPath,
-        httpMethod: req.method || 'GET',
-        queryParams,
-        source: 'lesson_assets_route',
-        success: true,
-        userId,
-      });
-
-      const headers = new Headers(resHeaders);
-
-      headers.set('Location', url.toString());
-
-      const res = new NextResponse(`Redirecting to ${url.toString()}`, {
-        headers,
-        status: 302,
-      });
-
-      return res;
+      location = url.toString();
     }
+
+    captureApiRequestEvent({
+      url: req.url,
+      apiKey,
+      args,
+      durationMs: Date.now() - startedAt,
+      apiMajor: major,
+      endpointPath,
+      httpMethod: req.method || 'GET',
+      queryParams,
+      source: 'lesson_assets_route',
+      success: true,
+      userId,
+    });
+
+    const headers = new Headers(resHeaders);
+
+    headers.set('Location', location);
+    // signed URLs expire, so this redirect must not be cached downstream
+    headers.set('Cache-Control', 'private, no-store');
+
+    return new NextResponse(`Redirecting to ${location}`, {
+      headers,
+      status: 302,
+    });
   } catch (e: unknown) {
     let errorCode = 'UNKNOWN_ERROR';
     if (hasErrorCode(e)) {
@@ -261,8 +245,8 @@ async function handlerWrapper(
   req: NextRequest,
   { params }: { params: Promise<{ lesson: string; type: string }> },
 ): Promise<Response> {
-  // Wrapped once here so the successor link reaches the streamed 200, the
-  // video 302 and both error paths alike.
+  // Wrapped once here so the successor link reaches the asset 302 and both
+  // error paths alike.
   return withSuccessorLink(await route(major, req, { params }), major);
 }
 

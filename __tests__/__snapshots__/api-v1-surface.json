@@ -1901,11 +1901,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {}
-            }
-          },
           "302": {},
           "400": {
             "content": {

@@ -1,5 +1,10 @@
 import type { lessonView, LessonView } from '@/lib/owaClient';
 import type { Storage } from '@google-cloud/storage';
+import { TRPCError } from '@trpc/server';
+
+// How long a signed asset URL stays usable. This governs when the download may
+// *start*; a transfer already in flight is not cut off when the URL expires.
+export const SIGNED_URL_TTL_MS = 15 * 60 * 1000;
 
 export function getAttribution(
   attribution: LessonView[typeof lessonView][0],
@@ -39,6 +44,37 @@ export async function listFilesWithMimeType(
     name: file.name,
     mimeType: file.metadata.contentType || 'unknown',
   }));
+}
+
+// Sign a read URL for an asset so the client can fetch it straight from Google
+// Cloud Storage rather than having the bytes proxied through us. GCS echoes
+// `responseDisposition` back as the Content-Disposition of the object, which is
+// what preserves the download filename now that we are out of the byte path.
+export async function getSignedAssetUrl(
+  storage: Storage,
+  bucketName: string,
+  filePath: string,
+  filename: string,
+): Promise<string> {
+  try {
+    const [url] = await storage
+      .bucket(bucketName)
+      .file(filePath)
+      .getSignedUrl({
+        version: 'v4',
+        action: 'read',
+        expires: Date.now() + SIGNED_URL_TTL_MS,
+        responseDisposition: `attachment; filename="${filename}"`,
+      });
+
+    return url;
+  } catch (cause) {
+    throw new TRPCError({
+      message: 'Failed to sign asset URL',
+      code: 'INTERNAL_SERVER_ERROR',
+      cause,
+    });
+  }
 }
 
 export async function getVideoFromMux(
