@@ -1,5 +1,9 @@
 /**
- * Temporary discovery logging for the asset download pipeline.
+ * Discovery logging for the asset download pipeline.
+ *
+ * Off unless `ASSET_DEBUG_LOG` is `1` or `true`, because this is chatty and
+ * sits on the hot path of every download. Set it on a preview deployment to
+ * trace a failing download end to end, then unset it again.
  *
  * Everything here is prefixed with `[asset-download]` so a preview deployment's
  * logs can be filtered down to this one journey, and so the whole lot can be
@@ -19,6 +23,16 @@
 const PREFIX = '[asset-download]';
 
 type Detail = Record<string, unknown>;
+
+/**
+ * Read per call rather than once at module load, so that flipping the variable
+ * on a deployment takes effect without a rebuild, and so tests can toggle it.
+ */
+function isEnabled(): boolean {
+  const flag = process.env.ASSET_DEBUG_LOG;
+
+  return flag === '1' || flag === 'true';
+}
 
 /** How far to follow an error's `cause` chain before giving up. */
 const MAX_CAUSE_DEPTH = 4;
@@ -89,17 +103,29 @@ function serialise(detail: Detail): string {
   }
 }
 
-/** A step completed. */
+/** A step completed. Silent unless `ASSET_DEBUG_LOG` is set. */
 export function assetLog(stage: string, detail: Detail = {}): void {
+  if (!isEnabled()) {
+    return;
+  }
+
   console.log(`${PREFIX} ${stage} ${serialise(detail)}`);
 }
 
-/** A step threw. The error is unwrapped; the surrounding context is not. */
+/**
+ * A step threw. The error is unwrapped; the surrounding context is not.
+ * Silent unless `ASSET_DEBUG_LOG` is set — the route still returns its error
+ * to the caller either way.
+ */
 export function assetError(
   stage: string,
   error: unknown,
   detail: Detail = {},
 ): void {
+  if (!isEnabled()) {
+    return;
+  }
+
   console.error(
     `${PREFIX} ${stage} FAILED ${serialise({
       ...detail,
