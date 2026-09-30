@@ -44,7 +44,6 @@ import {
 import { errorFormatter } from '@/lib/trpc';
 import { corsHeaders } from '@/lib/api/cors';
 import { withSuccessorLink } from '@/lib/api/versionHeaders';
-import { assetError, assetLog, describeError } from '@/lib/assetDebugLog';
 
 const storage = getGoogleCloudStorage();
 
@@ -87,19 +86,10 @@ const handler = async (
 
   const resHeaders = createCorsHeaders();
 
-  assetLog('request: start', {
-    major,
-    method: req.method,
-    url: req.url,
-    hasApiKey: Boolean(apiKey),
-  });
-
   try {
     // 1. get the user
     const user = await withUser(req, apiKey);
     userId = user?.id;
-
-    assetLog('request: user resolved', { userId, hasUser: Boolean(user) });
     const ctx = {
       user,
       resHeaders,
@@ -121,16 +111,7 @@ const handler = async (
     const { lesson } = resolvedParams;
     args = { lesson, type };
 
-    assetLog('request: params', { lesson, type });
-
     const { assets } = await assetsForLesson(lesson);
-
-    // Which asset types this lesson actually has, so a 'missing asset' failure
-    // can be told apart from a permissions one without a second request.
-    assetLog('assets: resolved for lesson', {
-      lesson,
-      availableTypes: Object.keys(assets ?? {}),
-    });
 
     const usePPTX = type === 'slideDeck';
     if (usePPTX) {
@@ -139,14 +120,6 @@ const handler = async (
 
     const asset = assets[type as DownloadTypeEnum];
 
-    assetLog('assets: selected', {
-      type,
-      usePPTX,
-      found: Boolean(asset),
-      // The shape differs per type; the keys alone say which branch we are in.
-      assetKeys: asset ? Object.keys(asset) : [],
-    });
-
     // every asset type redirects: videos to the CDN, everything else to a
     // short-lived signed URL on the storage bucket
     let location: string;
@@ -154,8 +127,6 @@ const handler = async (
     if (type !== 'video') {
       let { bucket_path } = asset as SignedAsset;
       const { bucket_name } = asset as SignedAsset;
-
-      assetLog('storage: asset record', { bucket_name, bucket_path });
 
       const list = await listFilesWithMimeType(
         storage,
@@ -166,8 +137,6 @@ const handler = async (
       const ext = usePPTX ? 'pptx' : bucket_path.split('.').pop() || 'pdf';
 
       const mime = typeToMime.get(ext.toLowerCase());
-
-      assetLog('storage: extension resolved', { ext, mime: mime ?? null });
 
       if (!mime) {
         throw new TRPCError({
@@ -183,14 +152,6 @@ const handler = async (
         } else {
           return file.name === bucket_path;
         }
-      });
-
-      assetLog('storage: match in listing', {
-        matched: Boolean(found),
-        // Without a match we sign `bucket_path` as the database gave it, which
-        // is the case most likely to sign an object that is not there.
-        signing: found ? found.name : bucket_path,
-        fellBackToDatabasePath: !found,
       });
 
       if (found) {
@@ -219,17 +180,13 @@ const handler = async (
 
       if (!download) {
         // test if the download is there as our db is often out of sync with mux
-        assetLog('video: no download on record, asking mux', { stream });
         download = await getVideoFromMux(stream);
-        assetLog('video: mux lookup done', { resolved: Boolean(download) });
       }
 
       const url = new URL(download || stream);
       url.hostname = new URL(assetBaseVideoUrl).hostname;
 
       location = url.toString();
-
-      assetLog('video: location resolved', { location });
     }
 
     captureApiRequestEvent({
@@ -252,12 +209,6 @@ const handler = async (
     // signed URLs expire, so this redirect must not be cached downstream
     headers.set('Cache-Control', 'private, no-store');
 
-    assetLog('request: redirecting', {
-      lesson,
-      type,
-      durationMs: Date.now() - startedAt,
-    });
-
     return new NextResponse(`Redirecting to ${location}`, {
       headers,
       status: 302,
@@ -269,15 +220,6 @@ const handler = async (
     } else if (e instanceof Error) {
       errorCode = e.name;
     }
-
-    // The innermost catch that still knows which lesson and type were asked
-    // for. `route` below reduces this to a message and a code on the way out.
-    assetError('request: handler threw', e, {
-      args,
-      errorCode,
-      userId,
-      durationMs: Date.now() - startedAt,
-    });
 
     captureApiRequestEvent({
       url: req.url,
@@ -318,13 +260,6 @@ async function route(
   } catch (e: unknown) {
     const { code, message } = e as { code: string; message: string };
 
-    // The response below carries only `message` and `code`, so the stack and
-    // any wrapped `cause` end here unless they are logged first.
-    assetError('response: converting error', e, {
-      isTRPCError: e instanceof TRPCError,
-      url: req.url,
-    });
-
     // if this is a TRPCError, we can map the code to status codes
     if (e instanceof TRPCError) {
       const errorPayload = errorFormatter({
@@ -346,8 +281,6 @@ async function route(
         trpcErrorCodeToHttpStatus[e.code] ||
         trpcErrorCodeToHttpStatus.INTERNAL_SERVER_ERROR;
 
-      assetLog('response: trpc error', { status, code: e.code });
-
       return new NextResponse(
         JSON.stringify({ ...errorPayload, code: e.code }),
         {
@@ -364,15 +297,6 @@ async function route(
       typeof code === 'string' && code in codes
         ? codes[code as keyof typeof codes]
         : 500;
-
-    // A non-string `code` (Google's `ApiError` uses a number) never maps, so
-    // an upstream 403 leaves here as a 500. Worth seeing both numbers.
-    assetLog('response: non-trpc error', {
-      statusCode,
-      code: code ?? null,
-      mapped: typeof code === 'string' && code in codes,
-      error: describeError(e),
-    });
 
     return new NextResponse(JSON.stringify({ message, code }), {
       status: statusCode,
