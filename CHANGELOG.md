@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.0](https://github.com/oaknational/oak-curriculum-api/compare/v1.0.1...v1.1.0) (2026-09-30)
+
+### Features
+
+* redirect asset downloads to signed storage urls ([#338](https://github.com/oaknational/oak-curriculum-api/issues/338)) ([894173e](https://github.com/oaknational/oak-curriculum-api/commit/894173ed786260cfe6ac1cbc3a00ec9e6e535586))
+
 ## [1.0.1](https://github.com/oaknational/oak-curriculum-api/compare/v1.0.0...v1.0.1) (2026-09-18)
 
 ### Bug Fixes

@@ -1,23 +1,8 @@
-import { Storage } from '@google-cloud/storage';
+import type { Storage } from '@google-cloud/storage';
 import { log, logError } from './logger';
 import { createReadStream } from 'node:fs';
 
 const bucketName = process.env.BUCKET_NAME;
-
-// Initialize Google Cloud Storage
-export function getGoogleCloudStorage(): Storage {
-  let storage: Storage;
-  if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
-    const credentials = JSON.parse(
-      process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
-    ) as object;
-    storage = new Storage({ credentials });
-  } else {
-    storage = new Storage();
-  }
-
-  return storage;
-}
 
 export function uploadToStorage(
   sequenceDir: string,

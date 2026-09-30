@@ -12,10 +12,8 @@ import {
   waitForEnter,
   __dirname,
 } from '../src/lib/bulk-data/utils';
-import {
-  getGoogleCloudStorage,
-  uploadToStorage,
-} from '../src/lib/bulk-data/data-stores';
+import { uploadToStorage } from '../src/lib/bulk-data/data-stores';
+import { getGoogleCloudStorage } from '../src/lib/googleCloudStorage';
 import type {
   AssetPacks,
   UnitWithExamBoards,

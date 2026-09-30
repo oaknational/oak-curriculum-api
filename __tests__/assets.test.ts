@@ -3,18 +3,12 @@ import { getLessonAsset, makeCaller, optionsLessonAsset } from './helper';
 import { getVideoFromMux } from '@/lib/handlers/assets/helpers';
 import placeholderVideos from '@/lib/queryGateData/placeholderVideoLessons.json' with { type: 'json' };
 
-vi.mock('@google-cloud/storage', async () => {
-  const { EventEmitter } = await import('events');
-
-  class Stream extends EventEmitter {
-    pipe(res: { write: (data: Buffer) => void }) {
-      setTimeout(() => this.emit('end'), 0);
-      res.write(Buffer.from('%PDF-'));
-      return vi.fn();
-    }
-  }
-
+vi.mock('@google-cloud/storage', () => {
   class StorageMock {
+    bucketName = '';
+
+    fileName = '';
+
     getFiles = vi.fn().mockResolvedValue([
       [
         {
@@ -33,11 +27,29 @@ vi.mock('@google-cloud/storage', async () => {
       ],
     ]);
 
-    bucket = vi.fn(() => this);
+    bucket = vi.fn((name: string) => {
+      this.bucketName = name;
+      return this;
+    });
 
-    file = vi.fn(() => this);
+    file = vi.fn((name: string) => {
+      this.fileName = name;
+      return this;
+    });
 
-    createReadStream = vi.fn(() => new Stream());
+    // a stand-in for a V4 signed URL: same shape as the real thing, with the
+    // signing inputs echoed back so tests can assert on them
+    getSignedUrl = vi.fn((options: { responseDisposition: string }) => {
+      const url = new URL(
+        `https://storage.googleapis.com/${this.bucketName}/${this.fileName}`,
+      );
+      url.searchParams.set('X-Goog-Signature', 'test-signature');
+      url.searchParams.set(
+        'response-content-disposition',
+        options.responseDisposition,
+      );
+      return Promise.resolve([url.toString()]);
+    });
   }
 
   return {
@@ -72,10 +84,16 @@ test('read a single asset (pdf)', async () => {
     type: 'slideDeck',
   });
 
-  expect(res.status).toBe(200);
+  expect(res.status).toBe(302);
   expect(res.headers.get('access-control-allow-origin')).toBe('*');
-  expect(res.headers.get('content-type')).toBe('application/octet-stream');
-  expect(res.headers.get('content-disposition')).toBe(
+  expect(res.headers.get('cache-control')).toBe('private, no-store');
+
+  const location = new URL(res.headers.get('location') || '');
+
+  expect(location.origin).toBe('https://storage.googleapis.com');
+  expect(location.pathname).toContain('LESS-ID/slidedeck/PowerPoint.pptx');
+  expect(location.searchParams.get('X-Goog-Signature')).toBeTruthy();
+  expect(location.searchParams.get('response-content-disposition')).toBe(
     'attachment; filename="checking-understanding-of-perimeter_slidedeck.pptx"',
   );
 });
@@ -91,20 +109,27 @@ test('lesson asset preflight returns CORS headers without auth', () => {
   );
 });
 
+// the asset routes redirect rather than serve the bytes, so the download
+// filename now travels in the signed URL rather than on our own response
+function dispositionOf(res: Response): string | null {
+  const location = new URL(res.headers.get('location') || '');
+  return location.searchParams.get('response-content-disposition');
+}
+
 test('request power point', async () => {
   const res1 = await getLessonAsset({
     lesson: 'checking-understanding-of-perimeter',
     type: 'slideDeck',
   });
 
-  expect(res1.headers.get('content-disposition')).to.match(/.pptx"$/);
+  expect(dispositionOf(res1)).to.match(/\.pptx"$/);
 
   const res2 = await getLessonAsset({
     lesson: 'checking-understanding-of-perimeter',
     type: 'exitQuiz',
   });
 
-  expect(res2.headers.get('content-disposition')).to.match(/.pdf"$/);
+  expect(dispositionOf(res2)).to.match(/\.pdf"$/);
 });
 
 test('sequence asset year filter', async () => {

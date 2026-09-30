@@ -16,6 +16,13 @@ Notes
 	- `/key-stages/{keyStage}/subject/{subject}/units`
 	- `/key-stages/{keyStage}/subject/{subject}/assets`
 - For questions list endpoints, `limit` has a maximum value of `100`.
+- `/lessons/{lesson}/assets/{type}` never returns the file body itself. It
+	responds `302` for every asset type: `video` redirects to the CDN, and every
+	other type redirects to a signed Google Cloud Storage URL valid for 15 minutes
+	(see `SIGNED_URL_TTL_MS` in
+	[`src/lib/handlers/assets/helpers.ts`](../src/lib/handlers/assets/helpers.ts)).
+	Browser callers using `fetch`/XHR need CORS configured on the asset bucket,
+	because the redirect target is not served by this app.
 
 ## Public endpoints
 
@@ -30,7 +37,7 @@ Notes
 | GET    | `/keywords`                                                 | [`src/lib/handlers/keywords/keywords.ts`](../src/lib/handlers/keywords/keywords.ts#L19)                                                                                                                                                |
 | POST   | `/lessons/check-restricted`                                 | [`src/lib/handlers/lesson/lesson.ts`](../src/lib/handlers/lesson/lesson.ts#L67)                                                                                                                                                        |
 | GET    | `/lessons/{lesson}/assets`                                  | [`src/lib/handlers/assets/assets.ts`](../src/lib/handlers/assets/assets.ts#L545)                                                                                                                                                       |
-| GET    | `/lessons/{lesson}/assets/{type}`                           | [`src/lib/handlers/assets/assets.ts`](../src/lib/handlers/assets/assets.ts#L707); download handler in [`src/lib/handlers/assetDownload/assetDownload.ts`](../src/lib/handlers/assetDownload/assetDownload.ts#L69) |
+| GET    | `/lessons/{lesson}/assets/{type}`                           | [`src/lib/handlers/assets/assets.ts`](../src/lib/handlers/assets/assets.ts#L747); download handler in [`src/lib/handlers/assetDownload/assetDownload.ts`](../src/lib/handlers/assetDownload/assetDownload.ts#L74) — always responds `302`; see note above |
 | GET    | `/lessons/{lesson}/quiz`                                    | [`src/lib/handlers/questions/questions.ts`](../src/lib/handlers/questions/questions.ts#L53)                                                                                                                                            |
 | GET    | `/lessons/{lesson}/summary`                                 | [`src/lib/handlers/lesson/lesson.ts`](../src/lib/handlers/lesson/lesson.ts#L46)                                                                                                                                                        |
 | GET    | `/lessons/{lesson}/transcript`                              | [`src/lib/handlers/transcript/transcript.ts`](../src/lib/handlers/transcript/transcript.ts#L18)                                                                                                                                        |
