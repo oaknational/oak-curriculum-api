@@ -36,7 +36,7 @@ import { assetBaseVideoUrl } from '@/lib/baseUrl';
 import codes from 'http-codes';
 import { assetsForLesson } from '@/lib/handlers/assets/assets';
 import placeholderVideoLessons from '@/lib/queryGateData/placeholderVideoLessons.json' with { type: 'json' };
-import { getGoogleCloudStorage } from '@/lib/bulk-data/data-stores';
+import { getGoogleCloudStorage } from '@/lib/googleCloudStorage';
 import {
   captureApiRequestEvent,
   parseQueryParams,

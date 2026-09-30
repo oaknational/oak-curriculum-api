@@ -28,7 +28,7 @@ vi.mock('@/lib/protect', () => ({
   protect: mocks.protectMock,
 }));
 
-vi.mock('@/lib/bulk-data/data-stores', () => ({
+vi.mock('@/lib/googleCloudStorage', () => ({
   getGoogleCloudStorage: () => ({
     bucket: () => ({
       file: () => ({
@@ -66,7 +66,7 @@ describe('Non-tRPC route analytics', () => {
         },
       }),
     );
-    global.fetch = fetchMock as unknown as typeof fetch;
+    global.fetch = fetchMock;
 
     mocks.captureApiRequestEventMock.mockReset();
     mocks.getApiKeyFromRequestMock.mockReset();

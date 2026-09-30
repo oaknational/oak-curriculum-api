@@ -42,6 +42,8 @@
     "@trpc/server": "^11.8.1",
     "@upstash/ratelimit": "^2.0.5",
     "@upstash/redis": "^1.38.4",
+    "@vercel/oidc": "^3.8.8",
+    "google-auth-library": "^9.15.1",
     "graphql": "^16.11.0",
     "graphql-request": "^7.4.0",
     "highlight.js": "^11.11.1",
