@@ -50,11 +50,14 @@ const MenuContainer = styled(OakFlex)`
   }
 `;
 
-// this is silly, but I don't have access to InternalShadowRoundButton
-// so it's necessary to hide the text and remove the padding
-const SecondaryButtonWithoutText = styled(OakSecondaryButton)`
-  div > span {
-    display: none;
+// this is silly, but I don't have access to InternalShadowRoundButton, so the
+// padding and border have to be stripped to leave a bare icon. Target the
+// inner button rather than descendant spans: oak-components renders the icon
+// as a span too, so hiding those hides the hamburger itself.
+const HamburgerButton = styled(OakSecondaryButton)`
+  button {
+    padding: 0;
+    border: 0;
   }
 `;
 
@@ -143,9 +146,10 @@ function Menu({
   const [isOpen, setIsOpen] = useState(false);
   return (
     <OakFlex $flexGrow="1" $justifyContent="end" className={className}>
-      <SecondaryButtonWithoutText
-        isTrailingIcon={true}
-        style={{ padding: 0, border: 0 }}
+      <HamburgerButton
+        aria-label="Open menu"
+        aria-expanded={isOpen}
+        iconGap="spacing-0"
         onClick={() => setIsOpen(true)}
         iconName="hamburger"
       />
