@@ -1,0 +1,110 @@
+name: Check PR Freshness
+
+# A soft replacement for the ruleset's "require branches to be up to date"
+# (strict_required_status_checks_policy), which forced an update commit on every
+# open PR the moment anything landed on main. This lets a PR drift a little and
+# only blocks one that is massively out of date.
+#
+# The verdict is published as a *commit status* on the PR head rather than taken
+# from this job's own conclusion: a PR goes stale when main moves, not when the
+# PR changes, so the push-to-main run below re-stamps every open PR. A plain
+# `pull_request` job could never do that — its checks attach to whichever SHA
+# triggered it.
+
+on:
+  # pull_request_target, not pull_request: the status must be writable for PRs
+  # from forks too, or the required check would never appear on them and they
+  # could never be merged. This workflow never checks out or runs PR code — only
+  # API calls against SHAs — so the usual pull_request_target caveat about
+  # untrusted code running with a write token does not apply.
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: pr-freshness-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read # compare commits
+  pull-requests: read # list open PRs when main moves
+  statuses: write # publish the `freshness` status
+
+env:
+  # How many commits a PR may be behind main before it is treated as stale.
+  MAX_COMMITS_BEHIND: 20
+
+jobs:
+  # Named `freshness-status`, not `freshness`: the required check is the commit
+  # status this job posts, and two checks sharing a name makes the ruleset's
+  # required-status-check entry ambiguous.
+  freshness-status:
+    name: freshness-status
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Stamp freshness status on open PRs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          EVENT_PR: ${{ github.event.pull_request.number }}
+        # Deliberately never exits non-zero for a stale PR: the commit status is
+        # the gate, and failing here would only paint main's own history red.
+        run: |
+          set -euo pipefail
+
+          # One PR on a PR event; every open PR when main moves.
+          if [ -n "${EVENT_PR:-}" ]; then
+            prs="$EVENT_PR"
+          else
+            prs=$(gh api "repos/$REPO/pulls?base=main&state=open&per_page=100" --jq '.[].number')
+          fi
+
+          {
+            echo "### PR freshness"
+            echo
+            echo "Limit: **$MAX_COMMITS_BEHIND** commits behind \`main\`."
+            echo
+            echo "| PR | Commits behind | Merge base age | Verdict |"
+            echo "| --- | --- | --- | --- |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          for pr in ${prs:-}; do
+            sha=$(gh api "repos/$REPO/pulls/$pr" --jq '.head.sha')
+
+            # `main...<sha>` reports behind_by as the commits main has that the
+            # PR does not — exactly "how far behind this branch is".
+            read -r behind base_date < <(
+              gh api "repos/$REPO/compare/main...$sha" \
+                --jq '[.behind_by, .merge_base_commit.commit.committer.date] | @tsv'
+            )
+
+            # Informational only: commit count alone reads oddly after a large
+            # dependency batch, so the summary also shows how old the fork point is.
+            age_days=$(( ( $(date -u +%s) - $(date -u -d "$base_date" +%s) ) / 86400 ))
+
+            if [ "$behind" -gt "$MAX_COMMITS_BEHIND" ]; then
+              state=failure
+              description="$behind commits behind main (limit $MAX_COMMITS_BEHIND) — update this branch"
+              verdict="stale"
+            else
+              state=success
+              description="$behind commits behind main"
+              verdict="ok"
+            fi
+
+            gh api -X POST "repos/$REPO/statuses/$sha" \
+              -f state="$state" \
+              -f context=freshness \
+              -f description="$description" \
+              -f target_url="$GITHUB_SERVER_URL/$REPO/actions/runs/$GITHUB_RUN_ID" \
+              --silent
+
+            echo "PR #$pr: $behind behind, fork point ${age_days}d old -> $state"
+            echo "| #$pr | $behind | ${age_days}d | $verdict |" >> "$GITHUB_STEP_SUMMARY"
+          done
