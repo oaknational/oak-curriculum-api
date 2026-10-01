@@ -24,6 +24,10 @@ const PROVIDED_BY_RUNTIME = new Set([
   'VERCEL_DEPLOYMENT_ID',
   'VERCEL_ENV',
   'VERCEL_GIT_COMMIT_SHA',
+  // Minted per invocation for workload identity federation, and written to
+  // .env.local by `vercel env pull` for local dev. It is a short-lived
+  // credential, so it must never be documented as something to fill in.
+  'VERCEL_OIDC_TOKEN',
   'VERCEL_URL',
   // custom vars that are for local dev
   'REPORT_MEMORY_USAGE',

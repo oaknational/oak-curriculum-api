@@ -6,7 +6,7 @@ import { protect } from '@/lib/protect';
 import type { File } from '@google-cloud/storage';
 import codes from 'http-codes';
 import yazl from 'yazl';
-import { getGoogleCloudStorage } from '@/lib/bulk-data/data-stores';
+import { getGoogleCloudStorage } from '@/lib/googleCloudStorage';
 import {
   captureApiRequestEvent,
   parseQueryParams,
