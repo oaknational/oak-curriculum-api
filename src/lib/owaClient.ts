@@ -151,8 +151,8 @@ export interface SubjectPhase {
 
 export interface LessonContentView {
   [lessonContentView]: {
-    transcript_sentences: string;
-    transcript_vtt: string;
+    transcript_sentences: string | null;
+    transcript_vtt: string | null;
   }[];
 }
 

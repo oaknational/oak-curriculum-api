@@ -66,10 +66,6 @@ describe('/search/transcripts', () => {
       const subjectSlugs: Record<string, string> = {
         // art restricts transcripts for the whole subject
         'slug-3': 'art',
-        // TEMP-TPC-GATE: was music, which restricted slide decks and so said
-        // nothing about transcripts. Geography is the subject that still
-        // leaves transcripts out.
-        'slug-5': 'geography',
       };
 
       return {

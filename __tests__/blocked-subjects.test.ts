@@ -53,6 +53,27 @@ async function callTrpcEndpoint(
   return GET(req);
 }
 
+async function callCheckRestricted(
+  major: ApiMajor,
+  lessonSlugs: string[],
+): Promise<Response> {
+  const { POST } = await trpcRoute[major]();
+
+  const req = new Request(
+    `http://localhost:2727/api/${major}/lessons/check-restricted`,
+    {
+      method: 'POST',
+      headers: {
+        authorization: 'Bearer test-key',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ lessonSlugs }),
+    },
+  ) as NextRequest;
+
+  return POST(req);
+}
+
 async function callLessonAssetEndpoint(
   major: ApiMajor,
   lesson: string,
@@ -84,6 +105,13 @@ describe.each(API_MAJORS)('blocked subjects return 404 at %s', (major) => {
     '/lessons/how-much-money-have-i-got/summary',
     '/lessons/how-much-money-have-i-got/quiz',
     '/lessons/how-much-money-have-i-got/assets',
+    '/lessons/how-much-money-have-i-got/transcript',
+    // a lesson of the same subject that the gate does not restrict: nothing
+    // but the subject stands between it and being served
+    '/lessons/can-i-spend-money-playing-online/summary',
+    '/lessons/can-i-spend-money-playing-online/quiz',
+    '/lessons/can-i-spend-money-playing-online/assets',
+    '/lessons/can-i-spend-money-playing-online/transcript',
   ])('GET %s returns 404', async (path) => {
     const res = await callTrpcEndpoint(major, path);
     expect(res.status).toBe(404);
@@ -96,5 +124,35 @@ describe.each(API_MAJORS)('blocked subjects return 404 at %s', (major) => {
       'slideDeck',
     );
     expect(res.status).toBe(404);
+  });
+
+  it('POST /lessons/check-restricted leaves a blocked subject out', async () => {
+    const control = 'add-fractions-with-the-same-denominator';
+
+    const res = await callCheckRestricted(major, [
+      'how-much-money-have-i-got',
+      control,
+    ]);
+
+    expect(res.status).toBe(200);
+
+    const statuses = (await res.json()) as Record<string, string>;
+
+    // absent, as a slug that does not exist is absent: the endpoint must not
+    // report a restriction for a lesson it will not serve
+    expect(statuses).not.toHaveProperty('how-much-money-have-i-got');
+    // and the lesson beside it still answers, so this is the subject check
+    // rather than an empty response
+    expect(Object.keys(statuses)).toContain(control);
+  });
+
+  it('GET /key-stages/ks1/subject/financial-education/check-restricted rejects the subject', async () => {
+    const res = await callTrpcEndpoint(
+      major,
+      '/key-stages/ks1/subject/financial-education/check-restricted',
+    );
+
+    // the subject never reaches the gate: the input schema's enum stops it
+    expect(res.status).toBe(400);
   });
 });

@@ -98,7 +98,6 @@ describe('check-restricted endpoints', () => {
       ).resolves.toStrictEqual({ 'maths-lesson': 'restricted' });
     });
 
-    // TEMP-TPC-GATE: delete with `assetTypeRestrictionsByLesson.json`
     it('restricts a lesson on the hard-coded list with no restriction row of its own', async () => {
       const [slug] = manualRestrictedLessonSlugs;
 
