@@ -94,7 +94,7 @@ describe('query parameter descriptions', () => {
       ]),
     );
 
-    expect(examples.subject).toBe('english');
+    expect(examples.subject).toBe('maths');
     expect(examples.keyStage).toBe('ks3');
   });
 

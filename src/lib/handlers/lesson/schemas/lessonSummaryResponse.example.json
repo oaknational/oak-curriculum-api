@@ -1,63 +1,44 @@
 {
-  "lessonTitle": "Creating a new word",
-  "canonicalUrl": "https://www.thenational.academy/teachers/lessons/creating-a-new-word",
-  "oakUrl": "https://www.thenational.academy/teachers/lessons/creating-a-new-word",
+  "lessonTitle": "Plotting non-integer coordinates",
+  "canonicalUrl": "https://www.thenational.academy/teachers/lessons/plotting-non-integer-coordinates",
+  "oakUrl": "https://www.thenational.academy/teachers/lessons/plotting-non-integer-coordinates",
   "units": [
     {
-      "unitSlug": "a-history-of-language",
-      "unitTitle": "A history of language"
+      "unitSlug": "plotting-coordinates",
+      "unitTitle": "Plotting coordinates"
     }
   ],
-  "subjectSlug": "english",
-  "subjectTitle": "English",
+  "subjectSlug": "maths",
+  "subjectTitle": "Maths",
   "keyStageSlug": "ks3",
   "keyStageTitle": "Key Stage 3",
   "lessonKeywords": [
     {
-      "keyword": "Blending",
-      "description": "In language, blending means to join the beginning of one word with the end of another to create a new word."
-    },
-    {
-      "keyword": "Compounds",
-      "description": "Compounds are words that are formed by combining two existing words together."
-    },
-    {
-      "keyword": "Acronym",
-      "description": "An acronym is a word formed by combining the first letter of each word in a name or phrase (e.g. ASAP)."
-    },
-    {
-      "keyword": "Initialism",
-      "description": "Initialism is an abbreviation where the first letters of each word are pronounced as separate letters (e.g. CCTV)."
-    },
-    {
-      "keyword": "Affixation",
-      "description": "Affixation is the process of adding groups of letters to the beginning or ends of words to change their meanings."
+      "keyword": "Integer",
+      "description": "An integer is any positive or negative whole number or zero."
     }
   ],
   "keyLearningPoints": [
     {
-      "keyLearningPoint": "Blending is when words are 'chopped up' and put together."
+      "keyLearningPoint": "Coordinates with any values can be plotted."
     },
     {
-      "keyLearningPoint": "Compounds are when two words are merged (sometimes using a hyphen)."
+      "keyLearningPoint": "Coordinates can be described in all four quadrants."
     },
     {
-      "keyLearningPoint": "Initialism is like an acronym, except all the letters are pronounced."
-    },
-    {
-      "keyLearningPoint": "Affixation means fastening parts of words to other words."
+      "keyLearningPoint": "Shapes can be described using coordinates."
     }
   ],
   "misconceptionsAndCommonMistakes": [
     {
-      "misconception": "That 'word blending' is a type of compound.",
-      "response": "'Word blending' combines only part of other words whereas word compounds combines the entirety of two existing words to form a new one."
+      "misconception": "That coordinates only exist, and can only be plotted, on the lines of graph paper.",
+      "response": "Between any two vertices there are infinitely more points. Ask pupils to consider what numbers are between 1 and 2."
     }
   ],
-  "pupilLessonOutcome": "I can create a new word using specific language change techniques.",
+  "pupilLessonOutcome": "I can describe and plot coordinates, including non-integer values, in all four quadrants.",
   "teacherTips": [
     {
-      "teacherTip": "There are lots of word compounds relevant to the school setting and this could be brought out further as part of an 'I Spy' style activity related to word compounds visible in the classroom."
+      "teacherTip": "Some verbal play can warm your class up for this topic. \"Give me a number between 0 and 5\". 1, 2, 3 and 4 will quickly be exhausted. Keep asking. 0.5, 1.5, 1.6 etc. may emerge. The game can go on infinitely."
     }
   ],
   "contentGuidance": null,
