@@ -23,10 +23,11 @@ import { apiBaseUrl } from '@/lib/baseUrl';
 import { getOakUrlForLesson } from '@/lib/canonicalUrls';
 
 import {
-  getLessonsRestrictions,
+  getLessonsListingGate,
   isLessonRestricted,
   isSubjectAllowed,
 } from '@/lib/queryGate';
+import type { GatedAssetType } from '@/lib/queryGateData/assetTypeRestrictions';
 import { sequenceWhere } from '../sequences/sequences';
 import { nextPageLink } from '@/lib/pagination';
 import { downloadTypeEnum } from './types';
@@ -53,18 +54,37 @@ type Attribution = (string | undefined)[] | undefined;
 interface AssetsForLesson {
   assets: Download;
   attribution: Attribution;
+  /**
+   * The asset types the gate withholds from a lesson it allows, for the caller
+   * that lists them rather than serving one.
+   */
+  withheldAssetTypes: GatedAssetType[];
 }
 
 export async function assetsForLesson(
   lessonSlug: string,
   assetType?: DownloadTypeEnum,
+  /**
+   * A listing keeps a lesson the gate only partly restricts and withholds the
+   * restricted types; serving a single asset does not.
+   */
+  { listing = false }: { listing?: boolean } = {},
 ): Promise<AssetsForLesson> {
   const graphqlClient = getClient();
   const gateTest = await isLessonRestricted(
     graphqlClient,
     lessonSlug,
     assetType,
+    { listing },
   );
+
+  // this covers lessons that are in financial-education or other unsupported subjects
+  if (gateTest.isNotFound()) {
+    throw new TRPCError({
+      message: 'Lesson not found',
+      code: 'NOT_FOUND',
+    });
+  }
 
   if (gateTest.isBlocked()) {
     throw new TRPCError({
@@ -159,6 +179,7 @@ export async function assetsForLesson(
   return {
     attribution: mappedAttribution.length ? mappedAttribution : undefined,
     assets: res[0],
+    withheldAssetTypes: gateTest.withheldAssetTypes,
   };
 }
 
@@ -173,6 +194,7 @@ function assetDownloads(
   lessonSlug: string,
   download: Download,
   filter?: DownloadTypeEnum,
+  withheld: GatedAssetType[] = [],
 ): AssetDownload[] {
   const baseUrl = apiBaseUrl(major);
   const assetUrls = [];
@@ -254,7 +276,10 @@ function assetDownloads(
     }
   }
 
-  const result = assetUrls.filter((asset) => !filter || asset.type === filter);
+  const result = assetUrls.filter(
+    (asset) =>
+      (!filter || asset.type === filter) && !withheld.includes(asset.type),
+  );
 
   return result;
 }
@@ -306,12 +331,8 @@ Not for: assets in a single programme (GET /programmes/{programme}/assets); a si
         ),
       );
 
-      const restrictions = await getLessonsRestrictions(
-        client,
-        lessonSlugs,
-        type,
-      );
-      const lessonsAllowed = lessonSlugs.filter((slug) => !restrictions[slug]);
+      const { lessonsAllowed, withheldAssetTypes } =
+        await getLessonsListingGate(client, lessonSlugs, type);
 
       const downloadsQuery = gql`
         query GetDownloads($lessonSlugs: [String!]!) {
@@ -377,33 +398,18 @@ Not for: assets in a single programme (GET /programmes/{programme}/assets); a si
           lessonSlug,
           lessonTitle: d.lessonTitle,
           attribution: mappedAttribution.length ? mappedAttribution : undefined,
-          assets: assetDownloads(ctx.major, lessonSlug, d, type),
+          assets: assetDownloads(
+            ctx.major,
+            lessonSlug,
+            d,
+            type,
+            withheldAssetTypes.get(lessonSlug),
+          ),
         };
       });
 
       return result;
     }),
-  // getUnitAssets: v0Procedure
-  //   .meta({
-  //     openapi: {
-  //       method: 'GET',
-  //       tags: ['assets'],
-  //       path: '/units/{unit}/assets',
-  //       description:
-  //         'This endpoint returns signed download URLs and types for the assets currently available on Oak for a given unit',
-  //       example: {
-  //         request: {
-  //           sequence: 'perimeter-and-area',
-  //         },
-  //       },
-  //     },
-  //   })
-  //   .input(z.object({ unit: z.string() }))
-  //   .output(z.any()) // lessonsAssetsType
-  //   .query(async ({ input }) => {
-  //     const { unit } = input;
-  //     return { unit };
-  //   }),
   getSubjectAssets: v0Procedure
     .meta({
       openapi: {
@@ -499,8 +505,8 @@ Not for: assets across a sequence (GET /sequences/{sequence}/assets); assets in 
         );
       }
 
-      const restrictions = await getLessonsRestrictions(client, lessonSlugs);
-      const lessonsAllowed = lessonSlugs.filter((slug) => !restrictions[slug]);
+      const { lessonsAllowed, withheldAssetTypes } =
+        await getLessonsListingGate(client, lessonSlugs, typeFilter);
 
       if (lessonsAllowed.length === 0) {
         return [];
@@ -577,7 +583,13 @@ Not for: assets across a sequence (GET /sequences/{sequence}/assets); assets in 
           lessonSlug,
           lessonTitle: d.lessonTitle,
           attribution: mappedAttribution.length ? mappedAttribution : undefined,
-          assets: assetDownloads(ctx.major, lessonSlug, d, typeFilter),
+          assets: assetDownloads(
+            ctx.major,
+            lessonSlug,
+            d,
+            typeFilter,
+            withheldAssetTypes.get(lessonSlug),
+          ),
         };
       });
 
@@ -601,12 +613,22 @@ Not for: streaming the file itself (GET /lessons/{lesson}/assets/{type}); bulk a
     .query(async ({ input, ctx }) => {
       const { lesson: lessonSlug, type } = input;
 
-      const { assets, attribution } = await assetsForLesson(lessonSlug);
+      const { assets, attribution, withheldAssetTypes } = await assetsForLesson(
+        lessonSlug,
+        undefined,
+        { listing: true },
+      );
 
       return {
         oakUrl: getOakUrlForLesson(lessonSlug),
         attribution,
-        assets: assetDownloads(ctx.major, lessonSlug, assets, type),
+        assets: assetDownloads(
+          ctx.major,
+          lessonSlug,
+          assets,
+          type,
+          withheldAssetTypes,
+        ),
       } as LessonAssetsType;
     }),
   getProgrammeAssets: v0Procedure
@@ -679,12 +701,8 @@ Not for: assets across a whole sequence (GET /sequences/{sequence}/assets); asse
       }
 
       // Step 2: fetch downloads
-      const restrictions = await getLessonsRestrictions(
-        client,
-        lessonSlugs,
-        typeFilter,
-      );
-      const lessonsAllowed = lessonSlugs.filter((slug) => !restrictions[slug]);
+      const { lessonsAllowed, withheldAssetTypes } =
+        await getLessonsListingGate(client, lessonSlugs, typeFilter);
 
       if (lessonsAllowed.length === 0) {
         return [];
@@ -753,7 +771,13 @@ Not for: assets across a whole sequence (GET /sequences/{sequence}/assets); asse
           lessonSlug,
           lessonTitle: d.lessonTitle,
           attribution: mappedAttribution.length ? mappedAttribution : undefined,
-          assets: assetDownloads(ctx.major, lessonSlug, d, typeFilter),
+          assets: assetDownloads(
+            ctx.major,
+            lessonSlug,
+            d,
+            typeFilter,
+            withheldAssetTypes.get(lessonSlug),
+          ),
         };
       });
     }),

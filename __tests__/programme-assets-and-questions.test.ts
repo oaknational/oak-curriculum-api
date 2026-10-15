@@ -106,9 +106,6 @@ describe('programme assets and questions endpoints', () => {
       }),
     ).resolves.toStrictEqual([]);
 
-    // TEMP-TPC-GATE: was three calls. The gate used to skip the subject
-    // lookup for asset types no subject restricted, 'quiz' among them; it now
-    // looks the subject up every time, which is the third call here.
     expect(mocks.owaClientRequestMock).toHaveBeenCalledTimes(4);
     expect(mocks.owaClientRequestMock.mock.calls[1]?.[0]).toContain(
       `${lessonRestrictionView}(`,
@@ -359,6 +356,66 @@ describe('programme assets and questions endpoints', () => {
     expect(mocks.owaClientRequestMock.mock.calls[3]?.[1]).toEqual({
       lessonSlugs: ['noun-phrases'],
     });
+  });
+
+  // english restricts video and transcripts only, so its lessons keep their
+  // place in a listing and lose the restricted types
+  it('/key-stages/{keyStage}/subject/{subject}/assets withholds the asset types a subject restricts', async () => {
+    mocks.owaClientRequestMock.mockResolvedValueOnce({
+      [unitVariantLessonsView]: [
+        {
+          lesson_slug: 'noun-phrases',
+          unit_slug: 'word-class',
+        },
+      ],
+    });
+    mocks.owaClientRequestMock.mockResolvedValueOnce({
+      [lessonRestrictionView]: [],
+    });
+    mocks.owaClientRequestMock.mockResolvedValueOnce({
+      [lessonView]: [{ lessonSlug: 'noun-phrases', subjectSlug: 'english' }],
+    });
+    mocks.owaClientRequestMock.mockResolvedValueOnce({
+      [downloadView]: [
+        {
+          lessonSlug: 'noun-phrases',
+          lessonTitle: 'Noun phrases',
+          worksheet: {
+            label: 'Worksheet',
+            bucket_path: 'LESS-ID/worksheet/PDF.pdf',
+          },
+          video: {
+            label: 'Video',
+            stream: 'stream-url',
+            download: 'download-url',
+          },
+        },
+      ],
+    });
+    mocks.owaClientRequestMock.mockResolvedValueOnce({
+      [lessonView]: [
+        {
+          lessonSlug: 'noun-phrases',
+          tpcWorks: [],
+          tpcMedia: [],
+        },
+      ],
+    });
+
+    const { authedCaller } = await import('./helper');
+    const { caller } = authedCaller();
+
+    const result = await caller.getAssets.getSubjectAssets({
+      keyStage: 'ks1',
+      subject: 'english',
+    });
+
+    expect(result.map((lesson) => lesson.lessonSlug)).toStrictEqual([
+      'noun-phrases',
+    ]);
+    expect(result[0]?.assets.map((asset) => asset.type)).toStrictEqual([
+      'worksheet',
+    ]);
   });
 
   it('/key-stages/{keyStage}/subject/{subject}/assets applies offset/limit before restrictions and downloads', async () => {

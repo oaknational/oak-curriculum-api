@@ -11,8 +11,8 @@ export const oakUrlSchema = z
 
 export const subjectSlugSchema = z.enum(subjectSlugs as [string]).meta({
   description:
-    "Subject slug to search by, e.g. 'english' - note that casing is important here (always lowercase)",
-  example: 'english',
+    "Subject slug to search by, e.g. 'maths' - note that casing is important here (always lowercase)",
+  example: 'maths',
 });
 
 export const keyStageSlugSchema = z.enum(keyStageSlugs as [string]).meta({
@@ -50,17 +50,17 @@ export const keyStageSubjectSchema = z.object({
 
 export const lessonSlugSchema = z.string().meta({
   description: 'The unique slug identifier for the lesson',
-  example: 'creating-a-new-word',
+  example: 'plotting-non-integer-coordinates',
 });
 
 export const lessonTitleSchema = z.string().meta({
   description: 'The title of the lesson',
-  example: 'Creating a new word',
+  example: 'Plotting non-integer coordinates',
 });
 
 export const programmeSlugSchema = z.string().meta({
   description: 'The programme slug identifier',
-  example: 'english-secondary-year-8',
+  example: 'maths-secondary-year-8',
 });
 
 export type LessonSlugSchema = z.infer<typeof lessonSlugSchema>;

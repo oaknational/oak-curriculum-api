@@ -31,6 +31,13 @@ Not for: searching across transcripts (GET /search/transcripts); the video file 
 
       const gated = await isLessonRestricted(client, slug, 'transcript');
 
+      if (gated.isNotFound()) {
+        throw new TRPCError({
+          message: 'Lesson not found',
+          code: 'NOT_FOUND',
+        });
+      }
+
       if (gated.isBlocked()) {
         throw new TRPCError({
           message: `Transcript not available: "${slug}"`,
@@ -42,7 +49,7 @@ Not for: searching across transcripts (GET /search/transcripts); the video file 
       const query = gql`
         query ($slug: String!) {
           ${lessonContentView}(
-            where: { lesson_slug: { _eq: $slug } }
+            where: { lesson_slug: { _eq: $slug }, is_legacy: { _eq: false } }
           ) {
             transcript_sentences
             transcript_vtt
@@ -54,9 +61,21 @@ Not for: searching across transcripts (GET /search/transcripts); the video file 
         slug,
       });
 
-      const transcript = res[lessonContentView][0]?.transcript_sentences;
-      const vtt = res[lessonContentView][0]?.transcript_vtt;
+      const content = res[lessonContentView][0];
 
-      return { vtt: vtt.replace(/\r/g, ''), transcript };
+      // the response needs both fields, so a lesson with no transcript — a
+      // legacy one, which the filter above leaves out, or one with no video —
+      // has nothing to answer with
+      if (!content?.transcript_vtt || !content.transcript_sentences) {
+        throw new TRPCError({
+          message: `Transcript not found: "${slug}"`,
+          code: 'NOT_FOUND',
+        });
+      }
+
+      return {
+        vtt: content.transcript_vtt.replace(/\r/g, ''),
+        transcript: content.transcript_sentences,
+      };
     }),
 });

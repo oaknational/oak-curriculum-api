@@ -4,7 +4,11 @@ import {
   lessonRestrictionView,
   lessonView,
 } from '@/lib/owaClient';
-import { getLessonsRestrictions, isLessonRestricted } from '@/lib/queryGate';
+import {
+  getLessonsListingGate,
+  getLessonsRestrictions,
+  isLessonRestricted,
+} from '@/lib/queryGate';
 import manualRestrictedLessonSlugs from '@/lib/queryGateData/assetTypeRestrictionsByLesson.json' with { type: 'json' };
 import type { GraphQLClient } from 'graphql-request';
 
@@ -126,34 +130,28 @@ test('isLessonRestricted blocks the asset types a subject restricts', async () =
   expect(result.reason).toContain('not currently available');
 });
 
-// TEMP-TPC-GATE: asserted `isLessonRestricted(art, 'worksheet')` was allowed,
-// back when art restricted only video and transcripts. Geography is the one
-// subject that still leaves an asset type out, so it carries the behaviour.
 test('isLessonRestricted allows the asset types a subject does not restrict', async () => {
   const result = await isLessonRestricted(
-    subjectClient('geography-lesson', 'geography'),
-    'geography-lesson',
-    'transcript',
+    subjectClient('english-lesson', 'english'),
+    'english-lesson',
+    'worksheet',
   );
 
   expect(result.isAllowed()).toBe(true);
 });
 
-// TEMP-TPC-GATE: used music, which restricted slide decks but not video.
-// Music now restricts every asset type, so geography stands in for the
-// per-type half of this and maths for the per-subject half.
 test('isLessonRestricted restricts asset types per subject, not across subjects', async () => {
-  const geography = subjectClient('geography-lesson', 'geography');
+  const english = subjectClient('english-lesson', 'english');
 
   await expect(
-    isLessonRestricted(geography, 'geography-lesson', 'slideDeck').then(
-      (gate) => gate.isBlocked(),
+    isLessonRestricted(english, 'english-lesson', 'video').then((gate) =>
+      gate.isBlocked(),
     ),
   ).resolves.toBe(true);
 
   await expect(
-    isLessonRestricted(geography, 'geography-lesson', 'transcript').then(
-      (gate) => gate.isBlocked(),
+    isLessonRestricted(english, 'english-lesson', 'worksheet').then((gate) =>
+      gate.isBlocked(),
     ),
   ).resolves.toBe(false);
 
@@ -166,10 +164,6 @@ test('isLessonRestricted restricts asset types per subject, not across subjects'
   ).resolves.toBe(false);
 });
 
-// TEMP-TPC-GATE: was 'blocks a restricted subject when no asset type is
-// given', from when the asset type was optional and omitting it meant "any
-// restriction at all applies". The asset type is now required, and a wholly
-// restricted subject restricts every one of them.
 test('isLessonRestricted blocks every asset type of a wholly restricted subject', async () => {
   for (const assetType of [
     'video',
@@ -188,9 +182,6 @@ test('isLessonRestricted blocks every asset type of a wholly restricted subject'
   }
 });
 
-// TEMP-TPC-GATE: asserted the subject was never queried for 'quiz', because
-// no subject restricted quizzes and the gate skipped the lookup. Quizzes are
-// now restricted like everything else, so the lookup always happens.
 test('isLessonRestricted queries the subject for every asset type', async () => {
   const { client, request } = countedClient(
     subjectResponses('art-lesson', 'art'),
@@ -222,32 +213,36 @@ test('getLessonsRestrictions applies the subject-level restrictions too', async 
   });
 });
 
-// TEMP-TPC-GATE: was 'restricts every asset type when given none'. Omitting
-// the asset type used to mean "any restriction at all applies"; it now falls
-// back to video, which art restricts either way.
-test('getLessonsRestrictions falls back to video when given no asset type', async () => {
+// Omitting the asset type means "any restriction at all applies", so a
+// partially restricted subject counts as restricted. The asset listings are
+// the exception — see `getLessonsListingGate`.
+test('getLessonsRestrictions restricts on any asset type when given none', async () => {
   const client = mockClient({
     [lessonRestrictionView]: [
       { ...oglCompatible, slug: 'art-lesson' },
-      { ...oglCompatible, slug: 'geography-lesson' },
+      { ...oglCompatible, slug: 'english-lesson' },
+      { ...oglCompatible, slug: 'maths-lesson' },
     ],
     [lessonView]: [
       { lessonSlug: 'art-lesson', subjectSlug: 'art' },
-      { lessonSlug: 'geography-lesson', subjectSlug: 'geography' },
+      { lessonSlug: 'english-lesson', subjectSlug: 'english' },
+      { lessonSlug: 'maths-lesson', subjectSlug: 'maths' },
     ],
   });
 
   await expect(
-    getLessonsRestrictions(client, ['art-lesson', 'geography-lesson']),
+    getLessonsRestrictions(client, [
+      'art-lesson',
+      'english-lesson',
+      'maths-lesson',
+    ]),
   ).resolves.toStrictEqual({
     'art-lesson': true,
-    'geography-lesson': true,
+    'english-lesson': true,
+    'maths-lesson': false,
   });
 });
 
-// TEMP-TPC-GATE: asserted the subject was never queried for 'quiz' and that
-// the art lesson came back unrestricted. Both have changed; see the sibling
-// isLessonRestricted test above.
 test('getLessonsRestrictions queries subjects for every asset type', async () => {
   const { client, request } = countedClient(
     subjectResponses('art-lesson', 'art'),
@@ -260,9 +255,8 @@ test('getLessonsRestrictions queries subjects for every asset type', async () =>
   expect(request).toHaveBeenCalledTimes(2);
 });
 
-// TEMP-TPC-GATE: delete these two along with
-// `assetTypeRestrictionsByLesson.json`. They read the first slug off the list
-// rather than naming one, so they keep testing the list as it shrinks.
+// These two read the first slug off the list rather than naming one, so they
+// keep testing the list as it changes.
 test('isLessonRestricted blocks a lesson on the hard-coded list whatever its subject', async () => {
   const [slug] = manualRestrictedLessonSlugs;
   const { client, request } = countedClient(subjectResponses(slug, 'maths'));
@@ -270,8 +264,9 @@ test('isLessonRestricted blocks a lesson on the hard-coded list whatever its sub
   const result = await isLessonRestricted(client, slug, 'worksheet');
 
   expect(result.isBlocked()).toBe(true);
-  // the list settles it, so there is no subject to look up
-  expect(request).toHaveBeenCalledTimes(0);
+  // the subject is looked up first, because it decides whether the lesson is
+  // there at all; the list then settles the restriction without the levels
+  expect(request).toHaveBeenCalledTimes(1);
 });
 
 test('getLessonsRestrictions blocks lessons on the hard-coded list', async () => {
@@ -290,4 +285,99 @@ test('getLessonsRestrictions blocks lessons on the hard-coded list', async () =>
     [slug]: true,
     'maths-lesson': false,
   });
+});
+
+// a listing asks whether anything is left to list, so a lesson of a partially
+// restricted subject survives it and reports the types to withhold instead
+test('isLessonRestricted allows a listing of a partially restricted lesson', async () => {
+  const result = await isLessonRestricted(
+    subjectClient('english-lesson', 'english'),
+    'english-lesson',
+    undefined,
+    { listing: true },
+  );
+
+  expect(result.isAllowed()).toBe(true);
+  expect(result.withheldAssetTypes).toStrictEqual(['video', 'transcript']);
+});
+
+// the withheld types still have to travel with a lesson the gate allows, even
+// when the lesson has no restriction row of its own to collapse
+test('isLessonRestricted reports the withheld types of a lesson with no restriction row', async () => {
+  const result = await isLessonRestricted(
+    mockClient({
+      [lessonRestrictionView]: [],
+      [lessonView]: [{ lessonSlug: 'english-lesson', subjectSlug: 'english' }],
+    }),
+    'english-lesson',
+    undefined,
+    { listing: true },
+  );
+
+  expect(result.isAllowed()).toBe(true);
+  expect(result.reason).toBe('Lesson not in restrictions');
+  expect(result.withheldAssetTypes).toStrictEqual(['video', 'transcript']);
+});
+
+test('isLessonRestricted blocks a listing of a wholly restricted lesson', async () => {
+  const result = await isLessonRestricted(
+    subjectClient('art-lesson', 'art'),
+    'art-lesson',
+    undefined,
+    { listing: true },
+  );
+
+  expect(result.isBlocked()).toBe(true);
+});
+
+test('getLessonsListingGate keeps partially restricted lessons and drops the rest', async () => {
+  const client = mockClient({
+    [lessonRestrictionView]: [
+      { ...oglCompatible, slug: 'art-lesson' },
+      { ...oglCompatible, slug: 'english-lesson' },
+      { ...oglCompatible, slug: 'maths-lesson' },
+      {
+        ...oglCompatible,
+        slug: 'restricted-maths-lesson',
+        tpc_works_max_restriction: LessonRestrictionLevel.RESTRICTED,
+      },
+    ],
+    [lessonView]: [
+      { lessonSlug: 'art-lesson', subjectSlug: 'art' },
+      { lessonSlug: 'english-lesson', subjectSlug: 'english' },
+      { lessonSlug: 'maths-lesson', subjectSlug: 'maths' },
+      { lessonSlug: 'restricted-maths-lesson', subjectSlug: 'maths' },
+    ],
+  });
+
+  const { lessonsAllowed, withheldAssetTypes } = await getLessonsListingGate(
+    client,
+    ['art-lesson', 'english-lesson', 'maths-lesson', 'restricted-maths-lesson'],
+  );
+
+  expect(lessonsAllowed).toStrictEqual(['english-lesson', 'maths-lesson']);
+  expect(withheldAssetTypes.get('english-lesson')).toStrictEqual([
+    'video',
+    'transcript',
+  ]);
+  expect(withheldAssetTypes.get('maths-lesson')).toBeUndefined();
+});
+
+test('getLessonsListingGate drops a lesson restricted for the asset type asked for', async () => {
+  const client = mockClient({
+    [lessonRestrictionView]: [{ ...oglCompatible, slug: 'english-lesson' }],
+    [lessonView]: [{ lessonSlug: 'english-lesson', subjectSlug: 'english' }],
+  });
+
+  await expect(
+    getLessonsListingGate(client, ['english-lesson'], 'video').then(
+      (gate) => gate.lessonsAllowed,
+    ),
+  ).resolves.toStrictEqual([]);
+
+  await expect(
+    getLessonsListingGate(client, ['english-lesson'], 'worksheet').then(
+      (gate) => gate.lessonsAllowed,
+    ),
+  ).resolves.toStrictEqual(['english-lesson']);
 });

@@ -63,6 +63,13 @@ Not for: quiz questions across a sequence (GET /sequences/{sequence}/questions);
 
       const gateTest = await isLessonRestricted(client, slug, 'quiz');
 
+      if (gateTest.isNotFound()) {
+        throw new TRPCError({
+          message: 'Lesson not found',
+          code: 'NOT_FOUND',
+        });
+      }
+
       if (gateTest.isBlocked()) {
         throw new TRPCError({
           message: `Lesson (${slug}) quiz is not available due to restrictions`,
