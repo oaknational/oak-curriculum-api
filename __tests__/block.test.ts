@@ -9,7 +9,6 @@ import {
   getLessonsRestrictions,
   isLessonRestricted,
 } from '@/lib/queryGate';
-import manualRestrictedLessonSlugs from '@/lib/queryGateData/assetTypeRestrictionsByLesson.json' with { type: 'json' };
 import type { GraphQLClient } from 'graphql-request';
 
 /**
@@ -40,6 +39,9 @@ const oglCompatible = {
   tpc_quizimages_max_restriction: LessonRestrictionLevel.OGL_COMPATIBLE,
   tpc_works_max_restriction: LessonRestrictionLevel.OGL_COMPATIBLE,
 };
+
+/** the restriction view's per-lesson flag: restricts every asset type */
+const copyrightConflict = { features: { has_copyright_conflict: true } };
 
 function subjectResponses(lessonSlug: string, subjectSlug: string) {
   return {
@@ -255,25 +257,29 @@ test('getLessonsRestrictions queries subjects for every asset type', async () =>
   expect(request).toHaveBeenCalledTimes(2);
 });
 
-// These two read the first slug off the list rather than naming one, so they
-// keep testing the list as it changes.
-test('isLessonRestricted blocks a lesson on the hard-coded list whatever its subject', async () => {
-  const [slug] = manualRestrictedLessonSlugs;
-  const { client, request } = countedClient(subjectResponses(slug, 'maths'));
+// These two cover the per-lesson restriction, which the restriction view
+// carries as a copyright-conflict flag rather than this repo as a list.
+test('isLessonRestricted blocks a lesson flagged as a copyright conflict whatever its subject', async () => {
+  const slug = 'conflict-lesson';
+  const { client, request } = countedClient({
+    [lessonRestrictionView]: [{ ...oglCompatible, ...copyrightConflict, slug }],
+    [lessonView]: [{ lessonSlug: slug, subjectSlug: 'maths' }],
+  });
 
   const result = await isLessonRestricted(client, slug, 'worksheet');
 
   expect(result.isBlocked()).toBe(true);
   // the subject is looked up first, because it decides whether the lesson is
-  // there at all; the list then settles the restriction without the levels
-  expect(request).toHaveBeenCalledTimes(1);
+  // there at all; the flag rides on the restriction row, so the levels query is
+  // needed to see it
+  expect(request).toHaveBeenCalledTimes(2);
 });
 
-test('getLessonsRestrictions blocks lessons on the hard-coded list', async () => {
-  const [slug] = manualRestrictedLessonSlugs;
+test('getLessonsRestrictions blocks lessons flagged as a copyright conflict', async () => {
+  const slug = 'conflict-lesson';
   const client = mockClient({
     [lessonRestrictionView]: [
-      { ...oglCompatible, slug },
+      { ...oglCompatible, ...copyrightConflict, slug },
       { ...oglCompatible, slug: 'maths-lesson' },
     ],
     [lessonView]: [{ lessonSlug: 'maths-lesson', subjectSlug: 'maths' }],

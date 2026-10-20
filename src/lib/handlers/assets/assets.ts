@@ -304,7 +304,6 @@ Not for: assets in a single programme (GET /programmes/{programme}/assets); a si
       const { sequence, type, year } = input;
       const client = getClient();
 
-      // FIXME can I get finance education? I shouldn't be able to.
       const where = sequenceWhere(sequence, year ? year.toString() : undefined);
 
       const query = gql`

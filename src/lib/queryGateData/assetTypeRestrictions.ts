@@ -1,22 +1,23 @@
 /**
  * A hand-maintained layer over the third-party content (TPC) gate, restricting
- * more than the restriction levels in `lessonRestrictionView` do on their own,
- * in two ways:
- *
- * 1. `assetTypeRestrictionsByLesson.json` — an explicit list of lesson slugs
- *    that are restricted whatever their subject says.
- * 2. `restrictedSubjectsMap` — subjects restricted across some or all of the
- *    asset types.
+ * more than the restriction levels in `lessonRestrictionView` do on their own:
+ * `restrictedSubjectsMap`, the subjects restricted across some or all of the
+ * asset types.
  *
  * A caller with no asset type to give means "any restriction at all applies",
  * so a partially restricted subject counts as restricted. The asset listings
  * are the exception: they keep the lesson and withhold the restricted types,
  * through `getLayerRestrictedAssetTypes`.
+ *
+ * Restrictions on an *individual* lesson are no longer kept here. They come
+ * from the `features.has_copyright_conflict` flag on the lesson's row in
+ * `lessonRestrictionView`, which restricts every asset type; it arrives with
+ * the restriction levels, so `queryGate` merges it in beside this layer rather
+ * than here. This module never queries anything.
  */
 import z from 'zod';
 import { downloadTypeEnum } from '@/lib/handlers/assets/types';
 import type { CollapsedRestrictionStatus } from '@/lib/queryGate';
-import manualRestrictedLessonSlugs from './assetTypeRestrictionsByLesson.json' with { type: 'json' };
 
 /**
  * The asset types the gate can be asked about: anything downloadable, plus the
@@ -28,6 +29,9 @@ const gatedAssetTypes = z.enum([
   'quiz',
 ]);
 export type GatedAssetType = z.infer<typeof gatedAssetTypes>;
+
+/** Every asset type the gate knows about: what a copyright conflict restricts. */
+export const allGatedAssetTypes: GatedAssetType[] = gatedAssetTypes.options;
 
 /**
  * Subjects where third-party content is restricted across a whole asset type,
@@ -56,13 +60,6 @@ export function getLayerRestrictedAssetTypes(
   const res = new Map<string, GatedAssetType[]>();
 
   for (const lessonSlug of lessonSlugs) {
-    // the hard coded list comes first, and restricts every asset type whatever
-    // the subject says
-    if (manualRestrictedLessonSlugs.includes(lessonSlug)) {
-      res.set(lessonSlug, gatedAssetTypes.options);
-      continue;
-    }
-
     const subject = subjectsByLesson.get(lessonSlug);
     const restrictions = subject
       ? restrictedSubjectsMap.get(subject)

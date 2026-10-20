@@ -10,6 +10,7 @@ import { subjectSlugs } from './keyStageAndSubjects';
 import { childSubjects } from './oakConsts';
 import {
   type GatedAssetType,
+  allGatedAssetTypes,
   getAssetRestrictionsForLessons,
   getLayerRestrictedAssetTypes,
   restrictsAssetType,
@@ -143,13 +144,20 @@ function unsupportedSubjectLessons(
 
 /**
  * The restriction status of each of the given lessons from its own restriction
- * levels alone, with the layer over them left out. Lessons with no published
- * row in the restriction view are left out.
+ * levels alone, with the layer over them left out, and the lessons the view
+ * flags as having a copyright conflict. Lessons with no published row in the
+ * restriction view are left out of both.
+ *
+ * The conflict flag rides along on this query so that every caller of the gate
+ * gets it en masse, without a request of its own.
  */
 async function restrictionStatusesFromLevels(
   client: GraphQLClient,
   lessonSlugs: string[],
-): Promise<Record<string, CollapsedRestrictionStatus>> {
+): Promise<{
+  statuses: Record<string, CollapsedRestrictionStatus>;
+  copyrightConflicts: Set<string>;
+}> {
   const query = gql`
   query ($slugs: [String!]!) @cached(ttl: 300) {
     ${lessonRestrictionView}(
@@ -160,6 +168,7 @@ async function restrictionStatusesFromLevels(
       tpc_media_max_restriction
       tpc_quizimages_max_restriction
       tpc_works_max_restriction
+      features
     }
   }
   `;
@@ -168,10 +177,11 @@ async function restrictionStatusesFromLevels(
     slugs: lessonSlugs,
   });
 
-  const result: Record<string, CollapsedRestrictionStatus> = {};
+  const statuses: Record<string, CollapsedRestrictionStatus> = {};
+  const copyrightConflicts = new Set<string>();
 
   for (const lesson of restrictions[lessonRestrictionView]) {
-    result[lesson.slug] = collapsedRestrictionStatus(
+    statuses[lesson.slug] = collapsedRestrictionStatus(
       highestRestrictionLevel([
         lesson.tpc_downloadablefiles_max_restriction,
         lesson.tpc_media_max_restriction,
@@ -179,9 +189,13 @@ async function restrictionStatusesFromLevels(
         lesson.tpc_works_max_restriction,
       ]),
     );
+
+    if (lesson.features?.has_copyright_conflict === true) {
+      copyrightConflicts.add(lesson.slug);
+    }
   }
 
-  return result;
+  return { statuses, copyrightConflicts };
 }
 
 /**
@@ -200,7 +214,10 @@ async function restrictionStatusesWithUnsupported(
   statuses: Record<string, CollapsedRestrictionStatus>;
   unsupportedLessons: Set<string>;
 }> {
-  const statuses = await restrictionStatusesFromLevels(client, lessonSlugs);
+  const { statuses, copyrightConflicts } = await restrictionStatusesFromLevels(
+    client,
+    lessonSlugs,
+  );
 
   const subjectsByLesson = await getLessonSubjectSlugs(client, lessonSlugs);
 
@@ -216,6 +233,12 @@ async function restrictionStatusesWithUnsupported(
     if (status === 'restricted') {
       statuses[slug] = status;
     }
+  }
+
+  // a copyright conflict restricts every asset type, so it restricts whatever
+  // asset type was asked about
+  for (const slug of copyrightConflicts) {
+    statuses[slug] = 'restricted';
   }
 
   return {
@@ -320,6 +343,7 @@ export async function isLessonRestricted(
       tpc_media_max_restriction
       tpc_quizimages_max_restriction
       tpc_works_max_restriction
+      features
     }
   }
   `;
@@ -327,6 +351,16 @@ export async function isLessonRestricted(
   const res: LessonRestrictionView = await client.request(query, {
     slug: lessonSlug,
   });
+
+  // a copyright conflict is the same kind of block as a restricted subject: it
+  // restricts every asset type, so it answers with the same vague reason
+  if (
+    res[lessonRestrictionView].some(
+      (restriction) => restriction.features?.has_copyright_conflict === true,
+    )
+  ) {
+    return new GateWithReason(true, 'This is not currently available.');
+  }
 
   if (!res[lessonRestrictionView].length) {
     return new GateWithReason(
@@ -373,10 +407,8 @@ export async function getLessonsListingGate(
   lessonsAllowed: string[];
   withheldAssetTypes: Map<string, GatedAssetType[]>;
 }> {
-  const levelStatuses = await restrictionStatusesFromLevels(
-    client,
-    lessonSlugs,
-  );
+  const { statuses: levelStatuses, copyrightConflicts } =
+    await restrictionStatusesFromLevels(client, lessonSlugs);
 
   const subjectsByLesson = await getLessonSubjectSlugs(client, lessonSlugs);
   const unsupportedSubjects = unsupportedSubjectLessons(subjectsByLesson);
@@ -385,6 +417,12 @@ export async function getLessonsListingGate(
     subjectsByLesson,
     lessonSlugs,
   );
+
+  // a copyright conflict withholds every asset type, which leaves a listing
+  // nothing to show and so drops the lesson in the filter below
+  for (const slug of copyrightConflicts) {
+    withheldAssetTypes.set(slug, allGatedAssetTypes);
+  }
 
   const lessonsAllowed = lessonSlugs.filter((slug) => {
     if (unsupportedSubjects.has(slug) || levelStatuses[slug] === 'restricted') {

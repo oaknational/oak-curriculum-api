@@ -24,7 +24,7 @@ export const programmesByYearViewTable =
 export const lessonOpenApiWithTranscriptsView =
   'published_view_lesson_open_api_with_transcripts_1';
 
-export const lessonRestrictionView = 'published_mv_lesson_restriction_levels_1';
+export const lessonRestrictionView = 'published_mv_lesson_restriction_levels_2';
 
 export const sequenceViewWhereInput =
   'published_mv_curriculum_sequence_b_13_0_21_bool_exp';
@@ -84,6 +84,19 @@ export interface LessonRestriction {
 
   /** Copyright text restriction level */
   tpc_works_max_restriction?: LessonRestrictionLevel;
+
+  features?: LessonFeatures;
+}
+
+/**
+ * The `features` JSONB column. Hasura returns it as-is, so the column itself
+ * and every member of it is absent until the view sets it — always read through
+ * `?.` and compare explicitly rather than trusting a member to be there.
+ */
+export interface LessonFeatures {
+  /** Restricts every asset type of the lesson, whatever its restriction levels say */
+  has_copyright_conflict?: boolean;
+  pe_swimming?: boolean;
 }
 
 export interface SubjectPhaseView {
@@ -201,7 +214,7 @@ export type Sequence = TitleSlug & {
   tier_slug: string;
   why_this_why_now: string;
   year: string;
-  features: { pe_swimming: boolean };
+  features: LessonFeatures;
   planned_number_of_lessons: number;
   actions: {
     opt_out: string[];
