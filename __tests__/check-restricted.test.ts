@@ -5,7 +5,6 @@ import {
   lessonView,
   unitVariantLessonsView,
 } from '@/lib/owaClient';
-import manualRestrictedLessonSlugs from '@/lib/queryGateData/assetTypeRestrictionsByLesson.json' with { type: 'json' };
 
 const mocks = vi.hoisted(() => ({
   owaClientRequestMock: vi.fn(),
@@ -29,7 +28,7 @@ const oglCompatible = {
 /**
  * Both check-restricted endpoints read the gate, so they answer for the whole
  * of it: the lesson's own restriction levels, the restricted subjects, and the
- * hard-coded list.
+ * per-lesson copyright-conflict flag.
  */
 function respondWith(
   restrictionRows: Record<string, unknown>[],
@@ -98,10 +97,21 @@ describe('check-restricted endpoints', () => {
       ).resolves.toStrictEqual({ 'maths-lesson': 'restricted' });
     });
 
-    it('restricts a lesson on the hard-coded list with no restriction row of its own', async () => {
-      const [slug] = manualRestrictedLessonSlugs;
+    it('restricts a lesson whose row is flagged as a copyright conflict', async () => {
+      const slug = 'conflict-lesson';
 
-      respondWith([], {});
+      // an unrestricted subject and unrestricted levels, so only the flag can
+      // account for the answer
+      respondWith(
+        [
+          {
+            ...oglCompatible,
+            slug,
+            features: { has_copyright_conflict: true },
+          },
+        ],
+        { [slug]: 'maths' },
+      );
 
       const { authedCaller } = await import('./helper');
       const { caller } = authedCaller();

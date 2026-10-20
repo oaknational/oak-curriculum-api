@@ -2,13 +2,15 @@ import { expect, test } from 'vitest';
 import { extractCauseFromTRPCError, makeCaller } from './helper';
 import { TRPCError } from '@trpc/server';
 
-// this slug is on the hard-coded list in assetTypeRestrictionsByLesson.json,
-// which the gate checks before the lesson's own restriction levels and which
-// answers with the deliberately vague reason
+// this lesson is restricted per-lesson rather than by its subject or its own
+// restriction levels, which the gate answers with the deliberately vague reason.
+// it runs against live data, so it is the end-to-end check that the restriction
+// view really does flag the lesson.
 test('restricted lesson throws on /lessons/{lesson}/quiz', async () => {
   const caller = makeCaller({ user: 1 });
 
-  // note that this slug is in the hard-coded list in assetTypeRestrictionsByLesson.json
+  // note that this lesson carries features.has_copyright_conflict in the
+  // restriction view
   const slug = `the-importance-of-exchange-surfaces-and-transport-systems-in-humans`;
 
   try {
