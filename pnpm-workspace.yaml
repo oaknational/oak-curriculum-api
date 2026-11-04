@@ -1,3 +1,4 @@
+engineStrict: true
 auditConfig:
   ignoreGhsas:
     # decompress advisories reachable only via Sanity's dev-time CLI

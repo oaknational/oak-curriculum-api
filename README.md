@@ -106,7 +106,7 @@ These are the system-level tools you need, not just the npm dependencies:
 
 | Tool      | Version                                                  | Notes                                                                                                         |
 | --------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Node.js   | `>=24.12 <25`                                            | Pinned in `.nvmrc` (`24`) and `engines` in `package.json`. `nvm use` picks it up.                             |
+| Node.js   | `>=24.22.1 <25`                                          | Set by `engines` in `package.json`, which CI reads and pnpm enforces. `.nvmrc` (`24`) is for `nvm use`.       |
 | pnpm      | `>=10`                                                   | The only supported package manager. `corepack enable` will install the pinned version from `packageManager`.  |
 | Docker    | any recent                                               | Only needed to build the `bulk-data` image locally (see [Dockerfile](Dockerfile)). Not needed for `pnpm dev`. |
 | Terraform | see [infrastructure/README.md](infrastructure/README.md) | Only needed to change hosting.                                                                                |
