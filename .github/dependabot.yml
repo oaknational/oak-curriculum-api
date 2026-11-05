@@ -30,8 +30,15 @@ updates:
     # production-minor-and-patch. Tests are skipped on Dependabot PRs (see
     # .github/workflows/test.yml), and the double ring is CSS rather than
     # types, so neither the test job nor lint would catch it.
+    #
+    # conventional-changelog-conventionalcommits 10+ refuses to render with
+    # conventional-changelog-writer 8, which
+    # @semantic-release/release-notes-generator 14 still uses. Stay on 9 until
+    # the generator moves to writer 9.
     ignore:
       - dependency-name: "@oaknational/oak-components"
+      - dependency-name: "conventional-changelog-conventionalcommits"
+        update-types: ["version-update:semver-major"]
 
   # Every action used in .github/workflows, not just Oak's own. Actions are
   # pinned to commit SHAs, and Dependabot updates the SHA and the version
