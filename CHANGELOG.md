@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.1](https://github.com/oaknational/oak-curriculum-api/compare/v1.1.0...v1.1.1) (2026-11-05)
+
+### Bug Fixes
+
+* run on node 24.22.2 and read ci node version from engines ([e4fba6e](https://github.com/oaknational/oak-curriculum-api/commit/e4fba6ec415991b8a365e5905c07a7a65d40e790))
+
 ## [1.1.0](https://github.com/oaknational/oak-curriculum-api/compare/v1.0.1...v1.1.0) (2026-09-30)
 
 ### Features
