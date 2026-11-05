@@ -28,7 +28,7 @@ importers:
         version: 3.22.1(@portabletext/react@4.0.3(react@19.3.1))(@tiptap/core@2.27.2(@tiptap/pm@2.27.2))(@tiptap/pm@2.27.2)(@types/react@19.3.0)(next-cloudinary@6.18.8(next@16.4.0(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@26.6.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1))(next@16.4.0(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@26.6.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(styled-components@6.5.3(react-dom@19.3.1(react@19.3.1))(react@19.3.1))
       '@oaknational/oak-curriculum-schema':
         specifier: ^2.16.0
-        version: 2.16.0(zod@4.6.5)
+        version: 2.16.0(zod@4.6.6)
       '@portabletext/react':
         specifier: ^4.0.3
         version: 4.0.3(react@19.3.1)
@@ -115,7 +115,7 @@ importers:
         version: 3.2.1
       trpc-to-openapi:
         specifier: 3.3.0
-        version: 3.3.0(@trpc/server@11.19.0(typescript@5.9.3))(zod-openapi@5.4.6(zod@4.6.5))(zod@4.6.5)
+        version: 3.3.0(@trpc/server@11.19.0(typescript@5.9.3))(zod-openapi@5.4.6(zod@4.6.6))(zod@4.6.6)
       uuid:
         specifier: ^14.0.2
         version: 14.0.2
@@ -126,8 +126,8 @@ importers:
         specifier: ^3.3.1
         version: 3.3.1
       zod:
-        specifier: ^4.6.5
-        version: 4.6.5
+        specifier: ^4.6.6
+        version: 4.6.6
     devDependencies:
       '@commitlint/cli':
         specifier: ^21.2.3
@@ -8854,8 +8854,8 @@ packages:
   zod@4.1.11:
     resolution: {integrity: sha512-WPsqwxITS2tzx1bzhIKsEs19ABD5vmCVa4xBo2tq/SrV4RNZtfws1EnCWQXM6yh8bD08a1idvkB5MZSBiZsjwg==}
 
-  zod@4.6.5:
-    resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
+  zod@4.6.6:
+    resolution: {integrity: sha512-4UmzQUF5fxvfcYHlbjBmejU+w+hbDnWFx4aS8kBx7nPBHcO2SqPbpAG8snbdg+Xse4pRefR98hgjFgIMCI/UhA==}
 
   zustand@5.0.15:
     resolution: {integrity: sha512-MpSEjRiBkA9crSYeOUH32rJC7SVqAbm0Fqcqge/bUi2PPoLcBWKOsG+C8mevmpr8TwXHBVkChbbJiyvkE+i/3A==}
@@ -10689,10 +10689,10 @@ snapshots:
       - '@tiptap/pm'
       - '@types/react'
 
-  '@oaknational/oak-curriculum-schema@2.16.0(zod@4.6.5)':
+  '@oaknational/oak-curriculum-schema@2.16.0(zod@4.6.6)':
     dependencies:
-      zod: 4.6.5
-      zod-to-camel-case: 0.5.0(zod@4.6.5)
+      zod: 4.6.6
+      zod-to-camel-case: 0.5.0(zod@4.6.6)
 
   '@oclif/core@4.13.5':
     dependencies:
@@ -18092,14 +18092,14 @@ snapshots:
 
   trough@2.2.0: {}
 
-  trpc-to-openapi@3.3.0(@trpc/server@11.19.0(typescript@5.9.3))(zod-openapi@5.4.6(zod@4.6.5))(zod@4.6.5):
+  trpc-to-openapi@3.3.0(@trpc/server@11.19.0(typescript@5.9.3))(zod-openapi@5.4.6(zod@4.6.6))(zod@4.6.6):
     dependencies:
       '@trpc/server': 11.19.0(typescript@5.9.3)
       co-body: 6.2.0
       h3: 1.15.11
       openapi3-ts: 4.4.0
-      zod: 4.6.5
-      zod-openapi: 5.4.6(zod@4.6.5)
+      zod: 4.6.6
+      zod-openapi: 5.4.6(zod@4.6.6)
     optionalDependencies:
       '@rollup/rollup-linux-x64-gnu': 4.6.1
 
@@ -18827,19 +18827,19 @@ snapshots:
       compress-commons: 6.0.2
       readable-stream: 4.7.0
 
-  zod-openapi@5.4.6(zod@4.6.5):
+  zod-openapi@5.4.6(zod@4.6.6):
     dependencies:
-      zod: 4.6.5
+      zod: 4.6.6
 
-  zod-to-camel-case@0.5.0(zod@4.6.5):
+  zod-to-camel-case@0.5.0(zod@4.6.6):
     dependencies:
-      zod: 4.6.5
+      zod: 4.6.6
 
   zod@3.25.76: {}
 
   zod@4.1.11: {}
 
-  zod@4.6.5: {}
+  zod@4.6.6: {}
 
   zustand@5.0.15(@types/react@19.3.0)(immer@10.2.0)(react@19.3.1)(use-sync-external-store@1.6.0(react@19.3.1)):
     optionalDependencies:
