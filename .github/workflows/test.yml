@@ -23,6 +23,12 @@ jobs:
     name: test
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      # Minting the OIDC token the Google auth step federates with. Needed for
+      # the live Google Cloud credential test; see the step below.
+      id-token: write
+
     env:
       # The suite runs integration tests against real backends, so it needs the
       # secrets below. Dependabot-triggered runs don't receive repository
@@ -66,8 +72,36 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
         if: env.RUN_TESTS == 'true'
+
+      # Credentials for the live Google Cloud test, by the same workload
+      # identity federation that publishes the bulk-data image. The
+      # `service_account` input is load-bearing: without it the action writes a
+      # federated credential with no `client_email`, which can read objects but
+      # cannot sign URLs. The action exports GOOGLE_APPLICATION_CREDENTIALS, so
+      # `getGoogleCloudStorage` picks it up by its application default
+      # credentials path.
+      #
+      # Skipped, not failed, where an OIDC token cannot exist: a pull request
+      # from a fork gets a read-only token, and that is not something an
+      # outside contributor can fix. The test skips itself when this step
+      # doesn't run, so the suite still passes there.
+      - name: Google auth
+        id: gcp_auth
+        if: >-
+          env.RUN_TESTS == 'true' && (github.event_name != 'pull_request' ||
+          github.event.pull_request.head.repo.full_name == github.repository)
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: ${{ vars.GOOGLE_IDENTITY_PROVIDER_NAME }}
+          service_account: ${{ vars.GOOGLE_CLOUD_SERVICE_ACCOUNT }}
+
       - run: pnpm test --coverage
         if: env.RUN_TESTS == 'true'
+        env:
+          # 'skipped' on a fork, 'success' when the credentials are there. A
+          # broken credential on a trusted run fails the auth step outright, so
+          # it cannot reach here as a quiet skip.
+          RUN_LIVE_GCP_TESTS: ${{ steps.gcp_auth.outcome == 'success' }}
 
       - name: Summarise coverage
         if: always() && env.RUN_TESTS == 'true'
