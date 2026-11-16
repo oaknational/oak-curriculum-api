@@ -1,6 +1,6 @@
 # Pinned by digest, not tag: a tag can be repointed by its publisher at any time.
 # Dependabot keeps the digest and the comment in step.
-FROM node:24.22.2@sha256:e7add2a490bb17d97b485b8641bd88455fff7839ade0f5eba493c3508124d413
+FROM node:26.13.1@sha256:e18c3ccdf7d71619990b0e85639f506e2028a95410999cab24cc373cbd10e0ac
 
 # enable Corepack & activate pnpm
 RUN corepack enable \
