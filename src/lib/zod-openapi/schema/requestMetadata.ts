@@ -1,3 +1,5 @@
+import { TRPCError } from '@trpc/server';
+import * as z from 'zod/v4';
 import {
   forEachOpenApiProcedure,
   getInputOutputParsers,
@@ -5,6 +7,7 @@ import {
   type OpenAPIObject,
   type OpenApiRouter,
 } from 'trpc-to-openapi';
+import type { ApiMeta } from '@/lib/trpc';
 
 /**
  * Key used to list a request schema's cross-field rules in its `.meta()`.
@@ -25,8 +28,10 @@ interface MetadataHolder {
 
 interface ParameterLike {
   name: string;
+  in?: string;
+  required?: boolean;
   description?: string;
-  schema?: { example?: unknown };
+  schema?: { example?: unknown } & Record<string, unknown>;
 }
 
 interface OperationLike {
@@ -65,9 +70,60 @@ function getFieldMeta(schema: unknown, key: string): unknown {
 }
 
 /**
+ * The OpenAPI query parameters for a procedure's `urlQuery` schema, which
+ * trpc-to-openapi never sees.
+ */
+function urlQueryParameters(urlQuery: z.ZodObject): ParameterLike[] {
+  const fields = Object.entries(urlQuery.shape) as [string, z.ZodType][];
+
+  return fields.map(([name, field]) => {
+    const schema: Record<string, unknown> = z.toJSONSchema(field, {
+      io: 'input',
+    });
+    // the description belongs on the parameter, as trpc-to-openapi puts it for
+    // a GET's query, rather than repeated on its schema
+    delete schema.$schema;
+    delete schema.description;
+    const description = getFieldMeta(field, 'description');
+    const example = getFieldMeta(field, 'example');
+
+    return {
+      name,
+      in: 'query',
+      required: !field.safeParse(undefined).success,
+      ...(typeof description === 'string' ? { description } : {}),
+      schema: { ...schema, ...(example === undefined ? {} : { example }) },
+    };
+  });
+}
+
+/**
+ * Parses a procedure's `urlQuery` from the request URL, answering a bad value
+ * with a 400 as trpc-to-openapi does for the query of a GET.
+ */
+export function parseUrlQuery<T extends z.ZodObject>(
+  urlQuery: T,
+  requestUrl: string | undefined,
+): z.infer<T> {
+  const { searchParams } = new URL(requestUrl ?? '', 'http://localhost');
+  const result = urlQuery.safeParse(Object.fromEntries(searchParams));
+
+  if (!result.success) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: z.prettifyError(result.error),
+      cause: result.error,
+    });
+  }
+
+  return result.data;
+}
+
+/**
  * Copies request schema metadata that trpc-to-openapi drops back onto the
- * generated document: parameter descriptions and examples, and cross-field
- * rules declared under {@link requestRulesKey}. Mutates and returns the given
+ * generated document: parameter descriptions and examples, the `urlQuery`
+ * parameters of body-taking procedures, and cross-field rules declared under
+ * {@link requestRulesKey}. Mutates and returns the given
  * document.
  */
 export function applyRequestMetadata(
@@ -81,6 +137,14 @@ export function applyRequestMetadata(
     ] as OperationLike | undefined;
 
     if (!operation) return;
+
+    const { urlQuery } = meta as ApiMeta;
+    if (urlQuery) {
+      operation.parameters = [
+        ...(operation.parameters ?? []),
+        ...urlQueryParameters(urlQuery),
+      ];
+    }
 
     const { inputParser } = getInputOutputParsers(procedure);
     const shape = asMetadataHolder(inputParser)?.shape ?? {};

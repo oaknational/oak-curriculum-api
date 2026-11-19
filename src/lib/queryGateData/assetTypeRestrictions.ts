@@ -17,13 +17,12 @@
  */
 import z from 'zod';
 import { downloadTypeEnum } from '@/lib/handlers/assets/types';
-import type { CollapsedRestrictionStatus } from '@/lib/queryGate';
 
 /**
  * The asset types the gate can be asked about: anything downloadable, plus the
  * transcript and the quiz, which are served by endpoints of their own.
  */
-const gatedAssetTypes = z.enum([
+export const gatedAssetTypes = z.enum([
   ...downloadTypeEnum.options,
   'transcript',
   'quiz',
@@ -95,25 +94,5 @@ export function restrictsEveryDownload(
 ): boolean {
   return downloadTypeEnum.options.every((type) =>
     restrictedTypes?.includes(type),
-  );
-}
-
-export function getAssetRestrictionsForLessons(
-  subjectsByLesson: Map<string, string>,
-  lessonSlugs: string[],
-  assetType?: GatedAssetType,
-): Map<string, CollapsedRestrictionStatus> {
-  const restrictedTypes = getLayerRestrictedAssetTypes(
-    subjectsByLesson,
-    lessonSlugs,
-  );
-
-  return new Map(
-    lessonSlugs.map((lessonSlug) => [
-      lessonSlug,
-      restrictsAssetType(restrictedTypes.get(lessonSlug), assetType)
-        ? 'restricted'
-        : 'ogl-compatible',
-    ]),
   );
 }

@@ -11,7 +11,6 @@ import { childSubjects } from './oakConsts';
 import {
   type GatedAssetType,
   allGatedAssetTypes,
-  getAssetRestrictionsForLessons,
   getLayerRestrictedAssetTypes,
   restrictsAssetType,
   restrictsEveryDownload,
@@ -198,13 +197,81 @@ async function restrictionStatusesFromLevels(
   return { statuses, copyrightConflicts };
 }
 
+/** A lesson's restriction status for each asset type the gate knows about. */
+export type AssetRestrictionStatuses = Record<
+  GatedAssetType,
+  CollapsedRestrictionStatus
+>;
+
 /**
- * The gate's bulk answer before anything is hidden: each lesson's restriction
- * status, from its own restriction levels and the layer over them, and the
- * lessons whose subject this API does not serve.
+ * The gate's bulk answer before anything is hidden or collapsed: each lesson's
+ * restriction status for every asset type, the lessons with a published row in
+ * the restriction view, and the lessons whose subject this API does not serve.
+ *
+ * A lesson's own restriction levels and a copyright conflict restrict every
+ * asset type; the layer restricts only the types it names. Lessons with no
+ * published row in the restriction view are left out, unless the layer
+ * restricts at least one of their asset types.
+ */
+async function assetRestrictionStatusesWithUnsupported(
+  client: GraphQLClient,
+  lessonSlugs: string[],
+): Promise<{
+  statuses: Map<string, AssetRestrictionStatuses>;
+  inRestrictionView: Set<string>;
+  unsupportedLessons: Set<string>;
+}> {
+  const { statuses: levelStatuses, copyrightConflicts } =
+    await restrictionStatusesFromLevels(client, lessonSlugs);
+
+  const subjectsByLesson = await getLessonSubjectSlugs(client, lessonSlugs);
+
+  const layerRestrictedTypes = getLayerRestrictedAssetTypes(
+    subjectsByLesson,
+    lessonSlugs,
+  );
+
+  const inRestrictionView = new Set(Object.keys(levelStatuses));
+  const statuses = new Map<string, AssetRestrictionStatuses>();
+
+  for (const slug of lessonSlugs) {
+    const layerTypes = layerRestrictedTypes.get(slug) ?? [];
+
+    // the layer stands on its own: a lesson it restricts is answered for even
+    // with no row in the restriction view
+    if (!inRestrictionView.has(slug) && !layerTypes.length) {
+      continue;
+    }
+
+    const wholeLessonRestricted =
+      levelStatuses[slug] === 'restricted' || copyrightConflicts.has(slug);
+
+    statuses.set(
+      slug,
+      Object.fromEntries(
+        allGatedAssetTypes.map((type) => [
+          type,
+          wholeLessonRestricted || layerTypes.includes(type)
+            ? 'restricted'
+            : 'ogl-compatible',
+        ]),
+      ) as AssetRestrictionStatuses,
+    );
+  }
+
+  return {
+    statuses,
+    inRestrictionView,
+    unsupportedLessons: unsupportedSubjectLessons(subjectsByLesson),
+  };
+}
+
+/**
+ * The gate's bulk answer collapsed to one status per lesson: its status for the
+ * given asset type, or with none, restricted if any of its asset types is.
  *
  * Lessons with no published row in the restriction view are left out, unless
- * the layer restricts them.
+ * they come out restricted.
  */
 async function restrictionStatusesWithUnsupported(
   client: GraphQLClient,
@@ -214,37 +281,52 @@ async function restrictionStatusesWithUnsupported(
   statuses: Record<string, CollapsedRestrictionStatus>;
   unsupportedLessons: Set<string>;
 }> {
-  const { statuses, copyrightConflicts } = await restrictionStatusesFromLevels(
-    client,
-    lessonSlugs,
-  );
+  const {
+    statuses: assetStatuses,
+    inRestrictionView,
+    unsupportedLessons,
+  } = await assetRestrictionStatusesWithUnsupported(client, lessonSlugs);
 
-  const subjectsByLesson = await getLessonSubjectSlugs(client, lessonSlugs);
+  const statuses: Record<string, CollapsedRestrictionStatus> = {};
 
-  const layerRestrictions = getAssetRestrictionsForLessons(
-    subjectsByLesson,
-    lessonSlugs,
-    assetType,
-  );
+  for (const [slug, byType] of assetStatuses) {
+    const status = assetType
+      ? byType[assetType]
+      : Object.values(byType).includes('restricted')
+        ? 'restricted'
+        : 'ogl-compatible';
 
-  // the layer only ever restricts further, and it stands on its own: a lesson
-  // it restricts stays restricted even with no row in the restriction view
-  for (const [slug, status] of layerRestrictions) {
-    if (status === 'restricted') {
+    if (inRestrictionView.has(slug) || status === 'restricted') {
       statuses[slug] = status;
     }
   }
 
-  // a copyright conflict restricts every asset type, so it restricts whatever
-  // asset type was asked about
-  for (const slug of copyrightConflicts) {
-    statuses[slug] = 'restricted';
+  return { statuses, unsupportedLessons };
+}
+
+/**
+ * The restriction status of every asset type of each of the given lessons: the
+ * detailed form of `getLessonsRestrictionStatuses`, which is this collapsed to
+ * one status per lesson. Read by the check-restricted endpoints when asked for
+ * detail.
+ */
+export async function getLessonsAssetRestrictionStatuses(
+  client: GraphQLClient,
+  lessonSlugs: string[],
+): Promise<Record<string, AssetRestrictionStatuses>> {
+  const { statuses, unsupportedLessons } =
+    await assetRestrictionStatusesWithUnsupported(client, lessonSlugs);
+
+  const result: Record<string, AssetRestrictionStatuses> = {};
+
+  // left out for the same reason as in getLessonsRestrictionStatuses
+  for (const [slug, byType] of statuses) {
+    if (!unsupportedLessons.has(slug)) {
+      result[slug] = byType;
+    }
   }
 
-  return {
-    statuses,
-    unsupportedLessons: unsupportedSubjectLessons(subjectsByLesson),
-  };
+  return result;
 }
 
 /**
