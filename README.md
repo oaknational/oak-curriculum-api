@@ -239,7 +239,7 @@ A script is available to generate this. You will need the following prerequisite
 Assuming your environment is in place, and assuming that your slugs are in `./slugs.json`, run the following command:
 
 ```sh
-pnpx tsx bin/get-direct-video-links.ts ./slugs.json > results.csv
+pnpm exec tsx bin/get-direct-video-links.ts ./slugs.json > results.csv
 ```
 
 The results.csv file is a CSV (without a header) that contains the URL and the lesson slug. This is to help ensure that the order is aligned to the original list.
@@ -304,7 +304,7 @@ The prepare-bulk.ts script creates organised archives of Oak educational content
 To generate bulk download packages:
 
 ```sh
-pnpx tsx bin/prepare-bulk.ts
+pnpm exec tsx bin/prepare-bulk.ts
 ```
 
 #### Output Structure
