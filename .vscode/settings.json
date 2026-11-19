@@ -1,4 +1,9 @@
 {
+  // Use the repo's TypeScript, not the one VS Code bundles, so the editor
+  // reports the same errors as `pnpm lint`. VS Code asks once per workspace
+  // before switching ("Use Workspace Version").
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
   "vitest.nodeEnv": {
     "DOTENV_CONFIG_PATH": ".env"
   },
