@@ -1,4 +1,3 @@
-import groupBy from 'object.groupby';
 import { v0Procedure } from '@/lib/protect';
 import { router } from '@/lib/trpc';
 import { TRPCError } from '@trpc/server';
@@ -30,9 +29,6 @@ import {
   getCanonicalUrlForLesson,
   getOakUrlForLesson,
 } from '@/lib/canonicalUrls';
-
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-groupBy.shim();
 
 const restrictionEnum = z.enum(collapsedRestrictionStatuses);
 export const checkRestrictedLessonsResponseSchema = z
