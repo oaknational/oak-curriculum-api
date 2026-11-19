@@ -50,13 +50,6 @@ export function routerForMajor(major: ApiMajor): AppRouter {
     return cached;
   }
 
-  // The latest major serves everything by definition, so it never needs
-  // rebuilding — and never touches tRPC's internals.
-  if (major === LATEST_API_MAJOR) {
-    cache.set(major, appRouter);
-    return appRouter;
-  }
-
   const record: Record<string, unknown> = {};
 
   // At runtime `_def.procedures` is a flat, dot-delimited record; its type
@@ -66,6 +59,18 @@ export function routerForMajor(major: ApiMajor): AppRouter {
     string,
     AnyProcedure
   >;
+
+  // The latest major serves everything bar what a twin supersedes from it, so
+  // with nothing superseded there it needs no rebuilding.
+  if (
+    major === LATEST_API_MAJOR &&
+    Object.values(procedures).every((procedure) =>
+      isServedIn(procedure._def.meta as ApiMeta | undefined, major),
+    )
+  ) {
+    cache.set(major, appRouter);
+    return appRouter;
+  }
 
   for (const [path, procedure] of Object.entries(procedures)) {
     const meta = procedure._def.meta as ApiMeta | undefined;
