@@ -1,5 +1,4 @@
-import groupBy from 'object.groupby';
-import { v0Procedure } from '@/lib/protect';
+import { protectedProcedure, v0Procedure } from '@/lib/protect';
 import { router } from '@/lib/trpc';
 import { TRPCError } from '@trpc/server';
 import { getClient, gql, lessonSearchView, lessonView } from 'lib/owaClient';
@@ -8,7 +7,7 @@ import * as z from 'zod/v4';
 import { errorResponses } from '@/lib/errorResponses';
 
 import {
-  collapsedRestrictionStatuses,
+  getLessonsAssetRestrictionStatuses,
   getLessonsRestrictionStatuses,
   isLessonRestricted,
   isSubjectAllowed,
@@ -20,50 +19,50 @@ import {
 } from '@/lib/handlers/unitProgrammeFactors';
 
 import {
+  checkRestrictedLessonsAnyResponseSchema,
+  checkRestrictedLessonsResponseSchema,
+  detailedQuerySchema,
+  isDetailed,
   lessonSearchRequestSchema,
   lessonSearchResponseSchema,
   lessonSummaryRequestSchema,
   lessonSummaryResponseSchema,
   type LessonSearchResultType,
 } from './schemas';
+import { parseUrlQuery } from '@/lib/zod-openapi/schema/requestMetadata';
 import {
   getCanonicalUrlForLesson,
   getOakUrlForLesson,
 } from '@/lib/canonicalUrls';
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-groupBy.shim();
+const checkRestrictedLessonsRequestSchema = z.object({
+  lessonSlugs: z
+    .array(z.string())
+    .min(1, 'At least one lesson slug is required'),
+});
 
-const restrictionEnum = z.enum(collapsedRestrictionStatuses);
-export const checkRestrictedLessonsResponseSchema = z
-  .record(z.string(), restrictionEnum)
-  .meta({
-    example: {
-      'joining-using-and': 'ogl-compatible',
-      'restricted-lesson': 'restricted',
-    },
-  });
+const checkRestrictedLessonsUrlQuerySchema = z.object({
+  detailed: detailedQuerySchema,
+});
+
+const checkRestrictedLessonsDescription = `Use when you have a list of lesson slugs and need to check whether third-party content restrictions withhold their assets. Returns an object keyed by lesson slug, each with a restriction status of \`ogl-compatible\` or \`restricted\`. A slug that is not found, or whose subject this API does not serve, is left out.
+
+Not for: checking a single lesson (GET /lessons/{lesson}/summary); searching lessons by title (GET /search/lessons); listing every lesson in a unit or subject (GET /key-stages/{keyStage}/subject/{subject}/lessons).`;
 
 export const getLessons = router({
   postCheckRestrictedLessons: v0Procedure
     .meta({
+      removedIn: 'v1',
       openapi: {
         method: 'POST',
         tags: ['lessons'],
         summary: 'Check restrictions for a list of lessons',
         path: '/lessons/check-restricted',
-        description: `Use when you have a list of lesson slugs and need to check if they are restricted. Returns a list of lessons with their restriction status and reasons.
-Not for: checking a single lesson (GET /lessons/{lesson}/summary); searching lessons by title (GET /search/lessons); listing every lesson in a unit or subject (GET /key-stages/{keyStage}/subject/{subject}/lessons).`,
+        description: checkRestrictedLessonsDescription,
         errorResponses,
       },
     })
-    .input(
-      z.object({
-        lessonSlugs: z
-          .array(z.string())
-          .min(1, 'At least one lesson slug is required'),
-      }),
-    )
+    .input(checkRestrictedLessonsRequestSchema)
     .output(checkRestrictedLessonsResponseSchema)
     .query(async ({ input }) => {
       const { lessonSlugs } = input;
@@ -71,6 +70,35 @@ Not for: checking a single lesson (GET /lessons/{lesson}/summary); searching les
       // no asset type: this answers for the lesson as a whole rather than for
       // one of its assets, so it takes the gate's default reading
       return getLessonsRestrictionStatuses(getClient(), lessonSlugs);
+    }),
+  // supersedes postCheckRestrictedLessons from v1, adding `?detailed`
+  postCheckRestrictedLessonsV1: protectedProcedure
+    .meta({
+      urlQuery: checkRestrictedLessonsUrlQuerySchema,
+      openapi: {
+        method: 'POST',
+        tags: ['lessons'],
+        summary: 'Check restrictions for a list of lessons',
+        path: '/lessons/check-restricted',
+        operationId: 'getLessonsPostCheckRestrictedLessons',
+        description: `${checkRestrictedLessonsDescription}
+
+Pass \`?detailed=true\` to get, for each lesson, the restriction status of every asset type (as served by GET /lessons/{lesson}/assets/{type}, GET /lessons/{lesson}/transcript and GET /lessons/{lesson}/quiz) in place of a single status for the whole lesson.`,
+        errorResponses,
+      },
+    })
+    .input(checkRestrictedLessonsRequestSchema)
+    .output(checkRestrictedLessonsAnyResponseSchema)
+    .query(async ({ input, ctx }) => {
+      const { lessonSlugs } = input;
+      const { detailed } = parseUrlQuery(
+        checkRestrictedLessonsUrlQuerySchema,
+        ctx.req.url,
+      );
+
+      return isDetailed(detailed)
+        ? getLessonsAssetRestrictionStatuses(getClient(), lessonSlugs)
+        : getLessonsRestrictionStatuses(getClient(), lessonSlugs);
     }),
   getLesson: v0Procedure
     .meta({

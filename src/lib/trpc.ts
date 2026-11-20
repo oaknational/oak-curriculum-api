@@ -3,6 +3,7 @@ import util from 'node:util';
 import superjson from 'superjson';
 import type { OpenApiMeta } from 'trpc-to-openapi';
 import { ZodError } from 'zod';
+import type * as z from 'zod/v4';
 
 import {
   ApiRequestCapturePayload,
@@ -33,6 +34,13 @@ export type ApiMeta = OpenApiMeta & {
   removedIn?: ApiMajor;
   /** Whether the call is exempt from consuming rate-limit quota. */
   noCost?: boolean;
+  /**
+   * Query parameters a body-taking (POST) procedure reads from its URL.
+   * trpc-to-openapi takes a POST's input from the body alone, so these are
+   * parsed by the handler with `parseUrlQuery` and added to the OpenAPI
+   * document by `applyRequestMetadata`, both from this one schema.
+   */
+  urlQuery?: z.ZodObject;
 };
 
 export const t = initTRPC.context<Context>().meta<ApiMeta>().create({

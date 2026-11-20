@@ -193,7 +193,13 @@ getLessonV2: protectedProcedure
 ```
 
 Each major's router holds exactly one of them, so there is no route collision
-and each document describes one operation. Set `operationId` explicitly on the
+and each document describes one operation. `removedIn` may name the current
+major as well as a future one, to add a feature to the current major without it
+reaching a frozen one: the v1 twins of the check-restricted endpoints in
+[`lesson.ts`](../src/lib/handlers/lesson/lesson.ts) and
+[`keyStageSubjectLessons.ts`](../src/lib/handlers/keyStageSubjectLessons/keyStageSubjectLessons.ts)
+do this. [`routerForMajor`](../src/lib/versionedRouter.ts) filters the current
+major whenever anything is removed from it. Set `operationId` explicitly on the
 twin so generated clients keep a stable name — operation ids are otherwise
 identical across majors, deliberately, since renaming them would break anyone
 who upgrades.

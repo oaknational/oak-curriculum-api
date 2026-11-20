@@ -308,6 +308,20 @@
             }
           },
           {
+            "name": "detailed",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "0",
+                "1",
+                "true",
+                "false"
+              ]
+            }
+          },
+          {
             "name": "limit",
             "in": "query",
             "required": false,
@@ -336,14 +350,44 @@
           "200": {
             "content": {
               "application/json": {
-                "type": "object",
-                "additionalProperties": {
-                  "type": "string",
-                  "enum": [
-                    "ogl-compatible",
-                    "restricted"
-                  ]
-                }
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string",
+                      "enum": [
+                        "ogl-compatible",
+                        "restricted"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "object",
+                      "required": [
+                        "slideDeck",
+                        "exitQuiz",
+                        "exitQuizAnswers",
+                        "starterQuiz",
+                        "starterQuizAnswers",
+                        "supplementaryResource",
+                        "video",
+                        "worksheet",
+                        "worksheetAnswers",
+                        "transcript",
+                        "quiz"
+                      ],
+                      "additionalProperties": {
+                        "type": "string",
+                        "enum": [
+                          "ogl-compatible",
+                          "restricted"
+                        ]
+                      }
+                    }
+                  }
+                ]
               }
             }
           },
@@ -1680,7 +1724,22 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "detailed",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "0",
+                "1",
+                "true",
+                "false"
+              ]
+            }
+          }
+        ],
         "requestBody": {
           "application/json": {
             "type": "object",
@@ -1701,14 +1760,44 @@
           "200": {
             "content": {
               "application/json": {
-                "type": "object",
-                "additionalProperties": {
-                  "type": "string",
-                  "enum": [
-                    "ogl-compatible",
-                    "restricted"
-                  ]
-                }
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string",
+                      "enum": [
+                        "ogl-compatible",
+                        "restricted"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "object",
+                      "required": [
+                        "slideDeck",
+                        "exitQuiz",
+                        "exitQuizAnswers",
+                        "starterQuiz",
+                        "starterQuizAnswers",
+                        "supplementaryResource",
+                        "video",
+                        "worksheet",
+                        "worksheetAnswers",
+                        "transcript",
+                        "quiz"
+                      ],
+                      "additionalProperties": {
+                        "type": "string",
+                        "enum": [
+                          "ogl-compatible",
+                          "restricted"
+                        ]
+                      }
+                    }
+                  }
+                ]
               }
             }
           },
