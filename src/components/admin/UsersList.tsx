@@ -130,6 +130,7 @@ export function UsersList(): React.ReactElement {
       {!search ? (
         <OakP $color="text-subdued">
           Search to find a user by name, company, email address, API key or ID.
+          Separate several with commas to find them all at once.
         </OakP>
       ) : loading ? (
         <OakFlex $justifyContent="center" $pv="spacing-48">
