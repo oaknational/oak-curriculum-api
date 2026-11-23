@@ -43,7 +43,7 @@
     "@upstash/ratelimit": "^2.2.0",
     "@upstash/redis": "^1.39.0",
     "@vercel/oidc": "^3.8.9",
-    "google-auth-library": "^9.15.1",
+    "google-auth-library": "^11.3.4",
     "graphql": "^16.11.0",
     "graphql-request": "^7.4.0",
     "highlight.js": "^11.11.1",
