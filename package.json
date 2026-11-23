@@ -36,7 +36,7 @@
     "@oaknational/oak-components": "3.22.1",
     "@oaknational/oak-curriculum-schema": "^2.16.0",
     "@portabletext/react": "^4.0.3",
-    "@prisma/client": "^5.22.0",
+    "@prisma/client": "^7.10.1",
     "@prisma/extension-accelerate": "^2.0.2",
     "@sanity/image-url": "^2.1.1",
     "@trpc/server": "^11.19.0",
