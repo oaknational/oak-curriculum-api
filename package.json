@@ -32,7 +32,7 @@
   "private": true,
   "dependencies": {
     "@emotion/is-prop-valid": "^1.4.0",
-    "@google-cloud/storage": "^8.2.0",
+    "@google-cloud/storage": "^9.0.0",
     "@oaknational/oak-components": "3.22.1",
     "@oaknational/oak-curriculum-schema": "^2.16.0",
     "@portabletext/react": "^4.0.3",
