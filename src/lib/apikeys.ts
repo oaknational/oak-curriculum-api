@@ -234,10 +234,27 @@ export interface ListUsersResult {
   total: number;
 }
 
-function matchesSearch(user: User, search: string): boolean {
-  return [user.name, user.company, user.email, user.key, String(user.id)].some(
-    (field) => field?.toLowerCase().includes(search),
-  );
+/**
+ * A search may hold several comma-separated terms ("alice@example.com, 3f2a…")
+ * of any mix; a user matches if any one of them does.
+ */
+function searchTerms(search: string): string[] {
+  return search
+    .split(',')
+    .map((term) => term.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function matchesSearch(user: User, terms: string[]): boolean {
+  const fields = [
+    user.name,
+    user.company,
+    user.email,
+    user.key,
+    String(user.id),
+  ].map((field) => field?.toLowerCase());
+
+  return terms.some((term) => fields.some((field) => field?.includes(term)));
 }
 
 function compareUsers(a: User, b: User, sort: UserSortField): number {
@@ -269,9 +286,10 @@ export async function listUsers({
 }: ListUsersOptions = {}): Promise<ListUsersResult> {
   let users = await allUserRecords();
 
-  if (search) {
-    const needle = search.trim().toLowerCase();
-    users = users.filter((user) => matchesSearch(user, needle));
+  const terms = searchTerms(search ?? '');
+
+  if (terms.length > 0) {
+    users = users.filter((user) => matchesSearch(user, terms));
   }
 
   users.sort((a, b) => compareUsers(a, b, sort));

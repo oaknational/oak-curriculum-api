@@ -89,7 +89,7 @@ describe('updateUser', () => {
 
     await updateUser({ key, rateLimit: 50 });
 
-    expect(await fakeRedis.dump('user:email:null')).toBeUndefined();
+    expect(fakeRedis.dump('user:email:null')).toBeUndefined();
   });
 
   it('bumps updatedAt without moving createdAt', async () => {
@@ -203,6 +203,31 @@ describe('listUsers', () => {
     const key = users[0].key;
 
     expect((await listUsers({ search: key })).users[0].key).toBe(key);
+  });
+
+  it('matches any of several comma-separated terms, keys and emails mixed', async () => {
+    const { users } = await listUsers({ sort: 'id', direction: 'asc' });
+    const [alice, bob, carol] = users;
+
+    const found = await listUsers({
+      search: ` ${alice.key} , CAROL@elsewhere.org,, `,
+      sort: 'id',
+      direction: 'asc',
+    });
+
+    expect(found.users.map((user) => user.id)).toEqual([alice.id, carol.id]);
+    expect(found.total).toBe(2);
+    expect(found.users).not.toContainEqual(bob);
+  });
+
+  it('counts a user once when several terms match them', async () => {
+    const { total } = await listUsers({ search: 'bob@example.com, bloggs' });
+
+    expect(total).toBe(1);
+  });
+
+  it('treats a search of only separators as no search', async () => {
+    expect((await listUsers({ search: ' , ,' })).total).toBe(3);
   });
 
   it('paginates while reporting the unpaginated total', async () => {

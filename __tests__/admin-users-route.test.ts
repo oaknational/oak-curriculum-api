@@ -1,5 +1,12 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import type { NextRequest } from 'next/server';
+import type { AdminErrorBody } from '@/app/api/admin/responses';
+import type {
+  AdminRollKeyResponse,
+  AdminUserDetailResponse,
+  AdminUserResponse,
+  AdminUsersResponse,
+} from '@/app/api/admin/schemas';
 import { fakeRedis } from './fakeRedis';
 
 vi.mock('@/lib/redis', () => ({ redis: fakeRedis }));
@@ -45,9 +52,14 @@ function params(id: string): { params: Promise<{ id: string }> } {
   return { params: Promise.resolve({ id }) };
 }
 
+// `Response.json()` resolves to `any`; name the shape each route returns.
+async function json<T>(res: Response): Promise<T> {
+  return (await res.json()) as T;
+}
+
 async function seed(body: Record<string, unknown> = alice): Promise<number> {
   const res = await createUser(request('/api/admin/users', body));
-  const { user } = await res.json();
+  const { user } = await json<AdminUserResponse>(res);
   return user.id;
 }
 
@@ -56,7 +68,7 @@ describe('POST /api/admin/users', () => {
 
   it('creates a user and returns the key', async () => {
     const res = await createUser(request('/api/admin/users', alice));
-    const body = await res.json();
+    const body = await json<AdminUserResponse>(res);
 
     expect(res.status).toBe(201);
     expect(body.user).toMatchObject({ id: 1, ...alice, rateLimit: 1000 });
@@ -69,14 +81,14 @@ describe('POST /api/admin/users', () => {
       request('/api/admin/users', { ...alice, rateLimit: 0 }),
     );
 
-    expect((await res.json()).user.rateLimit).toBe(0);
+    expect((await json<AdminUserResponse>(res)).user.rateLimit).toBe(0);
   });
 
   it('reports field-level issues for an invalid body', async () => {
     const res = await createUser(
       request('/api/admin/users', { ...alice, email: 'not-an-email' }),
     );
-    const body = await res.json();
+    const body = await json<AdminErrorBody>(res);
 
     expect(res.status).toBe(400);
     expect(body.issues).toContainEqual(
@@ -101,19 +113,30 @@ describe('GET /api/admin/users', () => {
 
   it('lists users newest first with a total', async () => {
     const res = await listUsers(request('/api/admin/users'));
-    const body = await res.json();
+    const body = await json<AdminUsersResponse>(res);
 
     expect(res.status).toBe(200);
-    expect(body.users.map((user: { id: number }) => user.id)).toEqual([2, 1]);
+    expect(body.users.map((user) => user.id)).toEqual([2, 1]);
     expect(body).toMatchObject({ total: 2, limit: 50, offset: 0 });
   });
 
   it('filters by search', async () => {
     const res = await listUsers(request('/api/admin/users?search=bloggs'));
-    const body = await res.json();
+    const body = await json<AdminUsersResponse>(res);
 
     expect(body.total).toBe(1);
     expect(body.users[0].name).toBe('Bob Bloggs');
+  });
+
+  it('filters by several comma-separated terms', async () => {
+    const res = await listUsers(
+      request(
+        `/api/admin/users?search=${encodeURIComponent('alice@example.com, bloggs')}`,
+      ),
+    );
+    const body = await json<AdminUsersResponse>(res);
+
+    expect(body.total).toBe(2);
   });
 
   it('rejects an out-of-range limit', async () => {
@@ -133,7 +156,7 @@ describe('GET /api/admin/users/[id]', () => {
       request(`/api/admin/users/${id}`),
       params(`${id}`),
     );
-    const body = await res.json();
+    const body = await json<AdminUserDetailResponse>(res);
 
     expect(res.status).toBe(200);
     expect(body.user).toMatchObject(alice);
@@ -154,7 +177,7 @@ describe('GET /api/admin/users/[id]', () => {
       params(`${id}`),
     );
 
-    expect((await res.json()).user.requests).toBe(0);
+    expect((await json<AdminUserDetailResponse>(res)).user.requests).toBe(0);
   });
 
   it('404s for an unknown id', async () => {
@@ -180,7 +203,7 @@ describe('PATCH /api/admin/users/[id]', () => {
       request(`/api/admin/users/${id}`, { rateLimit: 5000 }),
       params(`${id}`),
     );
-    const { user } = await res.json();
+    const { user } = await json<AdminUserResponse>(res);
 
     expect(res.status).toBe(200);
     expect(user).toMatchObject({ ...alice, rateLimit: 5000 });
@@ -221,7 +244,7 @@ describe('PATCH /api/admin/users/[id]', () => {
     );
 
     expect(res.status).toBe(200);
-    expect((await res.json()).user.name).toBe('Renamed');
+    expect((await json<AdminUserResponse>(res)).user.name).toBe('Renamed');
   });
 });
 
@@ -245,13 +268,13 @@ describe('POST /api/admin/users/[id]/roll-key', () => {
       request(`/api/admin/users/${id}`),
       params(`${id}`),
     );
-    const previous = (await before.json()).user.key;
+    const previous = (await json<AdminUserDetailResponse>(before)).user.key;
 
     const res = await rollKey(
       request(`/api/admin/users/${id}/roll-key`, { confirm: 'roll' }),
       params(`${id}`),
     );
-    const body = await res.json();
+    const body = await json<AdminRollKeyResponse>(res);
 
     expect(res.status).toBe(200);
     expect(body.previousKey).toBe(previous);
