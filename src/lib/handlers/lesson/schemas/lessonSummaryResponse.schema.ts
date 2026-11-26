@@ -118,3 +118,25 @@ export const lessonSummaryResponseSchema = z
 export type LessonSummaryResponseType = z.infer<
   typeof lessonSummaryResponseSchema
 >;
+
+/**
+ * The v1 lesson summary: the v0 shape plus `equipment`.
+ *
+ * Kept as an extension rather than a field on the shared schema, because
+ * `/api/v0` is frozen and its contract must not gain fields. See
+ * docs/RELEASING.md, "Superseding an endpoint".
+ */
+export const lessonSummaryResponseSchemaV1 = lessonSummaryResponseSchema
+  .extend({
+    equipment: z.string().or(z.null()).meta({
+      description:
+        'Equipment and resources needed to teach the lesson, or null when none are listed.',
+      example:
+        'An object to control - which could be a ball or rolled up socks, an implement to hit the ball with (e.g. a book, racket or pan) and optional own equipment to make your own target game.',
+    }),
+  })
+  .meta({ example: { ...example, equipment: null } });
+
+export type LessonSummaryResponseV1Type = z.infer<
+  typeof lessonSummaryResponseSchemaV1
+>;

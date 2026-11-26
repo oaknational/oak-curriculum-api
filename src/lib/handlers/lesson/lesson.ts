@@ -1,5 +1,5 @@
 import { protectedProcedure, v0Procedure } from '@/lib/protect';
-import { router } from '@/lib/trpc';
+import { router, type ApiMeta } from '@/lib/trpc';
 import { TRPCError } from '@trpc/server';
 import { getClient, gql, lessonSearchView, lessonView } from 'lib/owaClient';
 import type { LessonSearchView, LessonView } from 'lib/owaClient';
@@ -27,7 +27,9 @@ import {
   lessonSearchResponseSchema,
   lessonSummaryRequestSchema,
   lessonSummaryResponseSchema,
+  lessonSummaryResponseSchemaV1,
   type LessonSearchResultType,
+  type LessonSummaryResponseV1Type,
 } from './schemas';
 import { parseUrlQuery } from '@/lib/zod-openapi/schema/requestMetadata';
 import {
@@ -48,6 +50,24 @@ const checkRestrictedLessonsUrlQuerySchema = z.object({
 const checkRestrictedLessonsDescription = `Use when you have a list of lesson slugs and need to check whether third-party content restrictions withhold their assets. Returns an object keyed by lesson slug, each with a restriction status of \`ogl-compatible\` or \`restricted\`. A slug that is not found, or whose subject this API does not serve, is left out.
 
 Not for: checking a single lesson (GET /lessons/{lesson}/summary); searching lessons by title (GET /search/lessons); listing every lesson in a unit or subject (GET /key-stages/{keyStage}/subject/{subject}/lessons).`;
+
+const lessonSummaryOpenApi = {
+  method: 'GET',
+  tags: ['lessons'],
+  summary: 'Lesson summary by slug',
+  path: '/lessons/{lesson}/summary',
+  errorResponses,
+} satisfies NonNullable<ApiMeta['openapi']>;
+
+const lessonSummaryDescription = (fields: string) =>
+  `Use when you have a lesson slug and need its full metadata: ${fields}. Returns the lesson summary record.
+
+Not for: finding a lesson from a search term (GET /search/lessons); searching what's said in lesson videos (GET /search/transcripts); listing every lesson in a unit or subject (GET /key-stages/{keyStage}/subject/{subject}/lessons); the transcript or assets (GET /lessons/{lesson}/transcript or GET /lessons/{lesson}/assets).
+
+Example slug: imagining-you-are-the-characters-the-three-billy-goats-gruff.`;
+
+const lessonSummaryFields =
+  'title, key stage, subject, unit, keywords, key learning points, misconceptions, pupil lesson outcome, teacher tips, content guidance, supervision level, and downloadsAvailable';
 
 export const getLessons = router({
   postCheckRestrictedLessons: v0Procedure
@@ -102,151 +122,37 @@ Pass \`?detailed=true\` to get, for each lesson, the restriction status of every
     }),
   getLesson: v0Procedure
     .meta({
+      removedIn: 'v1',
       openapi: {
-        method: 'GET',
-        tags: ['lessons'],
-        summary: 'Lesson summary by slug',
-        path: '/lessons/{lesson}/summary',
-        description: `Use when you have a lesson slug and need its full metadata: title, key stage, subject, unit, keywords, key learning points, misconceptions, pupil lesson outcome, teacher tips, content guidance, supervision level, and downloadsAvailable. Returns the lesson summary record.
-
-Not for: finding a lesson from a search term (GET /search/lessons); searching what's said in lesson videos (GET /search/transcripts); listing every lesson in a unit or subject (GET /key-stages/{keyStage}/subject/{subject}/lessons); the transcript or assets (GET /lessons/{lesson}/transcript or GET /lessons/{lesson}/assets).
-
-Example slug: imagining-you-are-the-characters-the-three-billy-goats-gruff.`,
-        errorResponses,
+        ...lessonSummaryOpenApi,
+        description: lessonSummaryDescription(lessonSummaryFields),
       },
     })
     .input(lessonSummaryRequestSchema)
     .output(lessonSummaryResponseSchema)
     .query(async ({ input }) => {
-      const slug = decodeURIComponent(input.lesson);
-      const client = getClient();
+      // `equipment` was added in v1, and the frozen v0 contract stays without it
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { equipment: _equipment, ...lesson } = await getLessonSummary(
+        input.lesson,
+      );
 
-      /** show lesson summary (regardless of tpc) - but Aakesh is going to find out if "highly restricted in works" means blocked on /summary */
-      // const blocked = await isLessonRestricted(client, slug);
-
-      // if (blocked.isBlocked()) {
-      //   throw new TRPCError({
-      //     message: `Lesson "${slug}" is restricted and cannot be accessed`,
-      //     code: 'BAD_REQUEST',
-      //     cause: blocked.reason,
-      //   });
-      // }
-
-      const query = gql`
-        query ($slug: String!) @cached(ttl: 300) {
-          ${lessonView}(
-            where: { lessonSlug: { _eq: $slug }, isLegacy: { _eq: false } }
-          ) {
-            lessonTitle
-            unitSlug
-            unitTitle
-            examBoardSlug
-            examBoardTitle
-            tierSlug
-            tierTitle
-            subjectSlug
-            subjectTitle
-            keyStageSlug
-            keyStageTitle
-            lessonKeywords
-            keyLearningPoints
-            misconceptionsAndCommonMistakes
-            pupilLessonOutcome
-            teacherTips
-            contentGuidance
-            downloadsAvailable: hasDownloadableResources
-            supervisionLevel
-            programmeSlug
-          }
-        }
-      `;
-
-      const res: LessonView = await client.request(query, {
-        slug,
-      });
-
-      const data = res[lessonView];
-
-      if (data.length === 0) {
-        throw new TRPCError({
-          message: 'Lesson not found',
-          code: 'NOT_FOUND',
-        });
-      }
-
-      // validate the subject
-      if (!data[0].subjectSlug || !isSubjectAllowed(data[0].subjectSlug)) {
-        throw new TRPCError({
-          message: 'Lesson not found',
-          code: 'NOT_FOUND',
-        });
-      }
-
-      try {
-        // The same lesson can appear in multiple unit variants (e.g. AQA
-        // foundation vs OCR higher), so collapse rows to a unique
-        // (unitSlug, programmeFactors) set and surface them all in `units`.
-        // The non-unit-scoped fields (lessonTitle, subject, key stage, etc.)
-        // are consistent across variants so we read them from any row.
-        const seen = new Set<string>();
-        const units: {
-          unitSlug: string;
-          unitTitle: string;
-          programmeFactors?: UnitProgrammeFactors;
-        }[] = [];
-
-        for (const row of data) {
-          if (!row.unitSlug || !row.unitTitle) {
-            continue;
-          }
-
-          const programmeFactors = getUnitProgrammeFactorsFromLesson(row);
-          const dedupeKey = `${row.unitSlug}|${getUnitProgrammeFactorsSignature(programmeFactors)}`;
-
-          if (seen.has(dedupeKey)) {
-            continue;
-          }
-          seen.add(dedupeKey);
-
-          units.push({
-            unitSlug: row.unitSlug,
-            unitTitle: row.unitTitle,
-            ...(programmeFactors ? { programmeFactors } : {}),
-          });
-        }
-
-        units.sort((a, b) => {
-          const slugCmp = a.unitSlug.localeCompare(b.unitSlug);
-          if (slugCmp !== 0) return slugCmp;
-          return getUnitProgrammeFactorsSignature(
-            a.programmeFactors,
-          ).localeCompare(getUnitProgrammeFactorsSignature(b.programmeFactors));
-        });
-
-        const lesson = {
-          ...data[0],
-          units,
-          canonicalUrl: getCanonicalUrlForLesson(slug),
-          oakUrl: getOakUrlForLesson(slug),
-        } as z.infer<typeof lessonSummaryResponseSchema>;
-
-        if (lesson.downloadsAvailable) {
-          const gated = await isLessonRestricted(client, slug, 'slideDeck');
-          if (gated.isBlocked()) {
-            lesson.downloadsAvailable = false;
-          }
-        }
-
-        lessonSummaryResponseSchema.parse(lesson);
-
-        return lesson;
-      } catch {
-        throw new TRPCError({
-          message: 'Internal server error',
-          code: 'INTERNAL_SERVER_ERROR',
-        });
-      }
+      return lesson;
     }),
+  // supersedes getLesson from v1, adding `equipment`
+  getLessonV1: protectedProcedure
+    .meta({
+      openapi: {
+        ...lessonSummaryOpenApi,
+        operationId: 'getLessonsGetLesson',
+        description: lessonSummaryDescription(
+          `${lessonSummaryFields}, and the equipment needed to teach it`,
+        ),
+      },
+    })
+    .input(lessonSummaryRequestSchema)
+    .output(lessonSummaryResponseSchemaV1)
+    .query(({ input }) => getLessonSummary(input.lesson)),
   searchByTextSimilarity: v0Procedure
     .meta({
       openapi: {
@@ -427,3 +333,134 @@ Example queries: KS3 science photosynthesis, fractions year 5, Macbeth soliloquy
         .toSorted((a, b) => b.similarity - a.similarity);
     }),
 });
+
+/**
+ * Resolves a lesson summary in its latest (v1) shape. The v0 procedure drops
+ * the fields v1 added, so both majors share this one implementation.
+ */
+async function getLessonSummary(
+  lessonSlug: string,
+): Promise<LessonSummaryResponseV1Type> {
+  const slug = decodeURIComponent(lessonSlug);
+  const client = getClient();
+
+  const query = gql`
+    query ($slug: String!) @cached(ttl: 300) {
+      ${lessonView}(
+        where: { lessonSlug: { _eq: $slug }, isLegacy: { _eq: false } }
+      ) {
+        lessonTitle
+        unitSlug
+        unitTitle
+        examBoardSlug
+        examBoardTitle
+        tierSlug
+        tierTitle
+        subjectSlug
+        subjectTitle
+        keyStageSlug
+        keyStageTitle
+        lessonKeywords
+        keyLearningPoints
+        misconceptionsAndCommonMistakes
+        pupilLessonOutcome
+        teacherTips
+        contentGuidance
+        downloadsAvailable: hasDownloadableResources
+        supervisionLevel
+        programmeSlug
+        lessonEquipmentAndResources
+      }
+    }
+  `;
+
+  const res: LessonView = await client.request(query, {
+    slug,
+  });
+
+  const data = res[lessonView];
+
+  if (data.length === 0) {
+    throw new TRPCError({
+      message: 'Lesson not found',
+      code: 'NOT_FOUND',
+    });
+  }
+
+  // validate the subject
+  if (!data[0].subjectSlug || !isSubjectAllowed(data[0].subjectSlug)) {
+    throw new TRPCError({
+      message: 'Lesson not found',
+      code: 'NOT_FOUND',
+    });
+  }
+
+  try {
+    // The same lesson can appear in multiple unit variants (e.g. AQA
+    // foundation vs OCR higher), so collapse rows to a unique
+    // (unitSlug, programmeFactors) set and surface them all in `units`.
+    // The non-unit-scoped fields (lessonTitle, subject, key stage, etc.)
+    // are consistent across variants so we read them from any row.
+    const seen = new Set<string>();
+    const units: {
+      unitSlug: string;
+      unitTitle: string;
+      programmeFactors?: UnitProgrammeFactors;
+    }[] = [];
+
+    for (const row of data) {
+      if (!row.unitSlug || !row.unitTitle) {
+        continue;
+      }
+
+      const programmeFactors = getUnitProgrammeFactorsFromLesson(row);
+      const dedupeKey = `${row.unitSlug}|${getUnitProgrammeFactorsSignature(programmeFactors)}`;
+
+      if (seen.has(dedupeKey)) {
+        continue;
+      }
+      seen.add(dedupeKey);
+
+      units.push({
+        unitSlug: row.unitSlug,
+        unitTitle: row.unitTitle,
+        ...(programmeFactors ? { programmeFactors } : {}),
+      });
+    }
+
+    units.sort((a, b) => {
+      const slugCmp = a.unitSlug.localeCompare(b.unitSlug);
+      if (slugCmp !== 0) return slugCmp;
+      return getUnitProgrammeFactorsSignature(a.programmeFactors).localeCompare(
+        getUnitProgrammeFactorsSignature(b.programmeFactors),
+      );
+    });
+
+    const { lessonEquipmentAndResources, ...row } = data[0];
+
+    const lesson = {
+      ...row,
+      units,
+      canonicalUrl: getCanonicalUrlForLesson(slug),
+      oakUrl: getOakUrlForLesson(slug),
+      // the view holds at most one entry, and an empty array when there's none
+      equipment: lessonEquipmentAndResources?.[0]?.equipment ?? null,
+    } as LessonSummaryResponseV1Type;
+
+    if (lesson.downloadsAvailable) {
+      const gated = await isLessonRestricted(client, slug, 'slideDeck');
+      if (gated.isBlocked()) {
+        lesson.downloadsAvailable = false;
+      }
+    }
+
+    lessonSummaryResponseSchemaV1.parse(lesson);
+
+    return lesson;
+  } catch {
+    throw new TRPCError({
+      message: 'Internal server error',
+      code: 'INTERNAL_SERVER_ERROR',
+    });
+  }
+}

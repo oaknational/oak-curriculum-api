@@ -5,14 +5,14 @@ export { gql } from 'graphql-request';
 export const currentCycle = '2';
 
 export const lessonView = 'published_mv_lesson_openapi_1_2_3';
-export const lessonContentView = 'published_mv_lesson_content_published_5_0_0';
+export const lessonContentView = 'published_mv_lesson_content_published_9_0_0';
 export const downloadView = 'published_mv_openapi_downloads_1_0_0';
 export const threadView = 'published_mv_threads_2';
 export const unitVariantLessonsView =
   'published_mv_synthetic_unitvariant_lessons_by_year_12_0_0';
 export const lessonViewTable = 'published.mv_lesson_openapi_1_2_3';
 export const lessonContentViewTable =
-  'published.mv_lesson_content_published_5_0_0';
+  'published.mv_lesson_content_published_9_0_0';
 export const subjectPhaseView = 'published_mv_subject_phase_options_0_11';
 export const sequenceView = 'published_mv_curriculum_sequence_b_13_0_21';
 export const lessonSearchView =
@@ -162,10 +162,29 @@ export interface SubjectPhase {
   display_order: number;
 }
 
+interface MediaObject {
+  url: string;
+  secure_url: string; // this should be the same
+  format: string;
+  is_audio: boolean;
+  has_video: boolean;
+  metadata: Record<string, string>;
+}
+
+interface MediaClip {
+  order: string;
+  media_id: string;
+  custom_title: string;
+  media_object: MediaObject;
+}
+
+type MediaClips = Record<string, MediaClip>;
+
 export interface LessonContentView {
   [lessonContentView]: {
     transcript_sentences: string | null;
     transcript_vtt: string | null;
+    media_clips?: MediaClips;
   }[];
 }
 
@@ -304,6 +323,10 @@ export interface LessonView {
 // whilst at the same time, not exposed - I've only included them for completeness
 // and debugging - RS 2024-03-20
 
+interface lessonEquipmentAndResource {
+  equipment: string;
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export interface Lesson {
   additionalMaterialUrl?: string;
@@ -320,7 +343,7 @@ export interface Lesson {
   keyStageSlug?: string;
   keyStageTitle?: string;
   lessonCohort?: string;
-  lessonEquipmentAndResources?: any;
+  lessonEquipmentAndResources?: [] | [lessonEquipmentAndResource];
   lessonId?: number;
   lessonKeywords?: any;
   lessonSlug?: string;

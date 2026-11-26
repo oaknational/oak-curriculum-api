@@ -2834,7 +2834,8 @@
                   "teacherTips",
                   "contentGuidance",
                   "supervisionLevel",
-                  "downloadsAvailable"
+                  "downloadsAvailable",
+                  "equipment"
                 ],
                 "additionalProperties": false,
                 "properties": {
@@ -3069,6 +3070,12 @@
                   },
                   "downloadsAvailable": {
                     "type": "boolean"
+                  },
+                  "equipment": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   }
                 }
               }
