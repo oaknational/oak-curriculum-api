@@ -69,3 +69,34 @@ test('structured-programs lesson exposes its KS4 unit and exam board', async () 
     seen.add(key);
   }
 });
+
+test('v1 lesson summary exposes the lesson equipment', async () => {
+  const caller = makeCaller({ user: 1, major: 'v1' });
+
+  const res = await caller.getLessons.getLessonV1({
+    lesson: 'games-can-you-use-an-implement-to-keep-a-ball-up',
+  });
+
+  expect(typeof res.equipment).toBe('string');
+  expect(res.equipment).toMatch(/ball/);
+});
+
+test('v1 lesson summary gives null equipment when none is listed', async () => {
+  const caller = makeCaller({ user: 1, major: 'v1' });
+
+  const res = await caller.getLessons.getLessonV1({
+    lesson: 'joining-using-and',
+  });
+
+  expect(res.equipment).toBeNull();
+});
+
+test('v0 lesson summary leaves equipment out', async () => {
+  const caller = makeCaller({ user: 1 });
+
+  const res = await caller.getLessons.getLesson({
+    lesson: 'games-can-you-use-an-implement-to-keep-a-ball-up',
+  });
+
+  expect(res).not.toHaveProperty('equipment');
+});
