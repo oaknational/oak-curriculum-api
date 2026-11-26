@@ -2,8 +2,8 @@
   // Use the repo's TypeScript, not the one VS Code bundles, so the editor
   // reports the same errors as `pnpm lint`. VS Code asks once per workspace
   // before switching ("Use Workspace Version").
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
   "vitest.nodeEnv": {
     "DOTENV_CONFIG_PATH": ".env"
   },
@@ -12,12 +12,12 @@
     "*.mjs": "javascript"
   },
   "[javascript]": {
-   "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
   },
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true,
+    "editor.formatOnSave": true
   },
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
