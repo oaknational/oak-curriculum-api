@@ -116,6 +116,8 @@ export async function assetsForLesson(
     }
   `;
 
+  console.log(queryDownloads);
+
   const variables = {
     lessonSlug,
   };
@@ -267,12 +269,26 @@ function assetDownloads(
   }
 
   if (download.video && (download.video.download || download.video.stream)) {
-    if (!placeholderVideoLessons.includes(lessonSlug)) {
-      assetUrls.push({
-        label: download.video.label,
-        type: downloadTypeEnum.enum.video,
-        url: `${baseUrl}/lessons/${lessonSlug}/assets/video`,
-      });
+    /** there's a bug in the published_mv_openapi_downloads_1_0_0:
+     * concat() in the MV query skips the NULL, so a lesson with no video gets stream: "https://stream.mux.com/.m3u8"
+     *
+     * The upcoming migration will fix this data once and for all, so this
+     * patch fix is good enough for now.
+     */
+
+    if (
+      download.video.stream &&
+      download.video.stream === 'https://stream.mux.com/.m3u8'
+    ) {
+      // nop
+    } else {
+      if (!placeholderVideoLessons.includes(lessonSlug)) {
+        assetUrls.push({
+          label: download.video.label,
+          type: downloadTypeEnum.enum.video,
+          url: `${baseUrl}/lessons/${lessonSlug}/assets/video`,
+        });
+      }
     }
   }
 
