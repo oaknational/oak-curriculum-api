@@ -67,7 +67,7 @@ export default [
       parser: typescriptParser,
       parserOptions: {
         tsconfigRootDir: __dirname,
-        project: ['./tsconfig.json'],
+        projectService: true,
       },
     },
     plugins: {
