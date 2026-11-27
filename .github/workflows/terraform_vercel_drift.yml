@@ -26,7 +26,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Run Drift Detection
-        uses: oaknational/oak-terraform-actions/actions/terraform-vercel-drift@d0aba78a1675931aef78069d13f75afabea2380f # v1.13.2
+        uses: oaknational/oak-terraform-actions/actions/terraform-vercel-drift@9f75b4438580bc2ce29c75096446b48f57fc7357 # v1.13.3
         with:
           TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
           TF_CLOUD_ORGANIZATION: ${{ vars.TF_CLOUD_ORGANIZATION }}
