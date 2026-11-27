@@ -30,9 +30,8 @@ import {
 import type { GatedAssetType } from '@/lib/queryGateData/assetTypeRestrictions';
 import { sequenceWhere } from '../sequences/sequences';
 import { nextPageLink } from '@/lib/pagination';
-import { downloadTypeEnum } from './types';
 import type { DownloadTypeEnum, LessonAssetsType } from './types';
-import { getAttribution } from './helpers';
+import { getAttribution, hasAsset } from './helpers';
 
 import {
   subjectAssetsRequestSchema,
@@ -46,8 +45,6 @@ import {
   lessonAssetsRequestSchema,
   lessonAssetsResponseSchema,
 } from './schemas';
-
-import placeholderVideoLessons from '@/lib/queryGateData/placeholderVideoLessons.json' with { type: 'json' };
 
 type Attribution = (string | undefined)[] | undefined;
 
@@ -115,8 +112,6 @@ export async function assetsForLesson(
       }
     }
   `;
-
-  console.log(queryDownloads);
 
   const variables = {
     lessonSlug,
@@ -191,6 +186,19 @@ interface AssetDownload {
   url: string;
 }
 
+/** The order a lesson's assets are listed in. */
+const LISTING_ORDER: DownloadTypeEnum[] = [
+  'slideDeck',
+  'worksheet',
+  'worksheetAnswers',
+  'supplementaryResource',
+  'starterQuiz',
+  'starterQuizAnswers',
+  'exitQuiz',
+  'exitQuizAnswers',
+  'video',
+];
+
 function assetDownloads(
   major: ApiMajor,
   lessonSlug: string,
@@ -199,105 +207,17 @@ function assetDownloads(
   withheld: GatedAssetType[] = [],
 ): AssetDownload[] {
   const baseUrl = apiBaseUrl(major);
-  const assetUrls = [];
 
-  if (download.slideDeck && download.slideDeck.bucket_path) {
-    assetUrls.push({
-      label: download.slideDeck.label,
-      type: downloadTypeEnum.enum.slideDeck,
-      url: `${baseUrl}/lessons/${lessonSlug}/assets/slideDeck`,
-    });
-  }
+  const assetUrls = LISTING_ORDER.filter(
+    (type) =>
+      (!filter || type === filter) && hasAsset(lessonSlug, download, type),
+  ).map((type) => ({
+    label: download[type].label,
+    type,
+    url: `${baseUrl}/lessons/${lessonSlug}/assets/${type}`,
+  }));
 
-  if (download.worksheet && download.worksheet.bucket_path) {
-    assetUrls.push({
-      label: download.worksheet.label,
-      type: downloadTypeEnum.enum.worksheet,
-      url: `${baseUrl}/lessons/${lessonSlug}/assets/worksheet`,
-    });
-  }
-
-  if (download.worksheetAnswers && download.worksheetAnswers.bucket_path) {
-    assetUrls.push({
-      label: download.worksheetAnswers.label,
-      type: downloadTypeEnum.enum.worksheetAnswers,
-      url: `${baseUrl}/lessons/${lessonSlug}/assets/worksheetAnswers`,
-    });
-  }
-
-  if (
-    download.supplementaryResource &&
-    download.supplementaryResource.bucket_path
-  ) {
-    assetUrls.push({
-      label: download.supplementaryResource.label,
-      type: downloadTypeEnum.enum.supplementaryResource,
-      url: `${baseUrl}/lessons/${lessonSlug}/assets/supplementaryResource`,
-    });
-  }
-
-  if (download.starterQuiz && download.starterQuiz.bucket_path) {
-    assetUrls.push({
-      label: download.starterQuiz.label,
-      type: downloadTypeEnum.enum.starterQuiz,
-      url: `${baseUrl}/lessons/${lessonSlug}/assets/starterQuiz`,
-    });
-  }
-
-  if (download.starterQuizAnswers && download.starterQuizAnswers.bucket_path) {
-    assetUrls.push({
-      label: download.starterQuizAnswers.label,
-      type: downloadTypeEnum.enum.starterQuizAnswers,
-      url: `${baseUrl}/lessons/${lessonSlug}/assets/starterQuizAnswers`,
-    });
-  }
-
-  if (download.exitQuiz && download.exitQuiz.bucket_path) {
-    assetUrls.push({
-      label: download.exitQuiz.label,
-      type: downloadTypeEnum.enum.exitQuiz,
-      url: `${baseUrl}/lessons/${lessonSlug}/assets/exitQuiz`,
-    });
-  }
-
-  if (download.exitQuizAnswers && download.exitQuizAnswers.bucket_path) {
-    assetUrls.push({
-      label: download.exitQuizAnswers.label,
-      type: downloadTypeEnum.enum.exitQuizAnswers,
-      url: `${baseUrl}/lessons/${lessonSlug}/assets/exitQuizAnswers`,
-    });
-  }
-
-  if (download.video && (download.video.download || download.video.stream)) {
-    /** there's a bug in the published_mv_openapi_downloads_1_0_0:
-     * concat() in the MV query skips the NULL, so a lesson with no video gets stream: "https://stream.mux.com/.m3u8"
-     *
-     * The upcoming migration will fix this data once and for all, so this
-     * patch fix is good enough for now.
-     */
-
-    if (
-      download.video.stream &&
-      download.video.stream === 'https://stream.mux.com/.m3u8'
-    ) {
-      // nop
-    } else {
-      if (!placeholderVideoLessons.includes(lessonSlug)) {
-        assetUrls.push({
-          label: download.video.label,
-          type: downloadTypeEnum.enum.video,
-          url: `${baseUrl}/lessons/${lessonSlug}/assets/video`,
-        });
-      }
-    }
-  }
-
-  const result = assetUrls.filter(
-    (asset) =>
-      (!filter || asset.type === filter) && !withheld.includes(asset.type),
-  );
-
-  return result;
+  return assetUrls.filter((asset) => !withheld.includes(asset.type));
 }
 
 export const getAssets = router({

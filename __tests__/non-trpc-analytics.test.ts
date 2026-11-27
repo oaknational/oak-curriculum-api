@@ -43,7 +43,10 @@ vi.mock('@/lib/handlers/assets/assets', () => ({
   assetsForLesson: mocks.assetsForLessonMock,
 }));
 
-vi.mock('@/lib/handlers/assets/helpers', () => ({
+vi.mock('@/lib/handlers/assets/helpers', async (importOriginal) => ({
+  hasAsset: (
+    await importOriginal<typeof import('@/lib/handlers/assets/helpers')>()
+  ).hasAsset,
   getSignedAssetUrl: mocks.getSignedAssetUrlMock,
   getVideoFromMux: mocks.getVideoFromMuxMock,
   listFilesWithMimeType: mocks.listFilesWithMimeTypeMock,
