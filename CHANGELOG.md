@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.2.0](https://github.com/oaknational/oak-curriculum-api/compare/v1.1.1...v1.2.0) (2026-11-27)
+
+### Features
+
+* add equipment to lesson summary ([c43f254](https://github.com/oaknational/oak-curriculum-api/commit/c43f2549c6c255d5cbdd296e61442a874fbe54e0))
+
+### Bug Fixes
+
+* correctly return 404 on no videos ([5e37c3f](https://github.com/oaknational/oak-curriculum-api/commit/5e37c3fbb54ab3511a0c191063426ea2e1ebef00))
+* don't returning video when it's not available ([7eaac34](https://github.com/oaknational/oak-curriculum-api/commit/7eaac3480da323aff24cbe67a02bb7fea8a33f8c))
+
 ## [1.1.1](https://github.com/oaknational/oak-curriculum-api/compare/v1.1.0...v1.1.1) (2026-11-05)
 
 ### Bug Fixes
