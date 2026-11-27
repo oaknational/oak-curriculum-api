@@ -1,5 +1,10 @@
 version: 2
 updates:
+  # Dependabot only proposes patch updates, in every ecosystem below. Minor and
+  # major bumps are taken by hand. `groups` only decides how updates are
+  # bundled, not which are proposed, so each ecosystem blocks them with an
+  # `ignore` entry for "*".
+
   # Application dependencies. Grouped so routine patch bumps arrive as one pull
   # request rather than a stream of them.
   - package-ecosystem: "npm"
@@ -11,12 +16,12 @@ updates:
     commit-message:
       prefix: "chore(deps)"
     groups:
-      production-minor-and-patch:
+      production-patch:
         dependency-type: "production"
-        update-types: ["minor", "patch"]
-      development-minor-and-patch:
+        update-types: ["patch"]
+      development-patch:
         dependency-type: "development"
-        update-types: ["minor", "patch"]
+        update-types: ["patch"]
 
     # oak-components is bumped by hand, never by Dependabot. The library is
     # still catching up to styled-components 6 (see docs/styled-components.md),
@@ -27,15 +32,18 @@ updates:
     #
     # That PR is 39 `fix:` commits with no `feat:` and no breaking-change
     # footer, so it will release as a patch and would otherwise arrive inside
-    # production-minor-and-patch. Tests are skipped on Dependabot PRs (see
+    # production-patch. Tests are skipped on Dependabot PRs (see
     # .github/workflows/test.yml), and the double ring is CSS rather than
     # types, so neither the test job nor lint would catch it.
     #
     # conventional-changelog-conventionalcommits 10+ refuses to render with
     # conventional-changelog-writer 8, which
     # @semantic-release/release-notes-generator 14 still uses. Stay on 9 until
-    # the generator moves to writer 9.
+    # the generator moves to writer 9. The "*" entry already blocks that major,
+    # but this entry stays so the reason isn't lost if "*" is ever loosened.
     ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
       - dependency-name: "@oaknational/oak-components"
       - dependency-name: "conventional-changelog-conventionalcommits"
         update-types: ["version-update:semver-major"]
@@ -53,6 +61,9 @@ updates:
     groups:
       actions:
         patterns: ["*"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
 
   # The base image in the Dockerfile, pinned by digest.
   - package-ecosystem: "docker"
@@ -62,6 +73,9 @@ updates:
       day: "monday"
     commit-message:
       prefix: "chore(infra)"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
 
   # Terraform modules from oak-terraform-modules.
   - package-ecosystem: "terraform"
@@ -71,3 +85,6 @@ updates:
       day: "monday"
     commit-message:
       prefix: "chore(infra)"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
