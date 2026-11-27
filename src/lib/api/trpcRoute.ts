@@ -24,11 +24,21 @@ export function createTrpcHandler(major: ApiMajor) {
   const router = routerForMajor(major);
   const createContextForMajor = createContext(major);
 
+  /**
+   * `trpc-to-openapi`'s fetch adapter delegates to its node-http adapter, so
+   * `createContext` is handed a node-style `res` carrying `setHeader`. Its
+   * published types reuse tRPC's fetch signature, which promises
+   * `resHeaders: Headers` instead, so the argument has to be re-asserted to
+   * the shape the context builder is actually called with.
+   */
+  type CreateContextOptions = Parameters<typeof createContextForMajor>[0];
+
   return async (req: NextRequest): Promise<Response> => {
     const res = await createOpenApiFetchHandler({
       endpoint,
       router,
-      createContext: createContextForMajor,
+      createContext: (opts) =>
+        createContextForMajor(opts as unknown as CreateContextOptions),
       onError: (opts) => {
         if (opts.type !== 'unknown' && opts.path) {
           return;
