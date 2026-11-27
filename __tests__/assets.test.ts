@@ -292,3 +292,14 @@ test('financial education is hidden: returns invalid enum value', async () => {
       }),
   ).rejects.toThrow('Invalid option');
 });
+
+test('a lesson without a video returns 404 for its video', async () => {
+  // the downloads view reports this lesson's missing video as the empty mux
+  // stream, which the listing already hides
+  const res = await getLessonAsset({
+    lesson: 'running',
+    type: 'video',
+  });
+
+  expect(res.status).toBe(404);
+});

@@ -27,19 +27,15 @@ const trpcErrorCodeToHttpStatus: Record<string, number> = {
 import {
   getSignedAssetUrl,
   getVideoFromMux,
+  hasAsset,
   listFilesWithMimeType,
 } from '@/lib/handlers/assets/helpers';
-import {
-  downloadTypeEnum,
-  typeToMime,
-  type DownloadTypeEnum,
-} from '@/lib/handlers/assets/types';
+import { downloadTypeEnum, typeToMime } from '@/lib/handlers/assets/types';
 import type { SignedAsset, Video } from '@/lib/owaClient';
 import { protect } from '@/lib/protect';
 import { assetBaseVideoUrl } from '@/lib/baseUrl';
 import codes from 'http-codes';
 import { assetsForLesson } from '@/lib/handlers/assets/assets';
-import placeholderVideoLessons from '@/lib/queryGateData/placeholderVideoLessons.json' with { type: 'json' };
 import { getGoogleCloudStorage } from '@/lib/googleCloudStorage';
 import {
   captureApiRequestEvent,
@@ -127,7 +123,17 @@ const handler = async (
       type = type.replace('PPTX', '');
     }
 
-    const asset = assets[type as DownloadTypeEnum];
+    // only what the listing offers can be downloaded; anything else (an
+    // unknown type, or one the lesson doesn't have) is a 404
+    const assetType = downloadTypeEnum.safeParse(type).data;
+    if (!assetType || !hasAsset(lesson, assets, assetType)) {
+      throw new TRPCError({
+        message: `Asset not found: "${type}" for lesson "${lesson}"`,
+        code: 'NOT_FOUND',
+      });
+    }
+
+    const asset = assets[assetType];
 
     // every asset type redirects: videos to the CDN, everything else to a
     // short-lived signed URL on the storage bucket
@@ -178,14 +184,6 @@ const handler = async (
     } else {
       const { stream } = asset as Video;
       let { download } = asset as Video;
-
-      if (placeholderVideoLessons.includes(lesson)) {
-        throw new TRPCError({
-          message: `Failed to fetch: ${lesson} - video is not available`,
-          cause: 'Video is a placeholder and not available',
-          code: 'NOT_FOUND',
-        });
-      }
 
       if (!download) {
         // test if the download is there as our db is often out of sync with mux

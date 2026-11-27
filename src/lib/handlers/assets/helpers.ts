@@ -1,6 +1,40 @@
-import type { lessonView, LessonView } from '@/lib/owaClient';
+import type { Download, lessonView, LessonView } from '@/lib/owaClient';
 import type { Storage } from '@google-cloud/storage';
 import { TRPCError } from '@trpc/server';
+import type { DownloadTypeEnum } from './types';
+import placeholderVideoLessons from '@/lib/queryGateData/placeholderVideoLessons.json' with { type: 'json' };
+
+/**
+ * There's a bug in published_mv_openapi_downloads_1_0_0: concat() in the MV
+ * query skips the NULL, so a lesson with no video gets this stream URL.
+ *
+ * The upcoming migration will fix this data once and for all, so this patch
+ * fix is good enough for now.
+ */
+const EMPTY_MUX_STREAM = 'https://stream.mux.com/.m3u8';
+
+/**
+ * Whether a lesson actually has a downloadable asset of this type. Shared by
+ * the asset listings and the download route, so a type is only listed when it
+ * can be downloaded.
+ */
+export function hasAsset(
+  lessonSlug: string,
+  download: Download,
+  type: DownloadTypeEnum,
+): boolean {
+  if (type === 'video') {
+    const { video } = download;
+    return Boolean(
+      video &&
+      (video.download || video.stream) &&
+      video.stream !== EMPTY_MUX_STREAM &&
+      !placeholderVideoLessons.includes(lessonSlug),
+    );
+  }
+
+  return Boolean(download[type]?.bucket_path);
+}
 
 // How long a signed asset URL stays usable. This governs when the download may
 // *start*; a transfer already in flight is not cut off when the URL expires.
