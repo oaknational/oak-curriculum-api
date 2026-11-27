@@ -12,10 +12,10 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('@/lib/db', () => ({
-  getPrisma: () => ({
+  prisma: {
     $queryRaw: mocks.queryRawMock,
     lesson: { findMany: mocks.findManyMock },
-  }),
+  },
 }));
 
 vi.mock('@/lib/owaClient', async () => {

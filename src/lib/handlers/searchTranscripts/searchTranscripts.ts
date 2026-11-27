@@ -1,4 +1,4 @@
-import { getPrisma } from '@/lib/db';
+import { prisma } from '@/lib/db';
 import { v0Procedure } from '@/lib/protect';
 import { router } from '@/lib/trpc';
 import {
@@ -42,12 +42,12 @@ Example queries: the mitochondria are the powerhouse, to be or not to be, carry 
 
       // over-fetch, because the restricted lessons are dropped below: the five
       // we return should be the five best matches a caller is allowed to see
-      const search: SearchRow[] = await getPrisma()
-        .$queryRaw`SELECT lesson_id, source_content FROM snippets WHERE to_tsvector('english', source_content) @@ to_tsquery(${q
-        .split(' ')
-        .join(
-          ' & ',
-        )}) ORDER BY similarity(source_content, ${q}) DESC limit ${resultLimit * 5}`;
+      const search: SearchRow[] =
+        await prisma.$queryRaw`SELECT lesson_id, source_content FROM snippets WHERE to_tsvector('english', source_content) @@ to_tsquery(${q
+          .split(' ')
+          .join(
+            ' & ',
+          )}) ORDER BY similarity(source_content, ${q}) DESC limit ${resultLimit * 5}`;
 
       // console.timeEnd('snippet search');
 
@@ -68,7 +68,7 @@ Example queries: the mitochondria are the powerhouse, to be or not to be, carry 
         title: string;
         slug: string;
       }
-      const res: Record[] = await getPrisma().lesson.findMany({
+      const res: Record[] = await prisma.lesson.findMany({
         where: {
           id: {
             in: ids,
