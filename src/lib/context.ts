@@ -3,17 +3,7 @@ import type { User } from '@/lib/apikeys';
 import { findUserByKey } from '@/lib/apikeys';
 import type { ApiMajor } from '@/lib/apiVersion';
 import type { RateLimitInfo } from './rateLimit';
-import type { TRPCRequestInfo } from '@trpc/server/http';
-
-interface ResponseHeaderSetter {
-  setHeader: (key: string, value: string) => void;
-}
-
-interface FetchCreateContextFnOptions {
-  req: Request;
-  res: ResponseHeaderSetter;
-  info: TRPCRequestInfo;
-}
+import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch';
 
 export interface Context {
   apiKey?: string | null;
@@ -33,18 +23,11 @@ export interface Context {
 
 const createContextWithUser =
   (major: ApiMajor) =>
-  async ({ req, info, res }: FetchCreateContextFnOptions): Promise<Context> => {
-    const headers = new Headers(req.headers);
-    const resHeaders = {
-      set: (key: string, value: string) => {
-        res.setHeader(key, value);
-        headers.set(key, value);
-      },
-      get: (key: string) => {
-        return headers.get(key);
-      },
-    };
-
+  async ({
+    req,
+    info,
+    resHeaders,
+  }: FetchCreateContextFnOptions): Promise<Context> => {
     for (const [key, value] of Object.entries(corsHeaders(API_METHODS))) {
       resHeaders.set(key, value);
     }

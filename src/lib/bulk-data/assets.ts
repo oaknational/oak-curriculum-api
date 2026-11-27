@@ -15,14 +15,11 @@ import { LessonWithTranscripts } from '../owaClient';
 
 /**
  * tar-stream v3 ships streamx types. streamx and Node streams interoperate at
- * runtime but are not structurally compatible, so piping across the boundary
- * between them needs a cast.
+ * runtime but are not structurally compatible: a pack can pipe into a Node
+ * writable as typed, but piping a Node readable into a pack entry needs a cast.
  */
 const asNodeWritable = (stream: ReturnType<Pack['entry']>) =>
   stream as unknown as NodeJS.WritableStream;
-
-const asStreamxWritable = (stream: NodeJS.WritableStream) =>
-  stream as unknown as Parameters<Pack['pipe']>[0];
 
 export async function downloadQuiz(
   key: ValidDownloadTypes,
@@ -167,26 +164,26 @@ export function buildAssetPacks(
     `${sequenceDir}/${slug}-worksheets.tar`,
   );
   const worksheetsPack = tar.pack();
-  worksheetsPack.pipe(asStreamxWritable(worksheetsOutput));
+  worksheetsPack.pipe(worksheetsOutput);
 
   // Create slide decks tarball
   const slideDecksOutput = createWriteStream(
     `${sequenceDir}/${slug}-slide-decks.tar`,
   );
   const slideDecksPack = tar.pack();
-  slideDecksPack.pipe(asStreamxWritable(slideDecksOutput));
+  slideDecksPack.pipe(slideDecksOutput);
 
   // Create quizzes tarball
   const quizzesOutput = createWriteStream(`${sequenceDir}/${slug}-quizzes.tar`);
   const quizzesPack = tar.pack();
-  quizzesPack.pipe(asStreamxWritable(quizzesOutput));
+  quizzesPack.pipe(quizzesOutput);
 
   // Create supplementary resources tarball
   const resourcesOutput = createWriteStream(
     `${sequenceDir}/${slug}-resources.tar`,
   );
   const resourcesPack = tar.pack();
-  resourcesPack.pipe(asStreamxWritable(resourcesOutput));
+  resourcesPack.pipe(resourcesOutput);
 
   // Create asset packs object
   assetPacks.worksheets = worksheetsPack;

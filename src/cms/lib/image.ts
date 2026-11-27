@@ -1,8 +1,9 @@
-import createImageUrlBuilder, {
+import {
+  createImageUrlBuilder,
+  type ImageUrlBuilder,
   type SanityImageSource,
 } from '@sanity/image-url';
 import getServerConfig from '@/node-lib/serverConfig';
-import type { ImageUrlBuilder } from 'sanity';
 
 const projectId = getServerConfig('sanityProjectId');
 const dataset = getServerConfig('sanityDataset');

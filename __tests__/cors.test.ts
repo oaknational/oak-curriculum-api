@@ -51,15 +51,15 @@ describe('the CORS preflights', () => {
 
 describe('an API response', () => {
   it('exposes the headers the browser would otherwise be denied', async () => {
-    const set = new Map<string, string>();
+    const resHeaders = new Headers();
 
     await createContext('v1')({
       req: new Request('https://open-api.thenational.academy/api/v1/subjects'),
-      res: { setHeader: (key, value) => void set.set(key, value) },
+      resHeaders,
       info: { url: null } as unknown as TRPCRequestInfo,
     });
 
-    const exposed = (set.get('access-control-expose-headers') ?? '')
+    const exposed = (resHeaders.get('access-control-expose-headers') ?? '')
       .split(',')
       .map((name) => name.trim().toLowerCase());
 
