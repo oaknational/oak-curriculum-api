@@ -2,6 +2,10 @@ import type { ApiMajor } from '@/lib/apiVersion';
 import { majorStatus, successorMajor, versionForMajor } from '@/lib/apiVersion';
 import { apiBaseUrl } from '@/lib/baseUrl';
 import { routerForMajor } from '@/lib/versionedRouter';
+import {
+  downloadTypeEnum,
+  isAssetTypeServed,
+} from '@/lib/handlers/assets/types';
 
 import { generateOpenApiDocument, type OpenAPIObject } from 'trpc-to-openapi';
 
@@ -123,6 +127,42 @@ function applyExampleMajor(
   ) as OpenAPIObject;
 }
 
+/**
+ * The asset type enum is shared by every major, so it names types a major
+ * doesn't serve (see `assetTypeAddedIn`). Take them back out of that major's
+ * document: from every enum, and from the prose lists of values, which name
+ * each such type as `, <type>`. A no-op for a major that serves them all.
+ */
+function applyAssetTypesForMajor(
+  document: OpenAPIObject,
+  major: ApiMajor,
+): OpenAPIObject {
+  const hidden: string[] = downloadTypeEnum.options.filter(
+    (type) => !isAssetTypeServed(type, major),
+  );
+
+  if (hidden.length === 0) {
+    return document;
+  }
+
+  return JSON.parse(JSON.stringify(document), (key, value: unknown) => {
+    if (key === 'enum' && Array.isArray(value)) {
+      return (value as unknown[]).filter(
+        (entry) => !hidden.includes(entry as string),
+      );
+    }
+
+    if (typeof value === 'string') {
+      return hidden.reduce(
+        (text, type) => text.replaceAll(`, ${type}`, ''),
+        value,
+      );
+    }
+
+    return value;
+  }) as OpenAPIObject;
+}
+
 function describeMajor(major: ApiMajor): string {
   const successor = successorMajor(major);
 
@@ -159,34 +199,37 @@ export function openApiDocumentFor(major: ApiMajor): OpenAPIObject {
 
   const router = routerForMajor(major);
 
-  const document = applyExampleMajor(
-    camelCaseOperationIds(
-      applyAssetRedirectResponse(
-        applyRequestMetadata(
-          generateOpenApiDocument(router, {
-            title: 'Oak Curriculum API',
-            version: versionForMajor(major),
-            baseUrl: apiBaseUrl(major),
-            docsUrl: '/docs',
-            description: getDescriptionForMajor(major),
-            securitySchemes: {
-              bearerAuth,
-            },
-            tags: [
-              'internal',
-              'assets',
-              'lessons',
-              'lists',
-              'programmes',
-              'questions',
-              'search',
-              'sequences',
-              'units',
-            ],
-          }),
-          router,
+  const document = applyAssetTypesForMajor(
+    applyExampleMajor(
+      camelCaseOperationIds(
+        applyAssetRedirectResponse(
+          applyRequestMetadata(
+            generateOpenApiDocument(router, {
+              title: 'Oak Curriculum API',
+              version: versionForMajor(major),
+              baseUrl: apiBaseUrl(major),
+              docsUrl: '/docs',
+              description: getDescriptionForMajor(major),
+              securitySchemes: {
+                bearerAuth,
+              },
+              tags: [
+                'internal',
+                'assets',
+                'lessons',
+                'lists',
+                'programmes',
+                'questions',
+                'search',
+                'sequences',
+                'units',
+              ],
+            }),
+            router,
+          ),
         ),
       ),
+      major,
     ),
     major,
   );

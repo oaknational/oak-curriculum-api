@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   downloadView,
+  lessonAssetsView,
   lessonRestrictionView,
   lessonView,
   unitVariantLessonsView,
@@ -160,6 +161,7 @@ describe('programme assets and questions endpoints', () => {
       ],
     });
     mocks.owaClientRequestMock.mockResolvedValueOnce({
+      [lessonAssetsView]: [],
       [downloadView]: [
         {
           lessonSlug: 'variables-and-data-types',
@@ -238,6 +240,7 @@ describe('programme assets and questions endpoints', () => {
         ],
       });
       mocks.owaClientRequestMock.mockResolvedValueOnce({
+        [lessonAssetsView]: [],
         [downloadView]: [
           {
             lessonSlug: 'variables-and-data-types',
@@ -276,6 +279,82 @@ describe('programme assets and questions endpoints', () => {
     },
   );
 
+  it.each(API_MAJORS)(
+    'lists the lesson guide last, from v1 only (%s)',
+    async (major) => {
+      mocks.owaClientRequestMock.mockResolvedValueOnce({
+        [unitVariantLessonsView]: [
+          {
+            lesson_slug: 'sprint-performance',
+            unit_slug: 'running',
+            subject_slug: 'physical-education',
+          },
+        ],
+      });
+      mocks.owaClientRequestMock.mockResolvedValueOnce({
+        [lessonRestrictionView]: [],
+      });
+      mocks.owaClientRequestMock.mockResolvedValueOnce({
+        [lessonView]: [
+          {
+            lessonSlug: 'sprint-performance',
+            subjectSlug: 'physical-education',
+          },
+        ],
+      });
+      mocks.owaClientRequestMock.mockResolvedValueOnce({
+        [downloadView]: [
+          {
+            lessonSlug: 'sprint-performance',
+            lessonTitle: 'Sprint performance',
+            slideDeck: {
+              label: 'Slide Deck',
+              bucket_path: 'LESS-ID/slidedeck/PDF.pdf',
+            },
+          },
+        ],
+        [lessonAssetsView]: [
+          {
+            slug: 'sprint-performance',
+            lessonGuide: {
+              bucket_name: 'ingested-assets-production',
+              bucket_path: 'LESS-ID/lesson_guide/PDF.pdf',
+            },
+          },
+        ],
+      });
+      mocks.owaClientRequestMock.mockResolvedValueOnce({
+        [lessonView]: [
+          { lessonSlug: 'sprint-performance', tpcWorks: [], tpcMedia: [] },
+        ],
+      });
+
+      const { authedCaller } = await import('./helper');
+      const { caller } = authedCaller(1, major);
+
+      const result = await caller.getAssets.getProgrammeAssets({
+        programme: 'physical-education-secondary-year-7',
+      });
+
+      // both views are read in one request
+      expect(mocks.owaClientRequestMock.mock.calls[3]?.[0]).toContain(
+        `${lessonAssetsView}(`,
+      );
+
+      const types = result[0]?.assets.map((asset) => asset.type);
+
+      if (major === 'v0') {
+        expect(types).toEqual(['slideDeck']);
+      } else {
+        expect(types).toEqual(['slideDeck', 'lessonGuide']);
+        expect(result[0]?.assets[1]?.label).toBe('Lesson Guide');
+        expect(result[0]?.assets[1]?.url).toContain(
+          `/api/${major}/lessons/sprint-performance/assets/lessonGuide`,
+        );
+      }
+    },
+  );
+
   it('/key-stages/{keyStage}/subject/{subject}/assets filters restricted lessons before fetching downloads', async () => {
     mocks.owaClientRequestMock.mockResolvedValueOnce({
       [unitVariantLessonsView]: [
@@ -304,6 +383,7 @@ describe('programme assets and questions endpoints', () => {
       ],
     });
     mocks.owaClientRequestMock.mockResolvedValueOnce({
+      [lessonAssetsView]: [],
       [downloadView]: [
         {
           lessonSlug: 'noun-phrases',
@@ -376,6 +456,7 @@ describe('programme assets and questions endpoints', () => {
       [lessonView]: [{ lessonSlug: 'noun-phrases', subjectSlug: 'english' }],
     });
     mocks.owaClientRequestMock.mockResolvedValueOnce({
+      [lessonAssetsView]: [],
       [downloadView]: [
         {
           lessonSlug: 'noun-phrases',
@@ -442,6 +523,7 @@ describe('programme assets and questions endpoints', () => {
       [lessonView]: [{ lessonSlug: 'lesson-2', subjectSlug: 'english' }],
     });
     mocks.owaClientRequestMock.mockResolvedValueOnce({
+      [lessonAssetsView]: [],
       [downloadView]: [
         {
           lessonSlug: 'lesson-2',

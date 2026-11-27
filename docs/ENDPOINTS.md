@@ -48,6 +48,19 @@ Notes
 	because the redirect target is not served by this app. A type the lesson
 	doesn't have (one `/lessons/{lesson}/assets` would not list, such as a video
 	the data only reports as the empty Mux stream) responds `404` instead.
+- From `/api/v1`, the asset endpoints list and serve a `lessonGuide` (PDF)
+	where a lesson has one, listed after `video`. `downloadView` doesn't carry
+	it, so it's read from `lessonAssetsView` in the same GraphQL request (see
+	`lessonGuidesSelection` in
+	[`src/lib/handlers/assets/helpers.ts`](../src/lib/handlers/assets/helpers.ts)).
+	`/api/v0` is frozen and doesn't offer it. The `type` enum is shared, so v0
+	takes `lessonGuide` back out of its OpenAPI document
+	(`applyAssetTypesForMajor` in
+	[`generateDocument.ts`](../src/lib/zod-openapi/schema/generateDocument.ts)),
+	responds `400` to it as a `type` filter and `404` to a download of it. Both
+	read `assetTypeAddedIn` in
+	[`src/lib/handlers/assets/types.ts`](../src/lib/handlers/assets/types.ts).
+	The bulk export doesn't include lesson guides.
 
 ## Public endpoints
 

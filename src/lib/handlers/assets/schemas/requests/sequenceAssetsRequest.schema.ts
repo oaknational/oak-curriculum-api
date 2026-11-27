@@ -12,6 +12,6 @@ export const sequenceAssetsRequestSchema = z.object({
   type: downloadTypeEnum.optional().meta({
     description: `Optional asset type specifier
 
-Available values: slideDeck, exitQuiz, exitQuizAnswers, starterQuiz, starterQuizAnswers, supplementaryResource, video, worksheet, worksheetAnswers`,
+Available values: slideDeck, exitQuiz, exitQuizAnswers, starterQuiz, starterQuizAnswers, supplementaryResource, video, worksheet, worksheetAnswers, lessonGuide`,
   }),
 });

@@ -30,7 +30,11 @@ import {
   hasAsset,
   listFilesWithMimeType,
 } from '@/lib/handlers/assets/helpers';
-import { downloadTypeEnum, typeToMime } from '@/lib/handlers/assets/types';
+import {
+  downloadTypeEnum,
+  isAssetTypeServed,
+  typeToMime,
+} from '@/lib/handlers/assets/types';
 import type { SignedAsset, Video } from '@/lib/owaClient';
 import { protect } from '@/lib/protect';
 import { assetBaseVideoUrl } from '@/lib/baseUrl';
@@ -126,7 +130,11 @@ const handler = async (
     // only what the listing offers can be downloaded; anything else (an
     // unknown type, or one the lesson doesn't have) is a 404
     const assetType = downloadTypeEnum.safeParse(type).data;
-    if (!assetType || !hasAsset(lesson, assets, assetType)) {
+    if (
+      !assetType ||
+      !isAssetTypeServed(assetType, major) ||
+      !hasAsset(lesson, assets, assetType)
+    ) {
       throw new TRPCError({
         message: `Asset not found: "${type}" for lesson "${lesson}"`,
         code: 'NOT_FOUND',
