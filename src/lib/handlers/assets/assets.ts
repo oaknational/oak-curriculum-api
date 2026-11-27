@@ -6,6 +6,7 @@ import { router } from '@/lib/trpc';
 import type {
   Download,
   DownloadView,
+  LessonAssetsView,
   LessonView,
   UnitVariantLessonsView,
   SequenceView,
@@ -13,6 +14,7 @@ import type {
 import {
   downloadView,
   getClient,
+  lessonAssetsView,
   lessonView,
   unitVariantLessonsView,
   sequenceView,
@@ -31,7 +33,14 @@ import type { GatedAssetType } from '@/lib/queryGateData/assetTypeRestrictions';
 import { sequenceWhere } from '../sequences/sequences';
 import { nextPageLink } from '@/lib/pagination';
 import type { DownloadTypeEnum, LessonAssetsType } from './types';
-import { getAttribution, hasAsset } from './helpers';
+import { isAssetTypeServed } from './types';
+import {
+  assertAssetTypeServed,
+  getAttribution,
+  hasAsset,
+  lessonGuidesSelection,
+  withLessonGuides,
+} from './helpers';
 
 import {
   subjectAssetsRequestSchema,
@@ -110,6 +119,7 @@ export async function assetsForLesson(
         worksheet
         worksheetAnswers
       }
+      ${lessonGuidesSelection('{ _eq: $lessonSlug }')}
     }
   `;
 
@@ -117,12 +127,13 @@ export async function assetsForLesson(
     lessonSlug,
   };
 
-  const lessonDetailViewResult: DownloadView = await graphqlClient.request(
-    queryDownloads,
-    variables,
-  );
+  const lessonDetailViewResult: DownloadView & LessonAssetsView =
+    await graphqlClient.request(queryDownloads, variables);
 
-  const res = lessonDetailViewResult[downloadView];
+  const res = withLessonGuides(
+    lessonDetailViewResult[downloadView],
+    lessonDetailViewResult[lessonAssetsView],
+  );
 
   if (!res || res.length === 0 || !res[0]) {
     throw new TRPCError({
@@ -197,6 +208,7 @@ const LISTING_ORDER: DownloadTypeEnum[] = [
   'exitQuiz',
   'exitQuizAnswers',
   'video',
+  'lessonGuide',
 ];
 
 function assetDownloads(
@@ -210,9 +222,12 @@ function assetDownloads(
 
   const assetUrls = LISTING_ORDER.filter(
     (type) =>
-      (!filter || type === filter) && hasAsset(lessonSlug, download, type),
+      (!filter || type === filter) &&
+      isAssetTypeServed(type, major) &&
+      hasAsset(lessonSlug, download, type),
   ).map((type) => ({
-    label: download[type].label,
+    // hasAsset has already checked it's there
+    label: download[type]?.label ?? '',
     type,
     url: `${baseUrl}/lessons/${lessonSlug}/assets/${type}`,
   }));
@@ -229,7 +244,7 @@ export const getAssets = router({
         path: '/sequences/{sequence}/assets',
         errorResponses,
         summary: 'Downloadable assets in a sequence',
-        description: `Use when you need every downloadable asset across a whole sequence — all programmes combined. Returns assets grouped by lesson in unit sequence order, with signed download URLs, asset type, lesson title and slug, and attribution. Pass year as an optional filter. Narrow further with type (one of: slideDeck, starterQuiz, starterQuizAnswers, exitQuiz, exitQuizAnswers, worksheet, worksheetAnswers, supplementaryResource, video). Lesson content is under OGL v3.0; assets are either Oak-owned or third-party under an OGL-compatible licence. Attribution required — see https://open-api.thenational.academy/docs/about-oaks-api/terms.
+        description: `Use when you need every downloadable asset across a whole sequence — all programmes combined. Returns assets grouped by lesson in unit sequence order, with signed download URLs, asset type, lesson title and slug, and attribution. Pass year as an optional filter. Narrow further with type (one of: slideDeck, starterQuiz, starterQuizAnswers, exitQuiz, exitQuizAnswers, worksheet, worksheetAnswers, supplementaryResource, video, lessonGuide). Lesson content is under OGL v3.0; assets are either Oak-owned or third-party under an OGL-compatible licence. Attribution required — see https://open-api.thenational.academy/docs/about-oaks-api/terms.
 
 Not for: assets in a single programme (GET /programmes/{programme}/assets); a single lesson's downloads (GET /lessons/{lesson}/assets); streaming one file (GET /lessons/{lesson}/assets/{type}); assets for a key stage + subject without programme structure (GET /key-stages/{keyStage}/subject/{subject}/assets).`,
       },
@@ -238,6 +253,7 @@ Not for: assets in a single programme (GET /programmes/{programme}/assets); a si
     .output(sequenceAssetsResponseSchema)
     .query(async ({ input, ctx }) => {
       const { sequence, type, year } = input;
+      assertAssetTypeServed(type, ctx.major);
       const client = getClient();
 
       const where = sequenceWhere(sequence, year ? year.toString() : undefined);
@@ -290,14 +306,16 @@ Not for: assets in a single programme (GET /programmes/{programme}/assets); a si
             worksheet
             worksheetAnswers
           }
+          ${lessonGuidesSelection('{ _in: $lessonSlugs }')}
         }`;
 
-      const downloadsViewResult: DownloadView = await client.request(
-        downloadsQuery,
-        { lessonSlugs: lessonsAllowed },
-      );
+      const downloadsViewResult: DownloadView & LessonAssetsView =
+        await client.request(downloadsQuery, { lessonSlugs: lessonsAllowed });
 
-      const downloads = downloadsViewResult[downloadView];
+      const downloads = withLessonGuides(
+        downloadsViewResult[downloadView],
+        downloadsViewResult[lessonAssetsView],
+      );
 
       const tpcQuery = gql`
         query GetTPC($lessonSlugs: [String!]!) {
@@ -353,7 +371,7 @@ Not for: assets in a single programme (GET /programmes/{programme}/assets); a si
         errorResponses,
         summary: 'Downloadable assets by key stage and subject',
         path: '/key-stages/{keyStage}/subject/{subject}/assets',
-        description: `Use when you want every downloadable asset for a key stage + subject, without programme structure or unit sequence order, optionally scoped to a unit or asset type. Returns assets grouped by lesson, each with signed download URLs, asset type, lesson title and slug, and attribution. Pass unit to restrict to one unit and type to restrict to one asset type (one of: slideDeck, starterQuiz, starterQuizAnswers, exitQuiz, exitQuizAnswers, worksheet, worksheetAnswers, supplementaryResource, video). Lesson content is under OGL v3.0; assets are either Oak-owned or third-party under an OGL-compatible licence. Attribution required — see https://open-api.thenational.academy/docs/about-oaks-api/terms.
+        description: `Use when you want every downloadable asset for a key stage + subject, without programme structure or unit sequence order, optionally scoped to a unit or asset type. Returns assets grouped by lesson, each with signed download URLs, asset type, lesson title and slug, and attribution. Pass unit to restrict to one unit and type to restrict to one asset type (one of: slideDeck, starterQuiz, starterQuizAnswers, exitQuiz, exitQuizAnswers, worksheet, worksheetAnswers, supplementaryResource, video, lessonGuide). Lesson content is under OGL v3.0; assets are either Oak-owned or third-party under an OGL-compatible licence. Attribution required — see https://open-api.thenational.academy/docs/about-oaks-api/terms.
 
 Not for: assets across a sequence (GET /sequences/{sequence}/assets); assets in one programme (GET /programmes/{programme}/assets); a single lesson's downloads (GET /lessons/{lesson}/assets); streaming one file (GET /lessons/{lesson}/assets/{type}).`,
       },
@@ -367,6 +385,7 @@ Not for: assets across a sequence (GET /sequences/{sequence}/assets); assets in 
       const offset = input.offset;
       const limit = input.limit;
       const typeFilter = input.type;
+      assertAssetTypeServed(typeFilter, ctx.major);
       const client = getClient();
 
       let unitFilter = '';
@@ -468,17 +487,19 @@ Not for: assets across a sequence (GET /sequences/{sequence}/assets); assets in 
             worksheet
             worksheetAnswers
           }
+          ${lessonGuidesSelection('{ _in: $lessonSlugs }')}
         }
       `;
 
-      const downloadsViewResult: DownloadView = await client.request(
-        downloadsQuery,
-        {
+      const downloadsViewResult: DownloadView & LessonAssetsView =
+        await client.request(downloadsQuery, {
           lessonSlugs: lessonsAllowed,
-        },
-      );
+        });
 
-      const downloads = downloadsViewResult[downloadView];
+      const downloads = withLessonGuides(
+        downloadsViewResult[downloadView],
+        downloadsViewResult[lessonAssetsView],
+      );
 
       if (!downloads || downloads.length === 0 || !downloads[0]) {
         return [];
@@ -538,7 +559,7 @@ Not for: assets across a sequence (GET /sequences/{sequence}/assets); assets in 
         summary: 'Downloadable assets for a lesson',
         path: '/lessons/{lesson}/assets',
         errorResponses,
-        description: `Use when you have a lesson slug and need the list of what's downloadable. Returns every available asset type with a signed download URL per asset and attribution. The 9 type values are: slideDeck, starterQuiz, starterQuizAnswers, exitQuiz, exitQuizAnswers, worksheet, worksheetAnswers, supplementaryResource, video. Pass type to return only one. Lesson content is under OGL v3.0; assets are either Oak-owned or third-party under an OGL-compatible licence. Attribution required — see https://open-api.thenational.academy/docs/about-oaks-api/terms.
+        description: `Use when you have a lesson slug and need the list of what's downloadable. Returns every available asset type with a signed download URL per asset and attribution. The type values are: slideDeck, starterQuiz, starterQuizAnswers, exitQuiz, exitQuizAnswers, worksheet, worksheetAnswers, supplementaryResource, video, lessonGuide. Pass type to return only one. Lesson content is under OGL v3.0; assets are either Oak-owned or third-party under an OGL-compatible licence. Attribution required — see https://open-api.thenational.academy/docs/about-oaks-api/terms.
 
 Not for: streaming the file itself (GET /lessons/{lesson}/assets/{type}); bulk asset retrieval across a key stage + subject (GET /key-stages/{keyStage}/subject/{subject}/assets), a sequence (GET /sequences/{sequence}/assets), or one programme (GET /programmes/{programme}/assets); lesson metadata (GET /lessons/{lesson}/summary).`,
       },
@@ -547,6 +568,7 @@ Not for: streaming the file itself (GET /lessons/{lesson}/assets/{type}); bulk a
     .output(lessonAssetsResponseSchema)
     .query(async ({ input, ctx }) => {
       const { lesson: lessonSlug, type } = input;
+      assertAssetTypeServed(type, ctx.major);
 
       const { assets, attribution, withheldAssetTypes } = await assetsForLesson(
         lessonSlug,
@@ -574,7 +596,7 @@ Not for: streaming the file itself (GET /lessons/{lesson}/assets/{type}); bulk a
         errorResponses,
         summary: 'Downloadable assets in a programme',
         path: '/programmes/{programme}/assets',
-        description: `Use when you need every downloadable asset for a single programme (year group) within a subject. Returns assets grouped by lesson with signed download URLs, asset type, lesson title and slug, and attribution. Supports offset/limit pagination; Link: rel="next" header signals more pages. Optionally narrow by asset type (one of: slideDeck, starterQuiz, starterQuizAnswers, exitQuiz, exitQuizAnswers, worksheet, worksheetAnswers, supplementaryResource, video). Lesson content is under OGL v3.0; assets are either Oak-owned or third-party under an OGL-compatible licence. Attribution required — see https://open-api.thenational.academy/docs/about-oaks-api/terms.
+        description: `Use when you need every downloadable asset for a single programme (year group) within a subject. Returns assets grouped by lesson with signed download URLs, asset type, lesson title and slug, and attribution. Supports offset/limit pagination; Link: rel="next" header signals more pages. Optionally narrow by asset type (one of: slideDeck, starterQuiz, starterQuizAnswers, exitQuiz, exitQuizAnswers, worksheet, worksheetAnswers, supplementaryResource, video, lessonGuide). Lesson content is under OGL v3.0; assets are either Oak-owned or third-party under an OGL-compatible licence. Attribution required — see https://open-api.thenational.academy/docs/about-oaks-api/terms.
 
 Not for: assets across a whole sequence (GET /sequences/{sequence}/assets); assets for a key stage + subject without programme structure (GET /key-stages/{keyStage}/subject/{subject}/assets); a single lesson's downloads (GET /lessons/{lesson}/assets); streaming one file (GET /lessons/{lesson}/assets/{type}).`,
       },
@@ -584,6 +606,7 @@ Not for: assets across a whole sequence (GET /sequences/{sequence}/assets); asse
     .query(async ({ input, ctx }) => {
       const { programme, offset, limit } = input;
       const typeFilter = input.type;
+      assertAssetTypeServed(typeFilter, ctx.major);
       const client = getClient();
 
       // Step 1: get lesson slugs for this programme
@@ -662,14 +685,16 @@ Not for: assets across a whole sequence (GET /sequences/{sequence}/assets); asse
             worksheet
             worksheetAnswers
           }
+          ${lessonGuidesSelection('{ _in: $lessonSlugs }')}
         }
       `;
 
-      const downloadsViewResult: DownloadView = await client.request(
-        downloadsQuery,
-        { lessonSlugs: lessonsAllowed },
+      const downloadsViewResult: DownloadView & LessonAssetsView =
+        await client.request(downloadsQuery, { lessonSlugs: lessonsAllowed });
+      const downloads = withLessonGuides(
+        downloadsViewResult[downloadView],
+        downloadsViewResult[lessonAssetsView],
       );
-      const downloads = downloadsViewResult[downloadView];
 
       if (!downloads || downloads.length === 0) {
         return [];
@@ -723,7 +748,7 @@ Not for: assets across a whole sequence (GET /sequences/{sequence}/assets); asse
         tags: ['assets', 'lessons'],
         path: '/lessons/{lesson}/assets/{type}',
         summary: 'Download a lesson asset file',
-        description: `Use when you want to download one specific asset for a lesson — slide deck, worksheet, etc. Responds with a 302 redirect: follow the \`Location\` header to fetch the file. Videos redirect to a CDN; every other asset type redirects to a signed storage URL that is valid for 15 minutes, so start the download promptly rather than storing the URL. Call GET /lessons/{lesson}/assets first to see which type values are available. Valid type values: slideDeck, starterQuiz, starterQuizAnswers, exitQuiz, exitQuizAnswers, worksheet, worksheetAnswers, supplementaryResource, video. Lesson content is under OGL v3.0; assets are either Oak-owned or third-party under an OGL-compatible licence. Attribution required — see https://open-api.thenational.academy/docs/about-oaks-api/terms.
+        description: `Use when you want to download one specific asset for a lesson — slide deck, worksheet, etc. Responds with a 302 redirect: follow the \`Location\` header to fetch the file. Videos redirect to a CDN; every other asset type redirects to a signed storage URL that is valid for 15 minutes, so start the download promptly rather than storing the URL. Call GET /lessons/{lesson}/assets first to see which type values are available. Valid type values: slideDeck, starterQuiz, starterQuizAnswers, exitQuiz, exitQuizAnswers, worksheet, worksheetAnswers, supplementaryResource, video, lessonGuide. Lesson content is under OGL v3.0; assets are either Oak-owned or third-party under an OGL-compatible licence. Attribution required — see https://open-api.thenational.academy/docs/about-oaks-api/terms.
 
 Not for: listing which asset types a lesson has (GET /lessons/{lesson}/assets); fetching the transcript (GET /lessons/{lesson}/transcript).`,
         errorResponses,

@@ -2,6 +2,8 @@ import {
   GET as _getLessonAsset,
   OPTIONS as _optionsLessonAsset,
 } from '@/app/api/v0/lessons/[lesson]/assets/[type]/route';
+import { GET as _getLessonAssetV1 } from '@/app/api/v1/lessons/[lesson]/assets/[type]/route';
+import type { ApiMajor } from '@/lib/apiVersion';
 import { TRPCError } from '@trpc/server';
 
 import type { NextRequest } from 'next/server';
@@ -52,9 +54,11 @@ export function extractCauseFromTRPCError(
 export async function getLessonAsset({
   lesson,
   type,
+  major = 'v0',
 }: {
   lesson: string;
   type: string;
+  major?: ApiMajor;
 }): Promise<Response> {
   const url = `http://localhost/lessons/${lesson}/assets/${type}`;
   const request = {
@@ -69,7 +73,8 @@ export async function getLessonAsset({
     lesson,
     type,
   });
-  return _getLessonAsset(request, { params });
+  const get = major === 'v1' ? _getLessonAssetV1 : _getLessonAsset;
+  return get(request, { params });
 }
 
 export function optionsLessonAsset(): Response {

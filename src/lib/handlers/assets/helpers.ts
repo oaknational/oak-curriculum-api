@@ -1,8 +1,73 @@
-import type { Download, lessonView, LessonView } from '@/lib/owaClient';
+import type {
+  Download,
+  LessonAssetsView,
+  lessonView,
+  LessonView,
+} from '@/lib/owaClient';
+import { lessonAssetsView } from '@/lib/owaClient';
+import type { ApiMajor } from '@/lib/apiVersion';
 import type { Storage } from '@google-cloud/storage';
 import { TRPCError } from '@trpc/server';
 import type { DownloadTypeEnum } from './types';
+import { isAssetTypeServed } from './types';
 import placeholderVideoLessons from '@/lib/queryGateData/placeholderVideoLessons.json' with { type: 'json' };
+
+/**
+ * The lesson guide isn't in `downloadView`, so it's read from
+ * `lessonAssetsView` instead. This is a second root field to send in the same
+ * request as the downloads query, given the `slug` comparison to filter on.
+ */
+export function lessonGuidesSelection(slugFilter: string): string {
+  return `
+    ${lessonAssetsView}(where: { slug: ${slugFilter} }) {
+      slug
+      lessonGuide: asset_lesson_guide(path: "asset_object.pdf")
+    }
+  `;
+}
+
+/** Merges the lesson guides from `lessonGuidesSelection` into the downloads. */
+export function withLessonGuides(
+  downloads: Download[],
+  guides: LessonAssetsView[typeof lessonAssetsView],
+): Download[] {
+  const bySlug = new Map(guides.map((row) => [row.slug, row.lessonGuide]));
+
+  return downloads.map((download) => {
+    const guide = bySlug.get(download.lessonSlug);
+
+    if (!guide?.bucket_path) {
+      return download;
+    }
+
+    return {
+      ...download,
+      lessonGuide: {
+        ext: 'pdf',
+        type: 'lesson_guide',
+        label: 'Lesson Guide',
+        bucket_name: guide.bucket_name,
+        bucket_path: guide.bucket_path,
+      },
+    };
+  });
+}
+
+/**
+ * Rejects a `type` filter the major doesn't serve, as a bad request, as though
+ * the enum didn't name it (which, in that major's OpenAPI document, it doesn't).
+ */
+export function assertAssetTypeServed(
+  type: DownloadTypeEnum | undefined,
+  major: ApiMajor,
+): void {
+  if (type && !isAssetTypeServed(type, major)) {
+    throw new TRPCError({
+      message: `Invalid option: "${type}" is not available in /api/${major}`,
+      code: 'BAD_REQUEST',
+    });
+  }
+}
 
 /**
  * There's a bug in published_mv_openapi_downloads_1_0_0: concat() in the MV

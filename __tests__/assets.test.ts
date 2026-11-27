@@ -303,3 +303,49 @@ test('a lesson without a video returns 404 for its video', async () => {
 
   expect(res.status).toBe(404);
 });
+
+test('the lesson guide downloads from v1, and is hidden from v0', async () => {
+  const v1 = await getLessonAsset({
+    lesson: 'sprint-performance',
+    type: 'lessonGuide',
+    major: 'v1',
+  });
+
+  expect(v1.status).toBe(302);
+  const location = new URL(v1.headers.get('location') || '');
+  expect(location.pathname).toContain('/lesson_guide/PDF.pdf');
+  expect(location.searchParams.get('response-content-disposition')).toBe(
+    'attachment; filename="sprint-performance_lessonguide.pdf"',
+  );
+
+  const v0 = await getLessonAsset({
+    lesson: 'sprint-performance',
+    type: 'lessonGuide',
+  });
+
+  expect(v0.status).toBe(404);
+});
+
+test('the lesson guide is listed last from v1', async () => {
+  const caller = makeCaller({ user: 1, major: 'v1' });
+
+  const res = await caller.getAssets.getLessonAssets({
+    lesson: 'sprint-performance',
+  });
+
+  expect(res.assets?.at(-1)).toMatchObject({
+    type: 'lessonGuide',
+    label: 'Lesson Guide',
+  });
+});
+
+test('v0 rejects the lesson guide as a type filter', async () => {
+  const caller = makeCaller({ user: 1 });
+
+  await expect(
+    caller.getAssets.getLessonAssets({
+      lesson: 'sprint-performance',
+      type: 'lessonGuide',
+    }),
+  ).rejects.toThrow('Invalid option');
+});

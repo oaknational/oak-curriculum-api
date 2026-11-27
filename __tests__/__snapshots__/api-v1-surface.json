@@ -151,7 +151,8 @@
                 "supplementaryResource",
                 "video",
                 "worksheet",
-                "worksheetAnswers"
+                "worksheetAnswers",
+                "lessonGuide"
               ]
             }
           },
@@ -212,7 +213,8 @@
                               "supplementaryResource",
                               "video",
                               "worksheet",
-                              "worksheetAnswers"
+                              "worksheetAnswers",
+                              "lessonGuide"
                             ]
                           },
                           "label": {
@@ -375,6 +377,7 @@
                         "video",
                         "worksheet",
                         "worksheetAnswers",
+                        "lessonGuide",
                         "transcript",
                         "quiz"
                       ],
@@ -1785,6 +1788,7 @@
                         "video",
                         "worksheet",
                         "worksheetAnswers",
+                        "lessonGuide",
                         "transcript",
                         "quiz"
                       ],
@@ -1861,7 +1865,8 @@
                 "supplementaryResource",
                 "video",
                 "worksheet",
-                "worksheetAnswers"
+                "worksheetAnswers",
+                "lessonGuide"
               ]
             }
           }
@@ -1908,7 +1913,8 @@
                             "supplementaryResource",
                             "video",
                             "worksheet",
-                            "worksheetAnswers"
+                            "worksheetAnswers",
+                            "lessonGuide"
                           ]
                         },
                         "label": {
@@ -1984,7 +1990,8 @@
                 "supplementaryResource",
                 "video",
                 "worksheet",
-                "worksheetAnswers"
+                "worksheetAnswers",
+                "lessonGuide"
               ]
             }
           }
@@ -3355,7 +3362,8 @@
                 "supplementaryResource",
                 "video",
                 "worksheet",
-                "worksheetAnswers"
+                "worksheetAnswers",
+                "lessonGuide"
               ]
             }
           }
@@ -3408,7 +3416,8 @@
                               "supplementaryResource",
                               "video",
                               "worksheet",
-                              "worksheetAnswers"
+                              "worksheetAnswers",
+                              "lessonGuide"
                             ]
                           },
                           "label": {
@@ -4841,7 +4850,8 @@
                 "supplementaryResource",
                 "video",
                 "worksheet",
-                "worksheetAnswers"
+                "worksheetAnswers",
+                "lessonGuide"
               ]
             }
           },
@@ -4902,7 +4912,8 @@
                               "supplementaryResource",
                               "video",
                               "worksheet",
-                              "worksheetAnswers"
+                              "worksheetAnswers",
+                              "lessonGuide"
                             ]
                           },
                           "label": {

@@ -126,3 +126,22 @@ describe('the majors as a set', () => {
     }
   });
 });
+
+describe('asset types added after a major froze', () => {
+  it('never appear in the v0 document, enums or prose', () => {
+    expect(JSON.stringify(openApiDocumentFor('v0'))).not.toContain(
+      'lessonGuide',
+    );
+  });
+
+  it('appear in the v1 document', () => {
+    const parameters =
+      openApiDocumentFor('v1').paths?.['/lessons/{lesson}/assets']?.get
+        ?.parameters ?? [];
+    const type = parameters.find(
+      (parameter) => 'name' in parameter && parameter.name === 'type',
+    );
+
+    expect(JSON.stringify(type)).toContain('lessonGuide');
+  });
+});
