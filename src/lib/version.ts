@@ -3,4 +3,4 @@
  *
  * Do not edit by hand — see [docs/RELEASING.md](../../docs/RELEASING.md).
  */
-export const VERSION = '1.2.0';
+export const VERSION = '1.3.0';

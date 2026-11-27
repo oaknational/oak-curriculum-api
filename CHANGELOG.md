@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.0](https://github.com/oaknational/oak-curriculum-api/compare/v1.2.0...v1.3.0) (2026-11-27)
+
+### Features
+
+* add lesson guide to the lesson assets endpoints ([0536cf6](https://github.com/oaknational/oak-curriculum-api/commit/0536cf6680b6342336a36163b8f22b3c4efdc9ff))
+
 ## [1.2.0](https://github.com/oaknational/oak-curriculum-api/compare/v1.1.1...v1.2.0) (2026-11-27)
 
 ### Features
